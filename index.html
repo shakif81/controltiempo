@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control de Tiempos PWA</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  body { font-family: Arial, sans-serif; background: #fff; color: #0a2f6c; padding: 20px; }
+  h1 { text-align: center; }
+  button { padding: 10px 20px; margin: 5px; font-size: 16px; cursor: pointer; border-radius: 8px; }
+  #cronometro { font-size: 24px; margin: 10px 0; text-align: center; }
+  #alerta { font-weight: bold; text-align: center; margin-bottom: 10px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+  table, th, td { border: 1px solid #0a2f6c; }
+  th, td { padding: 8px; text-align: center; }
+</style>
+</head>
+<body>
+<h1>Control de Tiempos de Producción</h1>
+
+<label for="tarea">Selecciona tarea:</label>
+<select id="tarea">
+  <option value="" disabled selected>Elige una tarea</option>
+  <option value="Premontaje bandeja AT derecha">Premontaje bandeja AT derecha</option>
+  <option value="Tarea 2">Tarea 2</option>
+  <option value="Tarea 3">Tarea 3</option>
+  <option value="Tarea 4">Tarea 4</option>
+  <option value="Tarea 5">Tarea 5</option>
+  <option value="Tarea 6">Tarea 6</option>
+  <option value="Tarea 7">Tarea 7</option>
+  <option value="Tarea 8">Tarea 8</option>
+  <option value="Tarea 9">Tarea 9</option>
+  <option value="Tarea 10">Tarea 10</option>
+  <option value="Tarea 11">Tarea 11</option>
+  <option value="Tarea 12">Tarea 12</option>
+  <option value="Tarea 13">Tarea 13</option>
+  <option value="Tarea 14">Tarea 14</option>
+  <option value="Tarea 15">Tarea 15</option>
+  <option value="Tarea 16">Tarea 16</option>
+</select>
+<br>
+<label for="tiempo">Tiempo estándar (min):</label>
+<input type="number" id="tiempo" value="30" min="1" max="30" step="0.1">
+<br>
+
+<div id="cronometro">00:00</div>
+<div id="alerta"></div>
+
+<button onclick="iniciar()">Iniciar</button>
+<button onclick="pausar()">Pausar</button>
+<button onclick="reiniciar()">Reiniciar</button>
+
+<h2>Registro de Tareas</h2>
+<table id="registro">
+  <thead>
+    <tr>
+      <th>Tarea</th>
+      <th>Tiempo estándar (min)</th>
+      <th>Tiempo real (min)</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+<button onclick="exportarExcel()">Exportar a Excel</button>
+
+<audio id="sonidoAlerta">
+  <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">
+</audio>
+
+<script>
+// Variables globales
+let tiempoRestante = 0;
+let intervalo = null;
+let tiempoInicio = 0;
+let wakeLock = null;
+
+// Mantener pantalla encendida
+async function activarWakeLock() {
+    if ('wakeLock' in navigator) {
+        try {
+            wakeLock = await navigator.wakeLock.request('screen');
+            wakeLock.addEventListener('release', () => console.log('Wake Lock liberado'));
+        } catch (err) {
+            console.error('No se pudo activar Wake Lock:', err);
+        }
+    }
+}
+
+async function liberarWakeLock() {
+    if (wakeLock) {
+        await wakeLock.release();
+        wakeLock = null;
+    }
+}
+
+// Cronómetro
+function iniciar() {
+    const tarea = document.getElementById('tarea').value;
+    const tiempo = parseFloat(document.getElementById('tiempo').value);
+    if (!tarea || isNaN(tiempo)) { alert("Selecciona tarea y tiempo."); return; }
+    if (!intervalo) {
+        tiempoRestante = tiempo * 60;
+        tiempoInicio = Date.now();
+        intervalo = setInterval(actualizarCronometro, 1000);
+        activarWakeLock();
+
+        // Desbloquear audio
+        const audio = document.getElementById('sonidoAlerta');
+        audio.play().then(()=>{ audio.pause(); audio.currentTime=0; }).catch(()=>{});
+    }
+}
+
+function pausar() {
+    clearInterval(intervalo);
+    intervalo = null;
+}
+
+function reiniciar() {
+    clearInterval(intervalo);
+    intervalo = null;
+    tiempoRestante = 0;
+    document.getElementById('cronometro').textContent = "00:00";
+    document.getElementById('alerta').textContent = "";
+    document.getElementById('cronometro').style.backgroundColor = "";
+    liberarWakeLock();
+}
+
+function actualizarCronometro() {
+    tiempoRestante--;
+    if (tiempoRestante <= 0) {
+        clearInterval(intervalo);
+        intervalo = null;
+        tiempoRestante = 0;
+        document.getElementById('cronometro').textContent = "00:00";
+        document.getElementById('alerta').textContent = "Tiempo terminado!";
+        document.getElementById('cronometro').style.backgroundColor = "#ffcccc";
+        alerta();
+        registrarTarea();
+        return;
+    }
+
+    if (tiempoRestante <= 10*60) {
+        document.getElementById('alerta').textContent = "⚠ Quedan menos de 10 min";
+        document.getElementById('cronometro').style.backgroundColor = "#ffcccc";
+        alerta();
+    }
+
+    let minutos = Math.floor(tiempoRestante / 60);
+    let segundos = tiempoRestante % 60;
+    document.getElementById('cronometro').textContent =
+        `${minutos.toString().padStart(2,'0')}:${segundos.toString().padStart(2,'0')}`;
+}
+
+function alerta() {
+    if (navigator.vibrate) navigator.vibrate([500,200,500]);
+    const audio = document.getElementById('sonidoAlerta');
+    audio.currentTime = 0;
+    audio.play().catch(()=>{});
+    if (Notification.permission === 'granted') {
+        new Notification("Alerta de producción", { body: "Tiempo restante crítico!" });
+    }
+}
+
+function registrarTarea() {
+    const tarea = document.getElementById('tarea').value;
+    const tiempo = parseFloat(document.getElementById('tiempo').value);
+    const tiempoReal = ((Date.now() - tiempoInicio)/60000).toFixed(2);
+    const tbody = document.getElementById('registro').querySelector('tbody');
+    const fila = document.createElement('tr');
+    fila.innerHTML = `<td>${tarea}</td><td>${tiempo}</td><td>${tiempoReal}</td>`;
+    tbody.appendChild(fila);
+    reiniciar();
+}
+
+function exportarExcel() {
+    let tabla = document.getElementById('registro');
+    let wb = XLSX.utils.table_to_book(tabla, {sheet:"Tareas"});
+    XLSX.writeFile(wb, "registro_tareas.xlsx");
+}
+
+if ('Notification' in window && Notification.permission !== 'granted') {
+    Notification.requestPermission();
+}
+
+let script = document.createElement('script');
+script.src = "https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js";
+document.head.appendChild(script);
+
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js').then(()=>console.log('SW registrado'));
+}
+</script>
+</body>
+</html>
