@@ -8,33 +8,78 @@
 <style>
   body { font-family: Arial, sans-serif; background: #fff; color: #0a2f6c; padding: 20px; }
   h1 { text-align: center; }
-  button { padding: 10px 20px; margin: 5px; font-size: 16px; cursor: pointer; border-radius: 8px; }
-  #cronometro { font-size: 24px; margin: 10px 0; text-align: center; }
+  button { padding: 10px 20px; margin: 5px; font-size: 16px; cursor: pointer; }
+  #cronometro { font-size: 32px; margin: 20px 0; text-align: center; font-weight: bold; }
   #alerta { font-weight: bold; text-align: center; margin-bottom: 10px; }
-  table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-  table, th, td { border: 1px solid #0a2f6c; }
-  th, td { padding: 8px; text-align: center; }
 </style>
 </head>
 <body>
 <h1>Control de Tiempos de Producción</h1>
 
-<label for="tarea">Selecciona tarea:</label>
 <select id="tarea">
-  <option value="" disabled selected>Elige una tarea</option>
-  <option value="Premontaje bandeja AT derecha">Premontaje bandeja AT derecha</option>
-  <option value="Tarea 2">Tarea 2</option>
-  <option value="Tarea 3">Tarea 3</option>
-  <option value="Tarea 4">Tarea 4</option>
-  <option value="Tarea 5">Tarea 5</option>
-  <option value="Tarea 6">Tarea 6</option>
-  <option value="Tarea 7">Tarea 7</option>
-  <option value="Tarea 8">Tarea 8</option>
-  <option value="Tarea 9">Tarea 9</option>
-  <option value="Tarea 10">Tarea 10</option>
-  <option value="Tarea 11">Tarea 11</option>
-  <option value="Tarea 12">Tarea 12</option>
-  <option value="Tarea 13">Tarea 13</option>
+  <option value="" disabled selected>Selecciona tarea</option>
+  <option value="Premontaje AT derecha">Premontaje AT derecha</option>
+  <option value="Montaje motor">Montaje motor</option>
+</select>
+
+<input type="number" id="tiempo" value="30" min="1" step="0.1"> min
+<br><br>
+
+<div id="cronometro">00:00</div>
+<div id="alerta"></div>
+
+<button onclick="iniciar()">Iniciar</button>
+<button onclick="pausar()">Pausar</button>
+<button onclick="reiniciar()">Reiniciar</button>
+
+<audio id="sonido" src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA="></audio>
+
+<script>
+let tiempoRestante=0, intervalo=null, tiempoInicio=0, wakeLock=null;
+
+async function wakeLockOn(){
+  if("wakeLock" in navigator){
+    try{ wakeLock = await navigator.wakeLock.request("screen"); }catch(e){ console.log(e); }
+  }
+}
+
+function iniciar(){
+  const t=parseFloat(document.getElementById("tiempo").value);
+  if(isNaN(t)) return alert("Indica tiempo");
+  if(!intervalo){
+    tiempoRestante=t*60; tiempoInicio=Date.now();
+    intervalo=setInterval(tick,1000);
+    wakeLockOn();
+    Notification.requestPermission();
+  }
+}
+
+function pausar(){ clearInterval(intervalo); intervalo=null; }
+function reiniciar(){ clearInterval(intervalo); intervalo=null; tiempoRestante=0;
+  document.getElementById("cronometro").textContent="00:00";
+  document.getElementById("alerta").textContent=""; }
+
+function tick(){
+  tiempoRestante--;
+  const m=Math.floor(tiempoRestante/60), s=tiempoRestante%60;
+  document.getElementById("cronometro").textContent=`${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  if(tiempoRestante===600) alerta("⚠ Quedan menos de 10 min");
+  if(tiempoRestante<=0){ clearInterval(intervalo); alerta("⏰ Tiempo terminado"); }
+}
+
+function alerta(msg){
+  document.getElementById("alerta").textContent=msg;
+  navigator.vibrate([400,200,400]);
+  document.getElementById("sonido").play().catch(()=>{});
+  if(Notification.permission==="granted")
+    new Notification("Control de Producción",{body:msg,icon:"icon-192.png"});
+}
+
+if("serviceWorker" in navigator)
+  navigator.serviceWorker.register("service-worker.js").then(()=>console.log("SW ok"));
+</script>
+</body>
+</html>  <option value="Tarea 13">Tarea 13</option>
   <option value="Tarea 14">Tarea 14</option>
   <option value="Tarea 15">Tarea 15</option>
   <option value="Tarea 16">Tarea 16</option>
