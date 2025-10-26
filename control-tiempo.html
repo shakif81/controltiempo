@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>⏱ Control de Tiempo — Instrucciones Mejoradas</title>
+  <style>
+    :root{--bg:#f5f6fa;--accent:#2ecc71;--danger:#e74c3c;--muted:#e9ecef;--card:#fff;--warning:#f39c12;}
+    body{font-family: 'Segoe UI', Arial, sans-serif;background:var(--bg);margin:0;padding:16px;display:flex;justify-content:center}
+    .wrap{width:100%;max-width:1200px}
+    h1{text-align:center;color:#2f3640;margin:0 0 12px}
+    label{display:block;margin-top:8px;color:#2f3640}
+    input,select,button{width:100%;padding:10px;border-radius:8px;border:1px solid #ccc;box-sizing:border-box;font-size:1rem}
+    .controls{display:grid;grid-template-columns:180px 1fr 1fr;gap:8px;align-items:end}
+    .row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+    #btnStart{background:#0984e3} #btnTerminar{background:var(--danger)} #btnReset{background:var(--accent)}
+    #cronometro{background:var(--muted);padding:8px;border-radius:8px;text-align:center;margin-top:8px}
+    .table-wrap{margin-top:12px;background:var(--card);border-radius:8px;padding:8px;overflow:auto}
+    table{width:100%;border-collapse:collapse;min-width:980px}
+    th,td{padding:8px;border:1px solid #e6e6e6;text-align:center;font-size:0.93rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    th{background:#f1f2f6}
+    
+    /* Eliminar flechas del input number */
+    #inpTiempo::-webkit-outer-spin-button,
+    #inpTiempo::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    #inpTiempo {
+      -moz-appearance: textfield;
+    }
+    
+    /* BARRA DE PROGRESO */
+    .progreso-container {
+      margin-top: 8px;
+      background: var(--muted);
+      padding: 8px;
+      border-radius: 8px;
+    }
+    .progreso-bar {
+      width: 100%;
+      height: 20px;
+      background: #f1f2f6;
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+    .progreso-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #2ecc71, #27ae60);
+      border-radius: 10px;
+      transition: width 0.3s ease, background 0.3s ease;
+      width: 0%;
+    }
+    .progreso-fill.excedido {
+      background: linear-gradient(90deg, #e74c3c, #c0392b);
+    }
+    .progreso-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: #2f3640;
+      pointer-events: none;
+    }
+    
+    .diff-plus{color:green;font-weight:700}
+    .diff-minus{color:red;font-weight:700}
+    
+    /* TOTAL FLOTANTE DEBAJO DE LA TABLA */
+    #floatingTotal{
+      position: sticky;
+      left: 0;
+      bottom: 0;
+      background: #fff;
+      border-radius: 10px;
+      padding: 12px 20px;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.12);
+      z-index: 1001;
+      font-weight: 700;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: center;
+      margin-top: 16px;
+      border: 2px solid var(--accent);
+    }
+    #toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;padding:10px 18px;border-radius:8px;display:none;z-index:1002}
+    
+    .tiempo-container {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .tiempo-input-group {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+    }
+    .tiempo-input-group input {
+      flex: 1;
+      margin: 0;
+      min-width: 0;
+      height: 42px;
+      box-sizing: border-box;
+    }
+    .tiempo-convertido {
+      background: var(--muted);
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #ddd;
+      flex: 1;
+      min-width: 0;
+      height: 42px;
+      box-sizing: border-box;
+    }
+    
+    /* FILTROS RESPONSIVE */
+    .filtros-container {
+      display: flex;
+      gap: 8px;
+      align-items: end;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .filtro-item {
+      flex: 1;
+      min-width: 150px;
+    }
+    .filtro-item.fecha {
+      min-width: 180px;
+    }
+    .filtro-item.operacion {
+      min-width: 220px;
+    }
+    .filtro-item.limpiar {
+      flex: 0 1 auto;
+      min-width: 140px;
+    }
+    .filtro-item.limpiar button {
+      white-space: nowrap;
+      background: var(--muted);
+      color: #666;
+      border: 1px solid #ddd;
+      transition: all 0.3s ease;
+    }
+    .filtro-item.limpiar button:hover {
+      background: #e0e0e0;
+      transform: translateY(-1px);
+    }
+    
+    /* MODAL DE INSTRUCCIONES MEJORADO */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      padding: 0;
+    }
+    
+    /* Para tablets - pantalla completa */
+    @media (min-width: 768px) and (max-width: 1024px) {
+      .modal-overlay {
+        padding: 0;
+      }
+      .modal-content {
+        width: 100vw;
+        height: 100vh;
+        max-width: none;
+        max-height: none;
+        border-radius: 0;
+      }
+    }
+    
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      max-width: 95%;
+      width: 100%;
+      max-height: 95vh;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    
+    .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--accent);
+      color: white;
+      border-radius: 12px 12px 0 0;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .modal-header h2 {
+      margin: 0;
+      flex: 1;
+    }
+    .close-modal {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      width: auto;
+      padding: 0;
+      margin: 0;
+    }
+    .modal-body {
+      padding: 20px;
+      min-height: 400px;
+    }
+    
+    /* PÁGINAS DE INSTRUCCIONES */
+    .instruccion-pagina {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    .instruccion-pagina.activo {
+      display: block;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    
+    @keyframes slideLeft {
+      from { transform: translateX(100%); }
+      to { transform: translateX(0); }
+    }
+    
+    @keyframes slideRight {
+      from { transform: translateX(-100%); }
+      to { transform: translateX(0); }
+    }
+    
+    /* NAVEGACIÓN MEJORADA */
+    .navegacion-pasos {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid #eee;
+      position: sticky;
+      bottom: 0;
+      background: white;
+      padding-bottom: 10px;
+    }
+    .btn-navegacion {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.3s ease;
+      width: auto;
+      min-width: 120px;
+    }
+    .btn-navegacion:hover {
+      background: #2980b9;
+    }
+    .btn-navegacion:disabled {
+      background: #bdc3c7;
+      cursor: not-allowed;
+    }
+    .btn-anterior {
+      background: #95a5a6;
+    }
+    .btn-anterior:hover {
+      background: #7f8c8d;
+    }
+    .contador-pasos {
+      font-weight: 600;
+      color: #2f3640;
+      font-size: 1rem;
+    }
+    
+    /* PÁGINA DE MATERIALES */
+    .materiales-lista {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .material-item {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      border-left: 4px solid #3498db;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .material-info {
+      flex: 1;
+    }
+    .material-nombre {
+      font-weight: 600;
+      color: #2f3640;
+      margin-bottom: 5px;
+    }
+    .material-descripcion {
+      color: #666;
+      font-size: 0.9rem;
+    }
+    .material-cantidad {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .cantidad-input {
+      width: 80px;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      text-align: center;
+    }
+    
+    /* ELEMENTOS CRÍTICOS */
+    .critico-item {
+      background: #fff3cd;
+      border: 2px solid #ffc107;
+      border-left: 6px solid #ffc107;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 15px 0;
+      animation: pulse 2s infinite;
+    }
+    .critico-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .critico-icon {
+      font-size: 1.5rem;
+    }
+    .critico-titulo {
+      font-weight: 700;
+      color: #856404;
+      margin: 0;
+    }
+    .critico-descripcion {
+      color: #856404;
+      margin: 0;
+    }
+    
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+    }
+    
+    /* HERRAMIENTAS */
+    .herramientas-lista {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .herramienta-item {
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      text-align: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .herramienta-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .herramienta-imagen {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      border: 1px solid #eee;
+    }
+    .herramienta-nombre {
+      font-weight: 600;
+      color: #2f3640;
+      font-size: 0.9rem;
+      margin-bottom: 5px;
+    }
+    .herramienta-descripcion {
+      color: #666;
+      font-size: 0.8rem;
+    }
+    
+    /* PASOS DE INSTRUCCIÓN */
+    .instruccion-paso {
+      margin-bottom: 25px;
+      padding: 25px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid var(--accent);
+    }
+    .instruccion-paso h3 {
+      margin: 0 0 15px 0;
+      color: #2f3640;
+      font-size: 1.3rem;
+    }
+    .instruccion-imagen {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin: 15px 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border: 1px solid #ddd;
+    }
+    .instruccion-video {
+      width: 100%;
+      height: 300px;
+      border-radius: 8px;
+      margin: 10px 0;
+    }
+    
+    /* INDICADORES DE PÁGINA */
+    .paginacion-indicadores {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin: 20px 0;
+    }
+    .indicador-pagina {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #ddd;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .indicador-pagina.activo {
+      background: var(--accent);
+    }
+    
+    /* BOTÓN VER INSTRUCCIONES */
+    .btn-instrucciones {
+      background: #9b59b6;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 8px;
+      width: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.3s ease;
+    }
+    .btn-instrucciones:hover {
+      background: #8e44ad;
+    }
+    .btn-instrucciones:disabled {
+      background: #bdc3c7;
+      cursor: not-allowed;
+    }
+    
+    .alerta-tiempo {
+      animation: pulse 1s infinite;
+      background: var(--warning) !important;
+    }
+    
+    /* RESPONSIVE MEJORADO */
+    @media(max-width: 1100px){
+      .filtros-container {
+        gap: 6px;
+      }
+      .filtro-item {
+        min-width: 140px;
+      }
+      .filtro-item.fecha {
+        min-width: 160px;
+      }
+      .filtro-item.operacion {
+        min-width: 200px;
+      }
+    }
+    
+    @media(max-width: 900px){ 
+      .controls{grid-template-columns:1fr} 
+      .row{flex-direction:column}
+      
+      .filtros-container {
+        flex-direction: column;
+        gap: 6px;
+      }
+      .filtro-item {
+        width: 100%;
+        min-width: auto;
+      }
+      .filtro-item.fecha,
+      .filtro-item.operacion {
+        min-width: auto;
+      }
+      .filtro-item.limpiar {
+        align-self: flex-end;
+        width: auto;
+        min-width: 140px;
+      }
+      
+      .materiales-lista {
+        grid-template-columns: 1fr;
+      }
+      
+      .herramientas-lista {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      }
+    }
+
+    @media(max-width: 600px){
+      .filtros-container {
+        gap: 4px;
+      }
+      .filtro-item.limpiar {
+        width: 100%;
+        min-width: auto;
+        align-self: stretch;
+      }
+      .filtro-item.limpiar button {
+        width: 100%;
+      }
+      
+      #floatingTotal {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+        flex-direction: column;
+        gap: 6px;
+        text-align: center;
+      }
+      
+      .tiempo-input-group {
+        flex-direction: column;
+        gap: 6px;
+      }
+      .tiempo-input-group input,
+      .tiempo-convertido {
+        width: 100%;
+      }
+      
+      .herramientas-lista {
+        grid-template-columns: 1fr;
+      }
+      
+      .navegacion-pasos {
+        flex-direction: column;
+        gap: 10px;
+      }
+      .btn-navegacion {
+        width: 100%;
+      }
+      
+      .material-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .material-cantidad {
+        align-self: stretch;
+        justify-content: space-between;
+      }
+    }
+
+    @media(max-width: 480px){
+      body {
+        padding: 12px 8px;
+      }
+      .wrap {
+        width: 100%;
+      }
+      .row {
+        gap: 6px;
+      }
+      .row button {
+        padding: 8px;
+        font-size: 0.9rem;
+      }
+      
+      #floatingTotal {
+        margin-top: 12px;
+        padding: 8px 12px;
+        font-size: 0.85rem;
+      }
+      
+      .filtros-container {
+        margin-top: 8px;
+      }
+      
+      .modal-body {
+        padding: 15px;
+      }
+      .instruccion-paso {
+        padding: 15px;
+        margin-bottom: 20px;
+      }
+      
+      .herramienta-imagen {
+        width: 60px;
+        height: 60px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>⏱ Control de Tiempo</h1>
+
+    <label for="inpOperacion">N° de Operación</label>
+    <input id="inpOperacion" placeholder="Ej: 234 o Lote 12">
+
+    <div class="controls" style="margin-top:6px">
+      <div>
+        <label for="selTipo">Tipo</label>
+        <select id="selTipo">
+          <option value="">— Selecciona tipo —</option>
+          <option value="DC3">DC3</option>
+          <option value="MS3">MS3</option>
+          <option value="Personalizada">Personalizada</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="selTarea">Tarea</label>
+        <select id="selTarea"><option value="">— Elige tipo primero —</option></select>
+        <div id="divPersonalizada" style="display:none;margin-top:6px">
+          <label for="inpNombrePersonalizado">Nombre personalizado</label>
+          <input id="inpNombrePersonalizado" placeholder="Nombre de tarea...">
+        </div>
+        
+        <!-- BOTÓN VER INSTRUCCIONES -->
+        <button id="btnInstrucciones" class="btn-instrucciones" disabled>
+          📚 Ver Instrucciones
+        </button>
+      </div>
+
+      <div class="tiempo-container">
+        <label for="inpTiempo">Tiempo estimado (horas)</label>
+        <div class="tiempo-input-group">
+          <input id="inpTiempo" type="number" step="0.01" min="0" placeholder="Ej: 1.50">
+          <div id="minutosConvertidos" class="tiempo-convertido">00:00:00</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="cronometro">Restante: 00:00:00</div>
+    
+    <div class="progreso-container">
+      <div class="progreso-bar">
+        <div class="progreso-fill" id="progresoFill"></div>
+        <div class="progreso-text" id="progresoText">0%</div>
+      </div>
+    </div>
+    
+    <div id="excedido" style="display:none;color:var(--danger);font-weight:700;margin-top:6px">-00:00:00 excedido</div>
+
+    <div class="row" style="margin-top:8px">
+      <button id="btnStart">Iniciar</button>
+      <button id="btnTerminar" disabled>Terminar</button>
+      <button id="btnReset">Reiniciar</button>
+      <button id="btnSilenciar">🔊 Silenciar</button>
+      <button id="btnTest">🔧 Probar alertas (1min)</button>
+      <button id="btnExportVisible">📥 Descargar tabla</button>
+      <button id="btnResetTabla">Resetear historial</button>
+      <!-- BOTÓN NUEVO PARA ADMINISTRADOR -->
+      <button id="btnAdmin" onclick="abrirAdministrador()">⚙️ Admin Tareas</button>
+    </div>
+
+    <label style="margin-top:8px"><input type="checkbox" id="chkNotifs" checked> Notificaciones activadas</label>
+    <div id="alerta" style="min-height:28px;margin-top:8px;text-align:center"></div>
+
+    <div class="filtros-container">
+      <div class="filtro-item fecha">
+        <label for="filtroFecha">Filtrar por fecha</label>
+        <input id="filtroFecha" type="date">
+      </div>
+      <div class="filtro-item operacion">
+        <label for="filtroOperacion">Filtrar por Nº de Operación</label>
+        <input id="filtroOperacion" placeholder="Ej: 234">
+      </div>
+      <div class="filtro-item limpiar">
+        <label for="filtroLimpiar">&nbsp;</label>
+        <button id="filtroLimpiar">🧹 Limpiar filtros</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table id="tabla">
+        <thead>
+          <tr>
+            <th>Nº Operación</th>
+            <th>Tipo</th>
+            <th>Tarea</th>
+            <th>Estimado</th>
+            <th>Tiempo Real</th>
+            <th>Diferencia</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- TOTAL MOVIDO DEBAJO DE LA TABLA -->
+    <div id="floatingTotal">
+      <div>Total día:</div>
+      <div id="floatingTotalValue" style="min-width:120px;text-align:center;color:green">+00:00:00</div>
+    </div>
+  </div>
+
+  <!-- MODAL DE INSTRUCCIONES MEJORADO -->
+  <div id="modalInstrucciones" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitulo">Instrucciones de Tarea</h2>
+        <button class="close-modal">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- Las instrucciones se cargarán aquí dinámicamente -->
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+  <audio id="beep" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" preload="auto"></audio>
+  <audio id="warningBeep" src="https://actions.google.com/sounds/v1/cartoon/cartoon_whistle.ogg" preload="auto"></audio>
+
+<script>
+// VARIABLES GLOBALES
+let inicioMs = 0;
+let rafId = null;
+let tiempoEstandar = 0;
+let silenciado = false;
+let alerta10minMostrada = false;
+let alerta5minMostrada = false;
+let alertaExcedidoMostrada = false;
+let modoPrueba = false;
+let intervaloVibracion = null;
+let vibracionActiva = false;
+
+// VARIABLES PARA NAVEGACIÓN MEJORADA
+let paginaActual = 0;
+let totalPaginas = 0;
+let instruccionActual = null;
+let startX = 0;
+let endX = 0;
+
+// TAREAS PREDEFINIDAS ORIGINALES
+const tareasBase = {
+  "Bandeja AT Derecha":1.27,
+  "Bandeja AT Izquierda":1.27,
+  "Contactor QA1200, QA2200":1.66,
+  "Contactor QA1240, QA2240":2.46,
+  "DCU":1.80,
+  "Contactor QB1242, QB2242, Transductores tensiones, condensador":2.11,
+  "Desmontar Caldereria y Placa Conectores":2.31,
+  "Psus, Switch, Bombas":1.62,
+  "Premecanico Transdutores Corriente Izquierdo":1.83,
+  "Premecanico Transductores Corriente Derecho":1.83,
+  "PreElectrico Transductores Corriente y BusBars":2.07,
+  "DC-LINK Superior y Inferior":2.19,
+  "Conexion SZ/KK y I/O":1.50
+};
+
+// SISTEMA DE INSTRUCCIONES MEJORADO
+function cargarInstruccionesTareas() {
+  const tareasGuardadas = JSON.parse(localStorage.getItem('tareasInstrucciones') || '{}');
+  
+  if (Object.keys(tareasGuardadas).length > 0) {
+    console.log('📁 Cargando tareas desde administrador:', Object.keys(tareasGuardadas).length);
+    return tareasGuardadas;
+  }
+  
+  // Tareas predeterminadas con materiales y elementos críticos
+  return {
+    "Bandeja AT Derecha": {
+      titulo: "Bandeja AT Derecha - Instalación Completa",
+      tipo: "DC3",
+      materiales: [
+        { nombre: "Tornillos M6x20", descripcion: "Tornillos de fijación", cantidad: 8, unidad: "unidades" },
+        { nombre: "Arandelas planas M6", descripcion: "Arandelas para tornillos", cantidad: 8, unidad: "unidades" },
+        { nombre: "Tornillos M8x30", descripcion: "Tornillos de anclaje", cantidad: 4, unidad: "unidades" },
+        { nombre: "Tuercas M6", descripcion: "Tuercas para fijación", cantidad: 8, unidad: "unidades" },
+        { nombre: "Separadores nylon", descripcion: "Separadores de 10mm", cantidad: 4, unidad: "unidades" }
+      ],
+      elementosCriticos: [
+        {
+          titulo: "PASTA TÉRMICA NECESARIA",
+          descripcion: "Aplicar pasta térmica entre el disipador y el componente antes del montaje. No operar sin pasta térmica.",
+          critico: true
+        },
+        {
+          titulo: "VERIFICAR AISLAMIENTO",
+          descripcion: "Comprobar que no hay cortocircuitos antes de energizar el sistema.",
+          critico: true
+        }
+      ],
+      herramientas: [
+        {
+          nombre: "Destornillador de estrella #2", 
+          imagen: "https://images.unsplash.com/photo-1581093458791-9d42c8a0652e?w=200&h=200&fit=crop",
+          descripcion: "Para tornillos de fijación"
+        },
+        {
+          nombre: "Alicates de corte", 
+          imagen: "https://images.unsplash.com/photo-1581093458872-5b8c6b883307?w=200&h=200&fit=crop",
+          descripcion: "Para cortar cables sobrantes"
+        },
+        {
+          nombre: "Llave allen 4mm", 
+          imagen: "https://images.unsplash.com/photo-1581093459086-4c64cee5457c?w=200&h=200&fit=crop",
+          descripcion: "Para tornillos de seguridad"
+        },
+        {
+          nombre: "Multímetro digital", 
+          imagen: "https://images.unsplash.com/photo-1581093458707-84093d116105?w=200&h=200&fit=crop",
+          descripcion: "Para verificar tensiones"
+        }
+      ],
+      pasos: [
+        {
+          titulo: "Preparación del área",
+          descripcion: "Desconectar la alimentación eléctrica y verificar ausencia de tensión con el multímetro. Limpiar la superficie de instalación y asegurar que el área esté libre de obstáculos.",
+          imagen: "https://images.unsplash.com/photo-1581093458791-9d42c8a0652e?w=500&h=300&fit=crop",
+          video: null
+        },
+        {
+          titulo: "Montaje de soportes",
+          descripcion: "Instalar los soportes de fijación a la distancia especificada en el manual (normalmente 60cm entre soportes). Verificar la alineación con nivel láser.",
+          imagen: "https://images.unsplash.com/photo-1581093458872-5b8c6b883307?w=500&h=300&fit=crop",
+          video: null
+        },
+        {
+          titulo: "Instalación de bandeja",
+          descripcion: "Colocar la bandeja sobre los soportes y fijar con tornillos autorroscantes. Verificar nivelación y ajustar si es necesario.",
+          imagen: "https://images.unsplash.com/photo-1581093458707-84093d116105?w=500&h=300&fit=crop",
+          video: null
+        },
+        {
+          titulo: "Verificación final",
+          descripcion: "Realizar prueba de resistencia y verificar que todos los tornillos estén bien apretados. Comprobar que no haya bordes afilados.",
+          imagen: "https://images.unsplash.com/photo-1581093458972-657c2a61b6b4?w=500&h=300&fit=crop",
+          video: null
+        }
+      ]
+    }
+  };
+}
+
+let instruccionesTareas = cargarInstruccionesTareas();
+
+// FUNCIÓN PARA ABRIR ADMINISTRADOR
+function abrirAdministrador() {
+  window.open('admin-tareas.html', '_blank');
+}
+
+// SISTEMA DE INSTRUCCIONES MEJORADO CON PÁGINAS
+function mostrarInstrucciones() {
+  const tareaSeleccionada = document.getElementById('selTarea').value;
+  const instruccion = instruccionesTareas[tareaSeleccionada];
+  
+  if (!instruccion) {
+    toast('📝 No hay instrucciones disponibles para esta tarea', '#f39c12');
+    return;
+  }
+  
+  const modal = document.getElementById('modalInstrucciones');
+  const titulo = document.getElementById('modalTitulo');
+  const body = document.getElementById('modalBody');
+  
+  // Configurar título
+  titulo.textContent = instruccion.titulo;
+  
+  // Guardar instrucción actual
+  instruccionActual = instruccion;
+  paginaActual = 0;
+  
+  // Calcular total de páginas (materiales + pasos)
+  totalPaginas = 1 + (instruccion.pasos ? instruccion.pasos.length : 0); // +1 para la página de materiales
+  
+  // Construir contenido con páginas
+  let contenidoHTML = `
+    <div class="paginacion-indicadores" id="paginacionIndicadores">
+      ${Array.from({length: totalPaginas}, (_, i) => 
+        `<div class="indicador-pagina ${i === 0 ? 'activo' : ''}" onclick="cambiarPagina(${i})"></div>`
+      ).join('')}
+    </div>
+    
+    <div id="contenedor-paginas">
+      <!-- PÁGINA 1: MATERIALES Y HERRAMIENTAS -->
+      <div class="instruccion-pagina activo" id="pagina-0">
+        <h3 style="color: #2f3640; margin-bottom: 20px;">📦 Materiales y Herramientas Requeridas</h3>
+        
+        <!-- ELEMENTOS CRÍTICOS -->
+        ${instruccion.elementosCriticos ? instruccion.elementosCriticos.map(critico => `
+          <div class="critico-item">
+            <div class="critico-header">
+              <span class="critico-icon">⚠️</span>
+              <h4 class="critico-titulo">${critico.titulo}</h4>
+            </div>
+            <p class="critico-descripcion">${critico.descripcion}</p>
+          </div>
+        `).join('') : ''}
+        
+        <!-- LISTA DE MATERIALES -->
+        <h4 style="color: #2f3640; margin: 25px 0 15px 0;">🔩 Materiales Necesarios</h4>
+        <div class="materiales-lista">
+          ${instruccion.materiales ? instruccion.materiales.map((material, index) => `
+            <div class="material-item">
+              <div class="material-info">
+                <div class="material-nombre">${material.nombre}</div>
+                <div class="material-descripcion">${material.descripcion}</div>
+              </div>
+              <div class="material-cantidad">
+                <input type="number" 
+                       class="cantidad-input" 
+                       value="${material.cantidad}" 
+                       min="0" 
+                       onchange="actualizarCantidadMaterial(${index}, this.value)"
+                       id="material-${index}">
+                <span>${material.unidad}</span>
+              </div>
+            </div>
+          `).join('') : '<p>No se especificaron materiales</p>'}
+        </div>
+        
+        <!-- HERRAMIENTAS -->
+        <h4 style="color: #2f3640; margin: 25px 0 15px 0;">🛠️ Herramientas</h4>
+        <div class="herramientas-lista">
+          ${instruccion.herramientas ? instruccion.herramientas.map(herramienta => {
+            const imagenSrc = herramienta.imagen || 'https://via.placeholder.com/80x80/cccccc/969696?text=🛠️';
+            return `
+              <div class="herramienta-item">
+                <img src="${imagenSrc}" alt="${herramienta.nombre}" class="herramienta-imagen">
+                <div class="herramienta-nombre">${herramienta.nombre}</div>
+                <div class="herramienta-descripcion">${herramienta.descripcion || ''}</div>
+              </div>
+            `;
+          }).join('') : '<p>No se especificaron herramientas</p>'}
+        </div>
+      </div>
+      
+      <!-- PÁGINAS DE PASOS -->
+      ${instruccion.pasos ? instruccion.pasos.map((paso, index) => {
+        const imagenSrc = paso.imagen || 'https://via.placeholder.com/500x300/cccccc/969696?text=Imagen+del+Paso';
+        return `
+          <div class="instruccion-pagina" id="pagina-${index + 1}">
+            <div class="instruccion-paso">
+              <h3>Paso ${index + 1}: ${paso.titulo}</h3>
+              <p>${paso.descripcion}</p>
+              <img src="${imagenSrc}" alt="Paso ${index + 1}" class="instruccion-imagen">
+              ${paso.video ? `
+                <video controls class="instruccion-video">
+                  <source src="${paso.video}" type="video/mp4">
+                  Tu navegador no soporta el elemento video.
+                </video>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('') : ''}
+    </div>
+    
+    <!-- NAVEGACIÓN -->
+    <div class="navegacion-pasos">
+      <button class="btn-navegacion btn-anterior" id="btnAnterior" onclick="paginaAnterior()" disabled>
+        ⬅️ Anterior
+      </button>
+      <div class="contador-pasos" id="contadorPasos">
+        Página 1 de ${totalPaginas}
+      </div>
+      <button class="btn-navegacion btn-siguiente" id="btnSiguiente" onclick="paginaSiguiente()">
+        ${paginaActual === totalPaginas - 1 ? 'Finalizar' : 'Siguiente ➡️'}
+      </button>
+    </div>
+  `;
+  
+  body.innerHTML = contenidoHTML;
+  modal.style.display = 'flex';
+  
+  // Configurar eventos táctiles
+  configurarEventosTactiles();
+  
+  // Actualizar navegación inicial
+  actualizarNavegacion();
+}
+
+// CONFIGURAR EVENTOS TÁCTILES PARA SWIPE
+function configurarEventosTactiles() {
+  const modalBody = document.getElementById('modalBody');
+  
+  modalBody.addEventListener('touchstart', function(e) {
+    startX = e.changedTouches[0].screenX;
+  }, false);
+  
+  modalBody.addEventListener('touchend', function(e) {
+    endX = e.changedTouches[0].screenX;
+    handleSwipe();
+  }, false);
+}
+
+function handleSwipe() {
+  const diffX = endX - startX;
+  const swipeThreshold = 50; // Mínimo de pixels para considerar un swipe
+  
+  if (Math.abs(diffX) > swipeThreshold) {
+    if (diffX > 0) {
+      // Swipe derecha a izquierda - anterior
+      paginaAnterior();
+    } else {
+      // Swipe izquierda a derecha - siguiente
+      paginaSiguiente();
+    }
+  }
+}
+
+// FUNCIONES DE NAVEGACIÓN
+function cambiarPagina(nuevaPagina) {
+  if (nuevaPagina >= 0 && nuevaPagina < totalPaginas) {
+    // Ocultar página actual
+    document.getElementById(`pagina-${paginaActual}`).classList.remove('activo');
+    
+    // Mostrar nueva página con animación
+    const nuevaPaginaElement = document.getElementById(`pagina-${nuevaPagina}`);
+    nuevaPaginaElement.classList.add('activo');
+    
+    paginaActual = nuevaPagina;
+    actualizarNavegacion();
+  }
+}
+
+function paginaAnterior() {
+  if (paginaActual > 0) {
+    cambiarPagina(paginaActual - 1);
+  }
+}
+
+function paginaSiguiente() {
+  if (paginaActual < totalPaginas - 1) {
+    cambiarPagina(paginaActual + 1);
+  } else {
+    // Finalizar
+    document.getElementById('modalInstrucciones').style.display = 'none';
+    toast('✅ Tutorial completado', '#2ecc71');
+  }
+}
+
+function actualizarNavegacion() {
+  const btnAnterior = document.getElementById('btnAnterior');
+  const btnSiguiente = document.getElementById('btnSiguiente');
+  const contadorPasos = document.getElementById('contadorPasos');
+  const indicadores = document.querySelectorAll('.indicador-pagina');
+  
+  if (!btnAnterior || !btnSiguiente) return;
+  
+  // Actualizar contador
+  contadorPasos.textContent = `Página ${paginaActual + 1} de ${totalPaginas}`;
+  
+  // Actualizar estado de botones
+  btnAnterior.disabled = paginaActual === 0;
+  btnSiguiente.textContent = paginaActual === totalPaginas - 1 ? 'Finalizar ✅' : 'Siguiente ➡️';
+  
+  // Actualizar indicadores
+  indicadores.forEach((indicador, index) => {
+    if (index === paginaActual) {
+      indicador.classList.add('activo');
+    } else {
+      indicador.classList.remove('activo');
+    }
+  });
+}
+
+// ACTUALIZAR CANTIDADES DE MATERIAL
+function actualizarCantidadMaterial(index, nuevaCantidad) {
+  console.log(`Material ${index} actualizado a: ${nuevaCantidad}`);
+  // Aquí puedes guardar las cantidades en localStorage si es necesario
+  localStorage.setItem(`material_${index}`, nuevaCantidad);
+}
+
+// GESTIÓN DE MODAL
+document.getElementById('btnInstrucciones').addEventListener('click', mostrarInstrucciones);
+
+document.querySelector('.close-modal').addEventListener('click', function() {
+  document.getElementById('modalInstrucciones').style.display = 'none';
+});
+
+document.getElementById('modalInstrucciones').addEventListener('click', function(e) {
+  if (e.target === this) {
+    this.style.display = 'none';
+  }
+});
+
+// ACTUALIZAR BOTÓN INSTRUCCIONES
+function actualizarBotonInstrucciones() {
+  const tareaSeleccionada = document.getElementById('selTarea').value;
+  const btnInstrucciones = document.getElementById('btnInstrucciones');
+  
+  if (tareaSeleccionada && instruccionesTareas[tareaSeleccionada]) {
+    btnInstrucciones.disabled = false;
+    btnInstrucciones.title = `Ver instrucciones para ${tareaSeleccionada}`;
+  } else {
+    btnInstrucciones.disabled = true;
+    btnInstrucciones.title = 'No hay instrucciones disponibles para esta tarea';
+  }
+}
+
+// ... (EL RESTO DEL CÓDIGO DE LA PÁGINA PRINCIPAL SE MANTIENE IGUAL)
+// [FUNCIONES BÁSICAS, STORAGE, CONTROL DE TIEMPO, ETC.]
+
+// FUNCIONES BÁSICAS ORIGINALES
+function formatear(ms){
+  const t = Math.floor(Math.abs(ms)/1000);
+  const h = String(Math.floor(t/3600)).padStart(2,'0');
+  const m = String(Math.floor((t%3600)/60)).padStart(2,'0');
+  const s = String(t%60).padStart(2,'0');
+  return `${h}:${m}:${s}`;
+}
+
+function convertDec(h){
+  const t = Math.round(h*3600);
+  const hh = Math.floor(t/3600), mm = Math.floor((t%3600)/60), ss = t%60;
+  return `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+}
+
+function msFromHHMMSS(hhmmss){
+  const parts = (hhmmss||'00:00:00').split(':').map(x=>parseInt(x,10)||0);
+  return ((parts[0]*3600)+(parts[1]*60)+parts[2]) * 1000;
+}
+
+function toast(msg, color='#2ecc71'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.style.background=color;
+  t.style.display='block';
+  setTimeout(()=>t.style.display='none',2400);
+}
+
+// GESTIÓN DE TAREAS ORIGINAL
+function fillTareasForTipo(tipo){
+  const selTarea = document.getElementById('selTarea');
+  selTarea.innerHTML = '';
+  document.getElementById('inpNombrePersonalizado').value = '';
+
+  if(!tipo){
+    selTarea.innerHTML = '<option value="">— Elige tipo primero —</option>';
+    document.getElementById('divPersonalizada').style.display = 'none';
+    selTarea.style.display = 'block';
+    actualizarBotonInstrucciones();
+    return;
+  }
+
+  if(tipo === 'Personalizada'){
+    selTarea.style.display = 'none';
+    document.getElementById('divPersonalizada').style.display = 'block';
+    actualizarBotonInstrucciones();
+    return;
+  }
+
+  document.getElementById('divPersonalizada').style.display = 'none';
+  selTarea.style.display = 'block';
+
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = '— Selecciona tarea —';
+  selTarea.appendChild(placeholder);
+
+  // Cargar tareas base desde localStorage (actualizadas por el administrador)
+  const tareasBaseActualizadas = JSON.parse(localStorage.getItem('tareasBase') || '{}');
+  
+  // Combinar tareas predeterminadas con las actualizadas
+  const todasLasTareas = {...tareasBase, ...tareasBaseActualizadas};
+
+  Object.entries(todasLasTareas).forEach(([nombre, horas])=>{
+    // Solo mostrar tareas del tipo seleccionado
+    const tareaInfo = instruccionesTareas[nombre];
+    if (!tareaInfo || tareaInfo.tipo === tipo) {
+      const o = document.createElement('option');
+      o.value = nombre;
+      o.textContent = nombre;
+      selTarea.appendChild(o);
+    }
+  });
+  
+  actualizarBotonInstrucciones();
+}
+
+// RENDER TABLA ORIGINAL
+function renderTabla(){
+  const tbody = document.querySelector('#tabla tbody');
+  tbody.innerHTML = '';
+  const hist = JSON.parse(localStorage.getItem('historial')||'[]');
+  
+  const fechaFiltro = document.getElementById('filtroFecha').value;
+  const operacionFiltro = document.getElementById('filtroOperacion').value.trim().toLowerCase();
+  let totalMs = 0;
+  
+  const registrosFiltrados = hist.filter(r => {
+    const fechaRegistro = r.fecha.slice(0,10);
+    const operacionRegistro = (r.operacion || '').toLowerCase();
+    
+    if (fechaFiltro && fechaRegistro !== fechaFiltro) return false;
+    if (operacionFiltro && !operacionRegistro.includes(operacionFiltro)) return false;
+    return true;
+  });
+  
+  registrosFiltrados.forEach(r => {
+    const diferenciaMs = msFromHHMMSS(r.diferencia);
+    totalMs += (r.signo === '+') ? diferenciaMs : -diferenciaMs;
+    
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.operacion || ''}</td>
+      <td>${r.tipo || ''}</td>
+      <td>${r.nombre || ''}</td>
+      <td>${r.estimado || ''}</td>
+      <td>${r.real || '00:00:00'}</td>
+      <td class="${r.signo === '+' ? 'diff-plus' : 'diff-minus'}">${r.signo}${r.diferencia}</td>
+      <td>${new Date(r.fecha).toLocaleString('es-ES')}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const signoTotal = totalMs >= 0 ? '+' : '-';
+  const totalFormateado = formatear(Math.abs(totalMs));
+  document.getElementById('floatingTotalValue').textContent = `${signoTotal}${totalFormateado}`;
+  document.getElementById('floatingTotalValue').style.color = totalMs >= 0 ? 'green' : 'red';
+}
+
+// STORAGE ORIGINAL
+function guardarTareaActiva(){
+  if(!inicioMs) return;
+  
+  const tareaActiva = {
+    inicio: inicioMs,
+    tiempoEstandar: tiempoEstandar,
+    operacion: document.getElementById('inpOperacion').value.trim(),
+    tipo: document.getElementById('selTipo').value,
+    tarea: document.getElementById('selTipo').value === 'Personalizada' ? 
+      (document.getElementById('inpNombrePersonalizado').value||'Sin nombre') : 
+      document.getElementById('selTarea').value,
+    personalizada: document.getElementById('inpNombrePersonalizado').value||'',
+    alerta10minMostrada: alerta10minMostrada,
+    alerta5minMostrada: alerta5minMostrada,
+    alertaExcedidoMostrada: alertaExcedidoMostrada,
+    modoPrueba: modoPrueba
+  };
+  
+  localStorage.setItem('tareaActiva', JSON.stringify(tareaActiva));
+}
+
+function leerTareaActiva(){
+  try{ return JSON.parse(localStorage.getItem('tareaActiva')||'null'); }catch(e){ return null; }
+}
+
+function borrarTareaActiva(){ localStorage.removeItem('tareaActiva'); }
+
+// FUNCIONES PRINCIPALES ORIGINALES
+function iniciar(){
+  const inpOperacion = document.getElementById('inpOperacion');
+  const selTipo = document.getElementById('selTipo');
+  const selTarea = document.getElementById('selTarea');
+  const inpTiempo = document.getElementById('inpTiempo');
+  
+  if(!inpOperacion.value.trim()){ toast('Introduce Nº de Operación', '#e74c3c'); return; }
+  if(!selTipo.value){ toast('Selecciona tipo', '#e74c3c'); return; }
+  if(selTipo.value !== 'Personalizada' && !selTarea.value){ toast('Selecciona una tarea', '#e74c3c'); return; }
+  const v = parseFloat(inpTiempo.value);
+  if(isNaN(v) || v <= 0){ toast('Introduce un tiempo válido', '#e74c3c'); return; }
+  if(rafId) return;
+
+  tiempoEstandar = v;
+  inicioMs = Date.now();
+  alerta10minMostrada = false;
+  alerta5minMostrada = false;
+  alertaExcedidoMostrada = false;
+  modoPrueba = false;
+
+  document.getElementById('excedido').style.display = 'none';
+  document.getElementById('progresoFill').style.width = '0%';
+  document.getElementById('progresoText').textContent = '0%';
+  document.getElementById('progresoFill').classList.remove('excedido');
+  document.getElementById('btnStart').disabled = true;
+  document.getElementById('btnTerminar').disabled = false;
+
+  guardarTareaActiva();
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = requestAnimationFrame(loop);
+}
+
+function actualizarTiempo(){
+  if(!inicioMs) return;
+  
+  const elapsed = Date.now() - inicioMs;
+  const estimMs = modoPrueba ? (tiempoEstandar * 1000) : (tiempoEstandar * 3600000);
+  const restante = estimMs - elapsed;
+
+  if (restante >= 0) {
+    document.getElementById('cronometro').textContent = `Restante: ${formatear(restante)}`;
+    document.getElementById('cronometro').style.color = '';
+  } else {
+    document.getElementById('cronometro').textContent = `Excedido: -${formatear(Math.abs(restante))}`;
+    document.getElementById('cronometro').style.color = 'var(--danger)';
+  }
+
+  const progreso = Math.min(100, (elapsed / estimMs) * 100);
+  document.getElementById('progresoFill').style.width = `${progreso}%`;
+  document.getElementById('progresoText').textContent = `${Math.round(progreso)}%`;
+
+  const restanteMs = restante;
+  const MINUTO_MS = 60 * 1000;
+  const factorEscala = modoPrueba ? 60 : 1;
+  const umbral10minAjustado = (10 * MINUTO_MS) / factorEscala;
+  const umbral5minAjustado = (5 * MINUTO_MS) / factorEscala;
+  
+  if(restanteMs <= umbral10minAjustado && restanteMs > umbral5minAjustado && !alerta10minMostrada){
+    mostrarAlerta('⚠️ Quedan menos de 10 minutos', 'warning');
+    alerta10minMostrada = true;
+    guardarTareaActiva();
+  }
+  
+  if(restanteMs <= umbral5minAjustado && restanteMs > 0 && !alerta5minMostrada){
+    mostrarAlerta('🚨 Quedan menos de 5 minutos', 'danger');
+    alerta5minMostrada = true;
+    guardarTareaActiva();
+  }
+
+  if(restanteMs <= 0 && !alertaExcedidoMostrada){
+    document.getElementById('progresoFill').classList.add('excedido');
+    document.getElementById('excedido').style.display = 'block';
+    document.getElementById('excedido').textContent = `-${formatear(Math.abs(restanteMs))} excedido`;
+    mostrarAlerta('⏰ Tiempo excedido', 'danger');
+    alertaExcedidoMostrada = true;
+    guardarTareaActiva();
+  }
+}
+
+function mostrarAlerta(mensaje, tipo){
+  const alerta = document.getElementById('alerta');
+  alerta.textContent = mensaje;
+  alerta.style.background = '';
+  alerta.style.color = '';
+  
+  if(tipo === 'warning'){
+    alerta.style.background = 'var(--warning)';
+    alerta.style.color = '#fff';
+  } else if(tipo === 'danger'){
+    alerta.style.background = 'var(--danger)';
+    alerta.style.color = '#fff';
+  }
+}
+
+function loop(){
+  actualizarTiempo();
+  if (Date.now() % 5000 < 16) guardarTareaActiva();
+  rafId = requestAnimationFrame(loop);
+}
+
+function terminar(){
+  if(!inicioMs) return;
+  if(rafId){ cancelAnimationFrame(rafId); rafId = null; }
+
+  const trans = Date.now() - inicioMs;
+  const estimMs = modoPrueba ? (tiempoEstandar * 1000) : (tiempoEstandar * 3600000);
+  const restante = estimMs - trans;
+  const signo = restante >= 0 ? '+' : '-';
+  const diferencia = formatear(Math.abs(restante));
+  
+  const oper = document.getElementById('inpOperacion').value.trim();
+  const tipo = document.getElementById('selTipo').value;
+  const tareaNombre = tipo === 'Personalizada' ? 
+    (document.getElementById('inpNombrePersonalizado').value||'Sin nombre') : 
+    document.getElementById('selTarea').value;
+
+  const tareaObj = {
+    operacion: oper,
+    tipo: tipo,
+    nombre: tareaNombre,
+    estimado: tiempoEstandar,
+    real: formatear(trans),
+    diferencia: diferencia,
+    signo: signo,
+    fecha: new Date().toISOString()
+  };
+
+  const h = JSON.parse(localStorage.getItem('historial')||'[]'); 
+  h.push(tareaObj); 
+  localStorage.setItem('historial', JSON.stringify(h));
+  
+  borrarTareaActiva();
+  toast('✅ Tarea guardada', '#2ecc71');
+  renderTabla();
+  reiniciar();
+}
+
+function reiniciar(){
+  if(rafId){ cancelAnimationFrame(rafId); rafId = null; }
+  inicioMs = 0; 
+  tiempoEstandar = 0; 
+  alerta10minMostrada = false;
+  alerta5minMostrada = false;
+  alertaExcedidoMostrada = false;
+  modoPrueba = false;
+  
+  document.getElementById('cronometro').textContent = 'Restante: 00:00:00';
+  document.getElementById('cronometro').style.color = '';
+  document.getElementById('alerta').textContent = ''; 
+  document.getElementById('excedido').style.display = 'none';
+  document.getElementById('progresoFill').style.width = '0%';
+  document.getElementById('progresoText').textContent = '0%';
+  document.getElementById('progresoFill').classList.remove('excedido');
+  document.getElementById('btnStart').disabled = false;
+  document.getElementById('btnTerminar').disabled = true;
+}
+
+function restaurarTareaActiva(){
+  const tareaActiva = leerTareaActiva();
+  if(!tareaActiva) return false;
+  
+  document.getElementById('inpOperacion').value = tareaActiva.operacion || '';
+  document.getElementById('selTipo').value = tareaActiva.tipo || '';
+  fillTareasForTipo(tareaActiva.tipo);
+  
+  if(tareaActiva.tipo === 'Personalizada'){
+    document.getElementById('inpNombrePersonalizado').value = tareaActiva.personalizada || '';
+  } else {
+    setTimeout(() => {
+      document.getElementById('selTarea').value = tareaActiva.tarea || '';
+      actualizarBotonInstrucciones();
+    }, 100);
+  }
+  
+  document.getElementById('inpTiempo').value = tareaActiva.tiempoEstandar || '';
+  document.getElementById('minutosConvertidos').textContent = convertDec(tareaActiva.tiempoEstandar || 0);
+  
+  inicioMs = tareaActiva.inicio;
+  tiempoEstandar = tareaActiva.tiempoEstandar;
+  alerta10minMostrada = tareaActiva.alerta10minMostrada || false;
+  alerta5minMostrada = tareaActiva.alerta5minMostrada || false;
+  alertaExcedidoMostrada = tareaActiva.alertaExcedidoMostrada || false;
+  modoPrueba = tareaActiva.modoPrueba || false;
+  
+  document.getElementById('btnStart').disabled = true;
+  document.getElementById('btnTerminar').disabled = false;
+  
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = requestAnimationFrame(loop);
+  
+  toast('⏱ Tarea activa restaurada', '#f39c12');
+  return true;
+}
+
+// EVENT LISTENERS ORIGINALES
+document.getElementById('selTipo').addEventListener('change', function(){
+  fillTareasForTipo(this.value);
+});
+
+document.getElementById('selTarea').addEventListener('change', function(){
+  const t = this.value;
+  if(t && tareasBase[t] !== undefined){
+    document.getElementById('inpTiempo').value = tareasBase[t];
+    document.getElementById('minutosConvertidos').textContent = convertDec(tareasBase[t]);
+  }
+  actualizarBotonInstrucciones();
+});
+
+document.getElementById('inpTiempo').addEventListener('input', function(){
+  const v = parseFloat(this.value);
+  document.getElementById('minutosConvertidos').textContent = (!isNaN(v) && v>0) ? convertDec(v) : '00:00:00';
+});
+
+document.getElementById('btnStart').addEventListener('click', iniciar);
+document.getElementById('btnTerminar').addEventListener('click', terminar);
+document.getElementById('btnReset').addEventListener('click', reiniciar);
+document.getElementById('btnSilenciar').addEventListener('click', function(){ 
+  silenciado = !silenciado;
+  this.textContent = silenciado ? '🔇 Silenciado' : '🔊 Sonidos activados';
+  toast(silenciado ? '🔇 Silenciado' : '🔊 Sonidos activados', silenciado ? '#b2bec3' : '#27ae60'); 
+});
+
+document.getElementById('btnTest').addEventListener('click', function(){
+  document.getElementById('inpOperacion').value = 'TEST';
+  document.getElementById('selTipo').value = 'DC3';
+  fillTareasForTipo('DC3');
+  document.getElementById('selTarea').value = 'DCU';
+  document.getElementById('inpTiempo').value = '0.5';
+  
+  tiempoEstandar = 1;
+  inicioMs = Date.now();
+  alerta10minMostrada = false;
+  alerta5minMostrada = false;
+  alertaExcedidoMostrada = false;
+  modoPrueba = true;
+  
+  document.getElementById('btnStart').disabled = true;
+  document.getElementById('btnTerminar').disabled = false;
+  guardarTareaActiva();
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = requestAnimationFrame(loop);
+  toast('🔧 Modo prueba activado - 1 minuto', '#f39c12');
+});
+
+document.getElementById('btnResetTabla').addEventListener('click', function(){ 
+  if(confirm('¿Borrar todo el historial?')){ 
+    localStorage.removeItem('historial'); 
+    localStorage.removeItem('tareaActiva');
+    renderTabla(); 
+    reiniciar();
+    toast('🗑 Histórico borrado','#e74c3c'); 
+  }
+});
+
+document.getElementById('filtroFecha').addEventListener('change', renderTabla);
+document.getElementById('filtroOperacion').addEventListener('input', renderTabla);
+document.getElementById('filtroLimpiar').addEventListener('click', function() {
+  document.getElementById('filtroFecha').value = '';
+  document.getElementById('filtroOperacion').value = '';
+  renderTabla();
+  toast('🧹 Filtros limpiados', '#b2bec3');
+});
+
+// INICIALIZACIÓN ORIGINAL
+window.addEventListener('load', ()=>{
+  fillTareasForTipo('');
+  const hoy = new Date().toISOString().slice(0,10);
+  document.getElementById('filtroFecha').value = hoy;
+  renderTabla();
+  
+  setTimeout(() => {
+    if (!restaurarTareaActiva()) {
+      console.log('🚀 Aplicación iniciada');
+    }
+  }, 500);
+});
+
+window.addEventListener('beforeunload', function() {
+  if (inicioMs) guardarTareaActiva();
+});
+</script>
+</body>
+</html>

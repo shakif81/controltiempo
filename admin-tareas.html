@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>🛠️ Administrador de Tareas</title>
+  <style>
+    :root {
+      --bg: #f5f6fa;
+      --accent: #2ecc71;
+      --danger: #e74c3c;
+      --warning: #f39c12;
+      --card: #fff;
+      --muted: #e9ecef;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      margin: 0;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    
+    h1 {
+      text-align: center;
+      color: #2f3640;
+      margin-bottom: 30px;
+    }
+    
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .nav-buttons button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+    
+    .btn-secondary {
+      background: #3498db;
+      color: white;
+    }
+    
+    .nav-buttons button:hover {
+      transform: translateY(-2px);
+    }
+    
+    .form-section {
+      background: var(--muted);
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 25px;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+      color: #2f3640;
+    }
+    
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      box-sizing: border-box;
+    }
+    
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    
+    .array-item {
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+    }
+    
+    .array-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .array-header h4 {
+      margin: 0;
+      color: #2f3640;
+    }
+    
+    .btn-small {
+      padding: 5px 10px;
+      font-size: 0.8rem;
+      background: var(--danger);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .btn-add {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    
+    .tareas-lista {
+      margin-top: 20px;
+    }
+    
+    .tarea-item {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .tarea-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .tarea-nombre {
+      font-weight: 600;
+      color: #2f3640;
+      font-size: 1.1rem;
+    }
+    
+    .tarea-acciones {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .btn-edit {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+    
+    .btn-delete {
+      background: var(--danger);
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+    
+    .tarea-detalles {
+      color: #666;
+      font-size: 0.9rem;
+    }
+    
+    .tarea-tipo {
+      display: inline-block;
+      background: #3498db;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      margin-left: 10px;
+    }
+    
+    .tarea-tipo.dc3 { background: #2ecc71; }
+    .tarea-tipo.ms3 { background: #e74c3c; }
+    .tarea-tipo.personalizada { background: #9b59b6; }
+    
+    .hidden {
+      display: none;
+    }
+    
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 6px;
+      display: none;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🛠️ Administrador de Tareas</h1>
+    
+    <div class="nav-buttons">
+      <button class="btn-primary" onclick="mostrarSeccion('formulario')">➕ Añadir Tarea</button>
+      <button class="btn-secondary" onclick="mostrarSeccion('lista')">📋 Ver Tareas</button>
+      <button class="btn-secondary" onclick="location.href='control-tiempo.html'">⏱ Ir a Control Tiempo</button>
+    </div>
+    
+    <!-- FORMULARIO -->
+    <div id="formulario" class="form-section">
+      <h3>📝 Añadir/Editar Tarea</h3>
+      
+      <div class="form-group">
+        <label for="tareaNombre">Nombre de la Tarea *</label>
+        <input type="text" id="tareaNombre" placeholder="Ej: Bandeja AT Derecha">
+      </div>
+      
+      <div class="form-group">
+        <label for="tareaTipo">Tipo de Tarea *</label>
+        <select id="tareaTipo">
+          <option value="">— Selecciona tipo —</option>
+          <option value="DC3">DC3</option>
+          <option value="MS3">MS3</option>
+          <option value="Personalizada">Personalizada</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="tareaTitulo">Título Descriptivo *</label>
+        <input type="text" id="tareaTitulo" placeholder="Ej: Instalación Completa">
+      </div>
+      
+      <div class="form-group">
+        <label for="tareaTiempo">Tiempo Estimado (horas) *</label>
+        <input type="number" id="tareaTiempo" step="0.01" min="0" placeholder="Ej: 1.27">
+      </div>
+      
+      <h4>🛠️ Herramientas</h4>
+      <div id="herramientasContainer"></div>
+      <button type="button" class="btn-add" onclick="agregarHerramienta()">➕ Añadir Herramienta</button>
+      
+      <h4>📋 Pasos</h4>
+      <div id="pasosContainer"></div>
+      <button type="button" class="btn-add" onclick="agregarPaso()">➕ Añadir Paso</button>
+      
+      <div style="margin-top: 20px; display: flex; gap: 10px;">
+        <button class="btn-primary" onclick="guardarTarea()">💾 Guardar Tarea</button>
+        <button class="btn-small" onclick="limpiarFormulario()">🗑️ Limpiar</button>
+      </div>
+    </div>
+    
+    <!-- LISTA -->
+    <div id="lista" class="form-section hidden">
+      <h3>📋 Tareas Guardadas</h3>
+      <div id="tareasLista" class="tareas-lista"></div>
+    </div>
+  </div>
+  
+  <div id="toast" class="toast"></div>
+
+  <script>
+    let tareasGuardadas = JSON.parse(localStorage.getItem('tareasInstrucciones') || '{}');
+    let tareaEditando = null;
+    let contadorHerramientas = 0;
+    let contadorPasos = 0;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      mostrarTareas();
+      agregarHerramienta();
+      agregarPaso();
+    });
+
+    function mostrarSeccion(seccion) {
+      document.getElementById('formulario').classList.add('hidden');
+      document.getElementById('lista').classList.add('hidden');
+      document.getElementById(seccion).classList.remove('hidden');
+    }
+
+    function agregarHerramienta() {
+      contadorHerramientas++;
+      const html = `
+        <div class="array-item" id="herramienta-${contadorHerramientas}">
+          <div class="array-header">
+            <h4>Herramienta ${contadorHerramientas}</h4>
+            <button type="button" class="btn-small" onclick="eliminarHerramienta(${contadorHerramientas})">❌ Eliminar</button>
+          </div>
+          <div class="form-group">
+            <label>Nombre</label>
+            <input type="text" placeholder="Ej: Destornillador" id="herramientaNombre-${contadorHerramientas}">
+          </div>
+          <div class="form-group">
+            <label>URL Imagen (opcional)</label>
+            <input type="text" placeholder="https://..." id="herramientaImagen-${contadorHerramientas}">
+          </div>
+        </div>
+      `;
+      document.getElementById('herramientasContainer').innerHTML += html;
+    }
+
+    function eliminarHerramienta(id) {
+      const elemento = document.getElementById(`herramienta-${id}`);
+      if (elemento) elemento.remove();
+    }
+
+    function agregarPaso() {
+      contadorPasos++;
+      const html = `
+        <div class="array-item" id="paso-${contadorPasos}">
+          <div class="array-header">
+            <h4>Paso ${contadorPasos}</h4>
+            <button type="button" class="btn-small" onclick="eliminarPaso(${contadorPasos})">❌ Eliminar</button>
+          </div>
+          <div class="form-group">
+            <label>Título</label>
+            <input type="text" placeholder="Ej: Preparación" id="pasoTitulo-${contadorPasos}">
+          </div>
+          <div class="form-group">
+            <label>Descripción</label>
+            <textarea placeholder="Describa el paso..." id="pasoDescripcion-${contadorPasos}"></textarea>
+          </div>
+          <div class="form-group">
+            <label>URL Imagen (opcional)</label>
+            <input type="text" placeholder="https://..." id="pasoImagen-${contadorPasos}">
+          </div>
+          <div class="form-group">
+            <label>URL Video (opcional)</label>
+            <input type="text" placeholder="https://..." id="pasoVideo-${contadorPasos}">
+          </div>
+        </div>
+      `;
+      document.getElementById('pasosContainer').innerHTML += html;
+    }
+
+    function eliminarPaso(id) {
+      const elemento = document.getElementById(`paso-${id}`);
+      if (elemento) elemento.remove();
+    }
+
+    function limpiarFormulario() {
+      document.getElementById('tareaNombre').value = '';
+      document.getElementById('tareaTipo').value = '';
+      document.getElementById('tareaTitulo').value = '';
+      document.getElementById('tareaTiempo').value = '';
+      document.getElementById('herramientasContainer').innerHTML = '';
+      document.getElementById('pasosContainer').innerHTML = '';
+      contadorHerramientas = 0;
+      contadorPasos = 0;
+      tareaEditando = null;
+      agregarHerramienta();
+      agregarPaso();
+      mostrarToast('Formulario limpiado');
+    }
+
+    function guardarTarea() {
+      const nombre = document.getElementById('tareaNombre').value.trim();
+      const tipo = document.getElementById('tareaTipo').value;
+      const titulo = document.getElementById('tareaTitulo').value.trim();
+      const tiempo = parseFloat(document.getElementById('tareaTiempo').value);
+
+      if (!nombre || !tipo || !titulo || isNaN(tiempo)) {
+        mostrarToast('Complete todos los campos obligatorios', 'error');
+        return;
+      }
+
+      const herramientas = [];
+      for (let i = 1; i <= contadorHerramientas; i++) {
+        const nombreHerramienta = document.getElementById(`herramientaNombre-${i}`)?.value.trim();
+        if (nombreHerramienta && document.getElementById(`herramienta-${i}`)) {
+          herramientas.push({
+            nombre: nombreHerramienta,
+            imagen: document.getElementById(`herramientaImagen-${i}`)?.value.trim() || ''
+          });
+        }
+      }
+
+      const pasos = [];
+      for (let i = 1; i <= contadorPasos; i++) {
+        const tituloPaso = document.getElementById(`pasoTitulo-${i}`)?.value.trim();
+        const descripcionPaso = document.getElementById(`pasoDescripcion-${i}`)?.value.trim();
+        if (tituloPaso && descripcionPaso && document.getElementById(`paso-${i}`)) {
+          pasos.push({
+            titulo: tituloPaso,
+            descripcion: descripcionPaso,
+            imagen: document.getElementById(`pasoImagen-${i}`)?.value.trim() || '',
+            video: document.getElementById(`pasoVideo-${i}`)?.value.trim() || ''
+          });
+        }
+      }
+
+      tareasGuardadas[nombre] = {
+        tipo: tipo,
+        titulo: titulo,
+        tiempo: tiempo,
+        herramientas: herramientas,
+        pasos: pasos
+      };
+
+      localStorage.setItem('tareasInstrucciones', JSON.stringify(tareasGuardadas));
+      
+      // Actualizar también las tareas base para que aparezcan en el selector
+      actualizarTareasBase(nombre, tiempo);
+      
+      mostrarToast(tareaEditando ? 'Tarea actualizada' : 'Tarea guardada');
+      limpiarFormulario();
+      mostrarTareas();
+      mostrarSeccion('lista');
+    }
+
+    function actualizarTareasBase(nombre, tiempo) {
+      // Actualizar el objeto tareasBase en localStorage para que la app principal lo use
+      let tareasBase = JSON.parse(localStorage.getItem('tareasBase') || '{}');
+      tareasBase[nombre] = tiempo;
+      localStorage.setItem('tareasBase', JSON.stringify(tareasBase));
+    }
+
+    function mostrarTareas() {
+      const container = document.getElementById('tareasLista');
+      container.innerHTML = '';
+
+      if (Object.keys(tareasGuardadas).length === 0) {
+        container.innerHTML = '<p>No hay tareas guardadas.</p>';
+        return;
+      }
+
+      for (const [nombre, tarea] of Object.entries(tareasGuardadas)) {
+        const tipoClass = tarea.tipo.toLowerCase();
+        const html = `
+          <div class="tarea-item">
+            <div class="tarea-header">
+              <div>
+                <span class="tarea-nombre">${nombre}</span>
+                <span class="tarea-tipo ${tipoClass}">${tarea.tipo}</span>
+              </div>
+              <div class="tarea-acciones">
+                <button class="btn-edit" onclick="editarTarea('${nombre}')">✏️ Editar</button>
+                <button class="btn-delete" onclick="eliminarTarea('${nombre}')">🗑️ Eliminar</button>
+              </div>
+            </div>
+            <div class="tarea-detalles">
+              <strong>Título:</strong> ${tarea.titulo}<br>
+              <strong>Tiempo:</strong> ${tarea.tiempo} horas<br>
+              <strong>Herramientas:</strong> ${tarea.herramientas.length}<br>
+              <strong>Pasos:</strong> ${tarea.pasos.length}
+            </div>
+          </div>
+        `;
+        container.innerHTML += html;
+      }
+    }
+
+    function editarTarea(nombre) {
+      const tarea = tareasGuardadas[nombre];
+      if (!tarea) return;
+
+      tareaEditando = nombre;
+      document.getElementById('tareaNombre').value = nombre;
+      document.getElementById('tareaTipo').value = tarea.tipo;
+      document.getElementById('tareaTitulo').value = tarea.titulo;
+      document.getElementById('tareaTiempo').value = tarea.tiempo;
+
+      document.getElementById('herramientasContainer').innerHTML = '';
+      document.getElementById('pasosContainer').innerHTML = '';
+
+      contadorHerramientas = 0;
+      tarea.herramientas.forEach(herramienta => {
+        contadorHerramientas++;
+        const html = `
+          <div class="array-item" id="herramienta-${contadorHerramientas}">
+            <div class="array-header">
+              <h4>Herramienta ${contadorHerramientas}</h4>
+              <button type="button" class="btn-small" onclick="eliminarHerramienta(${contadorHerramientas})">❌ Eliminar</button>
+            </div>
+            <div class="form-group">
+              <label>Nombre</label>
+              <input type="text" value="${herramienta.nombre}" id="herramientaNombre-${contadorHerramientas}">
+            </div>
+            <div class="form-group">
+              <label>URL Imagen</label>
+              <input type="text" value="${herramienta.imagen || ''}" id="herramientaImagen-${contadorHerramientas}">
+            </div>
+          </div>
+        `;
+        document.getElementById('herramientasContainer').innerHTML += html;
+      });
+
+      contadorPasos = 0;
+      tarea.pasos.forEach(paso => {
+        contadorPasos++;
+        const html = `
+          <div class="array-item" id="paso-${contadorPasos}">
+            <div class="array-header">
+              <h4>Paso ${contadorPasos}</h4>
+              <button type="button" class="btn-small" onclick="eliminarPaso(${contadorPasos})">❌ Eliminar</button>
+            </div>
+            <div class="form-group">
+              <label>Título</label>
+              <input type="text" value="${paso.titulo}" id="pasoTitulo-${contadorPasos}">
+            </div>
+            <div class="form-group">
+              <label>Descripción</label>
+              <textarea id="pasoDescripcion-${contadorPasos}">${paso.descripcion}</textarea>
+            </div>
+            <div class="form-group">
+              <label>URL Imagen</label>
+              <input type="text" value="${paso.imagen || ''}" id="pasoImagen-${contadorPasos}">
+            </div>
+            <div class="form-group">
+              <label>URL Video</label>
+              <input type="text" value="${paso.video || ''}" id="pasoVideo-${contadorPasos}">
+            </div>
+          </div>
+        `;
+        document.getElementById('pasosContainer').innerHTML += html;
+      });
+
+      mostrarSeccion('formulario');
+    }
+
+    function eliminarTarea(nombre) {
+      if (confirm(`¿Eliminar "${nombre}"?`)) {
+        delete tareasGuardadas[nombre];
+        localStorage.setItem('tareasInstrucciones', JSON.stringify(tareasGuardadas));
+        
+        // También eliminar de tareasBase
+        let tareasBase = JSON.parse(localStorage.getItem('tareasBase') || '{}');
+        delete tareasBase[nombre];
+        localStorage.setItem('tareasBase', JSON.stringify(tareasBase));
+        
+        mostrarTareas();
+        mostrarToast('Tarea eliminada');
+      }
+    }
+
+    function mostrarToast(mensaje, tipo = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = mensaje;
+      toast.style.background = tipo === 'error' ? 'var(--danger)' : 'var(--accent)';
+      toast.style.display = 'block';
+      setTimeout(() => toast.style.display = 'none', 3000);
+    }
+  </script>
+</body>
+</html>
