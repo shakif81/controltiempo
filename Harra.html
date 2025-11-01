@@ -640,7 +640,7 @@
         class TallerSystem {
             constructor() {
                 this.storageKey = 'taller_herramientas_data_v2';
-                this.syncInterval = 20000; // 20 segundos
+                this.syncInterval = 40000; // 40 segundos
                 this.users = new Set();
                 this.currentUser = '';
                 this.init();
@@ -749,7 +749,7 @@
                 // Actualizar cada 10 segundos
                 setInterval(() => {
                     this.updateUserPresence();
-                }, 10000);
+                }, 30000);
                 
                 // Actualizar al cargar
                 this.updateUserPresence();
