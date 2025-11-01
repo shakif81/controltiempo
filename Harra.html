@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Control de Herramientas - Taller</title>
+    <title>Sistema de Control de Herramientas - Mejorado</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -186,12 +186,6 @@
             display: flex;
             align-items: center;
             gap: 8px;
-        }
-        
-        .tool-serial {
-            font-size: 0.85em;
-            color: var(--gray-color);
-            margin-left: 10px;
         }
         
         .tool-icon {
@@ -482,39 +476,27 @@
         
         .tool-history {
             margin-top: 30px;
-            max-height: 400px;
+            max-height: 300px;
             overflow-y: auto;
             border: 1px solid var(--light-color);
             border-radius: 8px;
             padding: 15px;
         }
         
-        .history-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-        
-        .history-table th,
-        .history-table td {
+        .history-item {
             padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--light-color);
+            border-bottom: 1px dashed var(--light-color);
+            font-size: 0.9rem;
         }
         
-        .history-table th {
-            background-color: var(--light-color);
-            font-weight: bold;
-            color: var(--primary-color);
-        }
-        
-        .history-table tr:hover {
-            background-color: #f9f9f9;
+        .history-item:last-child {
+            border-bottom: none;
         }
         
         .history-time {
             color: var(--gray-color);
             font-size: 0.8rem;
+            margin-top: 5px;
         }
         
         .operator-tools {
@@ -574,13 +556,6 @@
         .quick-actions .btn {
             flex: 1;
         }
-        
-        .quick-take-section {
-            background-color: var(--light-color);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
     </style>
 </head>
 <body>
@@ -628,7 +603,7 @@
                 
                 <div class="search-box">
                     <i class="fas fa-search"></i>
-                    <input type="text" id="search-tool" placeholder="Buscar herramienta o número de serie...">
+                    <input type="text" id="search-tool" placeholder="Buscar herramienta...">
                 </div>
                 
                 <div class="tool-list" id="tool-list">
@@ -646,27 +621,25 @@
                     <input type="text" id="operator-name" placeholder="Ingrese su nombre completo">
                 </div>
                 
-                <!-- Sección para TOMAR RÁPIDO (aparece al hacer click en disponible) -->
-                <div class="quick-take-section" id="quick-take-section" style="display: none;">
-                    <h3><i class="fas fa-hand-paper"></i> Tomar Herramienta</h3>
-                    <div class="form-group">
-                        <label><strong>Herramienta seleccionada:</strong></label>
-                        <div id="selected-tool-info" style="padding: 10px; background: white; border-radius: 5px;"></div>
-                    </div>
-                    <div class="form-group">
-                        <label for="quick-station"><i class="fas fa-industry"></i> Estación de Trabajo</label>
-                        <select id="quick-station">
-                            <option value="">Seleccione una estación</option>
-                        </select>
-                    </div>
-                    <div class="action-buttons">
-                        <button class="btn btn-primary" id="quick-take-btn">
-                            <i class="fas fa-hand-paper"></i> Confirmar Toma
-                        </button>
-                        <button class="btn btn-danger" id="cancel-quick-take">
-                            <i class="fas fa-times"></i> Cancelar
-                        </button>
-                    </div>
+                <div class="form-group">
+                    <label for="station"><i class="fas fa-industry"></i> Estación de Trabajo</label>
+                    <select id="station">
+                        <option value="">Seleccione una estación</option>
+                    </select>
+                </div>
+                
+                <!-- Sección para TOMAR herramienta -->
+                <div class="form-group">
+                    <label for="tool-select"><i class="fas fa-wrench"></i> Seleccionar Herramienta para Tomar</label>
+                    <select id="tool-select">
+                        <option value="">Seleccione una herramienta disponible</option>
+                    </select>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="take-tool">
+                        <i class="fas fa-hand-paper"></i> Tomar Herramienta
+                    </button>
                 </div>
 
                 <!-- Sección para DEVOLVER herramienta -->
@@ -712,28 +685,11 @@
         </div>
         
         <div class="panel">
-            <h2><i class="fas fa-history"></i> Historial Detallado de Uso</h2>
-            
-            <div class="tool-history">
-                <table class="history-table">
-                    <thead>
-                        <tr>
-                            <th>Fecha/Hora</th>
-                            <th>Herramienta</th>
-                            <th>N° Serie</th>
-                            <th>Operario</th>
-                            <th>Acción</th>
-                            <th>Estación</th>
-                        </tr>
-                    </thead>
-                    <tbody id="history-table-body">
-                        <tr>
-                            <td colspan="6" style="text-align: center; padding: 40px;">
-                                <i class="fas fa-spinner fa-spin"></i> Cargando historial...
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+            <h2><i class="fas fa-history"></i> Historial Reciente</h2>
+            <div class="tool-history" id="tool-history">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i> Cargando historial...
+                </div>
             </div>
         </div>
         
@@ -746,14 +702,15 @@
 
     <script>
         // Configuración de Firebase
+
         const firebaseConfig = {
-  apiKey: "AIzaSyBZvSfAi2AO_FF1rqDqKDH6-VDFrbeCdhg",
-  authDomain: "taller-herramientas-79e58.firebaseapp.com",
-  projectId: "taller-herramientas-79e58",
-  storageBucket: "taller-herramientas-79e58.firebasestorage.app",
-  messagingSenderId: "1010208693381",
-  appId: "1:1010208693381:web:cd5736b779a41d2c4eddec"
-};
+            apiKey: "AIzaSyBZvSfAi2AO_FF1rqDqKDH6-VDFrbeCdhg",
+            authDomain: "taller-herramientas-79e58.firebaseapp.com",
+            projectId: "taller-herramientas-79e58",
+            storageBucket: "taller-herramientas-79e58.firebasestorage.app",
+            messagingSenderId: "1010208693381",
+            appId: "1:1010208693381:web:cd5736b779a41d2c4eddec"
+        };
 
         // Sistema de Control de Herramientas con Firebase
         class TallerSystem {
@@ -762,7 +719,6 @@
                 this.unsubscribe = null;
                 this.userId = 'user_' + Math.random().toString(36).substr(2, 9);
                 this.userName = localStorage.getItem('taller_user_name') || '';
-                this.selectedToolForQuickTake = null;
                 this.init();
             }
             
@@ -791,14 +747,9 @@
             }
             
             setupEventListeners() {
-                // Quick take tool
-                document.getElementById('quick-take-btn').addEventListener('click', () => {
-                    this.confirmQuickTake();
-                });
-                
-                // Cancel quick take
-                document.getElementById('cancel-quick-take').addEventListener('click', () => {
-                    this.cancelQuickTake();
+                // Tomar herramienta
+                document.getElementById('take-tool').addEventListener('click', () => {
+                    this.takeTool();
                 });
                 
                 // Devolver herramienta
@@ -857,16 +808,16 @@
             
             getDefaultTools() {
                 return [
-                    { id: 1, name: "Llave Dinamométrica 6Nm", serial: "LD6N-001", status: "available", operator: "", station: "", icon: "fas fa-wrench" },
-                    { id: 2, name: "Llave Dinamométrica 6Nm", serial: "LD6N-002", status: "available", operator: "", station: "", icon: "fas fa-wrench" },
-                    { id: 3, name: "Llave Dinamométrica 6Nm", serial: "LD6N-003", status: "available", operator: "", station: "", icon: "fas fa-wrench" },
-                    { id: 4, name: "Llave Dinamométrica 6Nm", serial: "LD6N-004", status: "available", operator: "", station: "", icon: "fas fa-wrench" },
-                    { id: 5, name: "Llave Dinamométrica 6Nm", serial: "LD6N-005", status: "available", operator: "", station: "", icon: "fas fa-wrench" },
-                    { id: 6, name: "Destornillador Plano", serial: "DPL-001", status: "available", operator: "", station: "", icon: "fas fa-screwdriver" },
-                    { id: 7, name: "Alicate de Corte", serial: "ALC-001", status: "available", operator: "", station: "", icon: "fas fa-cut" },
-                    { id: 8, name: "Martillo de Goma", serial: "MTG-001", status: "available", operator: "", station: "", icon: "fas fa-hammer" },
-                    { id: 9, name: "Taladro Eléctrico", serial: "TLE-001", status: "available", operator: "", station: "", icon: "fas fa-bolt" },
-                    { id: 10, name: "Sierra Circular", serial: "SRC-001", status: "available", operator: "", station: "", icon: "fas fa-cut" }
+                    { id: 1, name: "Llave Inglesa 10mm", status: "available", operator: "", station: "", icon: "fas fa-wrench" },
+                    { id: 2, name: "Destornillador Plano", status: "available", operator: "", station: "", icon: "fas fa-screwdriver" },
+                    { id: 3, name: "Alicate de Corte", status: "available", operator: "", station: "", icon: "fas fa-cut" },
+                    { id: 4, name: "Martillo de Goma", status: "available", operator: "", station: "", icon: "fas fa-hammer" },
+                    { id: 5, name: "Llave Allen Set", status: "available", operator: "", station: "", icon: "fas fa-toolbox" },
+                    { id: 6, name: "Taladro Eléctrico", status: "available", operator: "", station: "", icon: "fas fa-bolt" },
+                    { id: 7, name: "Sierra Circular", status: "available", operator: "", station: "", icon: "fas fa-cut" },
+                    { id: 8, name: "Nivel Láser", status: "available", operator: "", station: "", icon: "fas fa-ruler-combined" },
+                    { id: 9, name: "Calibrador Pie de Rey", status: "available", operator: "", station: "", icon: "fas fa-ruler" },
+                    { id: 10, name: "Multímetro Digital", status: "available", operator: "", station: "", icon: "fas fa-tachometer-alt" }
                 ];
             }
             
@@ -919,10 +870,11 @@
             
             renderAll() {
                 this.renderTools();
+                this.updateToolSelect();
                 this.updateReturnToolSelect();
                 this.updateMaintenanceSelect();
                 this.renderStations();
-                this.renderHistoryTable();
+                this.renderHistory();
                 this.updateStats();
                 this.populateStationSelect();
             }
@@ -934,8 +886,7 @@
                 toolList.innerHTML = '';
                 
                 const filteredTools = this.tools.filter(tool => 
-                    tool.name.toLowerCase().includes(filter.toLowerCase()) ||
-                    (tool.serial && tool.serial.toLowerCase().includes(filter.toLowerCase()))
+                    tool.name.toLowerCase().includes(filter.toLowerCase())
                 );
                 
                 if (filteredTools.length === 0) {
@@ -948,7 +899,7 @@
                     toolItem.className = 'tool-item';
                     toolItem.onclick = () => {
                         if (tool.status === 'available') {
-                            this.startQuickTake(tool);
+                            this.quickTakeTool(tool.id);
                         }
                     };
                     
@@ -957,20 +908,22 @@
                     
                     const toolName = document.createElement('div');
                     toolName.className = 'tool-name';
-                    toolName.innerHTML = `
-                        <i class="${tool.icon} tool-icon"></i> 
-                        ${tool.name}
-                        <span class="tool-serial">${tool.serial}</span>
-                    `;
+                    toolName.innerHTML = `<i class="${tool.icon} tool-icon"></i> ${tool.name}`;
                     
                     const toolStatus = document.createElement('div');
                     toolStatus.className = `tool-status status-${tool.status}`;
+                    toolStatus.onclick = (e) => {
+                        e.stopPropagation(); // Evitar que se active el click del item
+                        if (tool.status === 'available') {
+                            this.quickTakeTool(tool.id);
+                        }
+                    };
                     
                     if (tool.status === 'available') {
                         toolStatus.textContent = 'Disponible (Click para tomar)';
                         toolStatus.style.cursor = 'pointer';
                     } else if (tool.status === 'in-use') {
-                        toolStatus.textContent = `En uso por ${tool.operator}`;
+                        toolStatus.textContent = `En uso por ${tool.operator} (${this.getStationName(tool.station)})`;
                     } else {
                         toolStatus.textContent = 'En mantenimiento';
                     }
@@ -983,85 +936,39 @@
                 });
             }
             
-            startQuickTake(tool) {
-                if (!this.userName) {
-                    this.showNotification('Primero ingresa tu nombre', 'warning');
-                    document.getElementById('operator-name').focus();
-                    return;
-                }
-                
-                this.selectedToolForQuickTake = tool;
-                
-                // Mostrar información de la herramienta seleccionada
-                document.getElementById('selected-tool-info').innerHTML = `
-                    <strong>${tool.name}</strong><br>
-                    <small>Número de Serie: ${tool.serial}</small>
-                `;
-                
-                // Mostrar sección de toma rápida
-                document.getElementById('quick-take-section').style.display = 'block';
-                
-                this.showNotification(`Seleccionada: ${tool.name} - ${tool.serial}. Ahora selecciona la estación.`, 'success');
-            }
-            
-            async confirmQuickTake() {
-                if (!this.selectedToolForQuickTake) return;
-                
-                const station = document.getElementById('quick-station').value;
-                
-                if (!station) {
-                    this.showNotification('Selecciona una estación de trabajo', 'warning');
-                    return;
-                }
-                
-                const tool = this.selectedToolForQuickTake;
-                const toolIndex = this.tools.findIndex(t => t.id === tool.id);
-                
-                if (toolIndex === -1) {
-                    this.showNotification('Herramienta no encontrada', 'warning');
-                    return;
-                }
-                
-                if (this.tools[toolIndex].status !== 'available') {
-                    this.showNotification('Esta herramienta ya no está disponible', 'warning');
-                    return;
-                }
-                
-                // Actualizar el estado de la herramienta
-                this.tools[toolIndex].status = 'in-use';
-                this.tools[toolIndex].operator = this.userName;
-                this.tools[toolIndex].station = station;
-                
-                // Agregar al historial
-                const now = new Date();
-                this.history.unshift({
-                    tool: tool.name,
-                    serial: tool.serial,
-                    action: 'tomada',
-                    operator: this.userName,
-                    station: this.getStationName(station),
-                    time: now.toISOString()
-                });
-                
-                // Guardar en Firebase
-                await this.saveData();
-                
-                this.showNotification(`Herramienta "${tool.name} - ${tool.serial}" tomada por ${this.userName}`, 'success');
-                
-                // Limpiar selección rápida
-                this.cancelQuickTake();
-            }
-            
-            cancelQuickTake() {
-                this.selectedToolForQuickTake = null;
-                document.getElementById('quick-take-section').style.display = 'none';
-                document.getElementById('quick-station').value = '';
-                document.getElementById('selected-tool-info').innerHTML = '';
-            }
-            
             getStationName(stationId) {
                 const station = this.stations.find(s => s.id === stationId);
                 return station ? station.name : 'Desconocida';
+            }
+            
+            updateToolSelect() {
+                const toolSelect = document.getElementById('tool-select');
+                if (!toolSelect) return;
+                
+                toolSelect.innerHTML = '<option value="">Seleccione una herramienta disponible</option>';
+                
+                this.tools.forEach(tool => {
+                    if (tool.status === 'available') {
+                        const option = document.createElement('option');
+                        option.value = tool.id;
+                        option.textContent = tool.name;
+                        toolSelect.appendChild(option);
+                    }
+                });
+            }
+            
+            updateMaintenanceSelect() {
+                const maintenanceSelect = document.getElementById('maintenance-tool-select');
+                if (!maintenanceSelect) return;
+                
+                maintenanceSelect.innerHTML = '<option value="">Seleccione una herramienta</option>';
+                
+                this.tools.forEach(tool => {
+                    const option = document.createElement('option');
+                    option.value = tool.id;
+                    option.textContent = `${tool.name} (${tool.status})`;
+                    maintenanceSelect.appendChild(option);
+                });
             }
             
             updateReturnToolSelect() {
@@ -1092,36 +999,22 @@
                 operatorTools.forEach(tool => {
                     const option = document.createElement('option');
                     option.value = tool.id;
-                    option.textContent = `${tool.name} - ${tool.serial} (${this.getStationName(tool.station)})`;
+                    option.textContent = `${tool.name} (${this.getStationName(tool.station)})`;
                     returnToolSelect.appendChild(option);
                 });
             }
             
-            updateMaintenanceSelect() {
-                const maintenanceSelect = document.getElementById('maintenance-tool-select');
-                if (!maintenanceSelect) return;
-                
-                maintenanceSelect.innerHTML = '<option value="">Seleccione una herramienta</option>';
-                
-                this.tools.forEach(tool => {
-                    const option = document.createElement('option');
-                    option.value = tool.id;
-                    option.textContent = `${tool.name} - ${tool.serial} (${tool.status})`;
-                    maintenanceSelect.appendChild(option);
-                });
-            }
-            
             populateStationSelect() {
-                const quickStation = document.getElementById('quick-station');
-                if (!quickStation) return;
+                const stationSelect = document.getElementById('station');
+                if (!stationSelect) return;
                 
-                quickStation.innerHTML = '<option value="">Seleccione una estación</option>';
+                stationSelect.innerHTML = '<option value="">Seleccione una estación</option>';
                 
                 this.stations.forEach(station => {
                     const option = document.createElement('option');
                     option.value = station.id;
                     option.textContent = station.name;
-                    quickStation.appendChild(option);
+                    stationSelect.appendChild(option);
                 });
             }
             
@@ -1154,7 +1047,7 @@
                         toolsInStation.forEach(tool => {
                             const toolElement = document.createElement('div');
                             toolElement.className = 'tool-in-station';
-                            toolElement.innerHTML = `<i class="${tool.icon}"></i> ${tool.name} - ${tool.serial} <br><small>(${tool.operator})</small>`;
+                            toolElement.innerHTML = `<i class="${tool.icon}"></i> ${tool.name} <br><small>(${tool.operator})</small>`;
                             stationTools.appendChild(toolElement);
                         });
                     }
@@ -1165,74 +1058,43 @@
                 });
             }
             
-            renderHistoryTable() {
-                const historyBody = document.getElementById('history-table-body');
-                if (!historyBody) return;
+            renderHistory() {
+                const toolHistory = document.getElementById('tool-history');
+                if (!toolHistory) return;
+                
+                toolHistory.innerHTML = '';
                 
                 if (this.history.length === 0) {
-                    historyBody.innerHTML = `
-                        <tr>
-                            <td colspan="6" style="text-align: center; padding: 40px; color: var(--gray-color);">
-                                No hay registros de historial
-                            </td>
-                        </tr>
-                    `;
+                    toolHistory.innerHTML = '<div class="history-item">No hay historial registrado</div>';
                     return;
                 }
                 
-                historyBody.innerHTML = '';
+                const sortedHistory = [...this.history].sort((a, b) => 
+                    new Date(b.time) - new Date(a.time)
+                ).slice(0, 10);
                 
-                this.history.slice(0, 50).forEach(item => {
-                    const row = document.createElement('tr');
+                sortedHistory.forEach(item => {
+                    const historyItem = document.createElement('div');
+                    historyItem.className = 'history-item';
                     
-                    row.innerHTML = `
-                        <td>
-                            <div>${this.formatDate(item.time)}</div>
-                            <div class="history-time">${this.formatTime(item.time)}</div>
-                        </td>
-                        <td>${item.tool}</td>
-                        <td>${item.serial}</td>
-                        <td>${item.operator}</td>
-                        <td>
-                            <span class="tool-status status-${this.getActionStatus(item.action)}">
-                                ${this.getActionText(item.action)}
-                            </span>
-                        </td>
-                        <td>${item.station}</td>
+                    const actionText = item.action === 'tomada' ? 'tomada por' : 
+                                     item.action === 'devuelta' ? 'devuelta por' : 
+                                     item.action === 'mantenimiento' ? 'enviada a mantenimiento por' :
+                                     item.action === 'disponible' ? 'puesta disponible por' : 
+                                     item.action;
+                    
+                    historyItem.innerHTML = `
+                        <strong>${item.tool}</strong> ${actionText} <strong>${item.operator}</strong> en ${item.station}
+                        <div class="history-time">${this.formatTime(item.time)}</div>
                     `;
                     
-                    historyBody.appendChild(row);
+                    toolHistory.appendChild(historyItem);
                 });
             }
             
-            getActionStatus(action) {
-                switch(action) {
-                    case 'tomada': return 'in-use';
-                    case 'devuelta': return 'available';
-                    case 'mantenimiento': return 'maintenance';
-                    case 'disponible': return 'available';
-                    default: return 'available';
-                }
-            }
-            
-            getActionText(action) {
-                switch(action) {
-                    case 'tomada': return 'Tomada';
-                    case 'devuelta': return 'Devuelta';
-                    case 'mantenimiento': return 'Mantenimiento';
-                    case 'disponible': return 'Disponible';
-                    default: return action;
-                }
-            }
-            
-            formatDate(dateString) {
-                const date = new Date(dateString);
-                return date.toLocaleDateString('es-ES');
-            }
-            
-            formatTime(dateString) {
-                const date = new Date(dateString);
-                return date.toLocaleTimeString('es-ES');
+            formatTime(dateTimeString) {
+                const date = new Date(dateTimeString);
+                return date.toLocaleString('es-ES');
             }
             
             updateStats() {
@@ -1281,6 +1143,101 @@
                 }
             }
             
+            async quickTakeTool(toolId) {
+                const operator = this.userName;
+                const station = document.getElementById('station').value;
+                
+                if (!operator) {
+                    this.showNotification('Primero ingresa tu nombre', 'warning');
+                    document.getElementById('operator-name').focus();
+                    return;
+                }
+                
+                if (!station) {
+                    this.showNotification('Selecciona una estación de trabajo', 'warning');
+                    document.getElementById('station').focus();
+                    return;
+                }
+                
+                const toolIndex = this.tools.findIndex(t => t.id === toolId);
+                
+                if (toolIndex === -1) {
+                    this.showNotification('Herramienta no encontrada', 'warning');
+                    return;
+                }
+                
+                if (this.tools[toolIndex].status !== 'available') {
+                    this.showNotification('Esta herramienta no está disponible', 'warning');
+                    return;
+                }
+                
+                // Actualizar el estado de la herramienta
+                this.tools[toolIndex].status = 'in-use';
+                this.tools[toolIndex].operator = operator;
+                this.tools[toolIndex].station = station;
+                
+                // Agregar al historial
+                const now = new Date();
+                this.history.unshift({
+                    tool: this.tools[toolIndex].name,
+                    action: 'tomada',
+                    operator: operator,
+                    station: this.getStationName(station),
+                    time: now.toISOString()
+                });
+                
+                // Guardar en Firebase
+                await this.saveData();
+                
+                this.showNotification(`Herramienta "${this.tools[toolIndex].name}" tomada por ${operator}`, 'success');
+            }
+            
+            async takeTool() {
+                const operator = this.userName;
+                const station = document.getElementById('station').value;
+                const toolId = parseInt(document.getElementById('tool-select').value);
+                
+                if (!operator || !station || !toolId) {
+                    this.showNotification('Por favor, complete todos los campos', 'warning');
+                    return;
+                }
+                
+                const toolIndex = this.tools.findIndex(t => t.id === toolId);
+                
+                if (toolIndex === -1) {
+                    this.showNotification('Herramienta no encontrada', 'warning');
+                    return;
+                }
+                
+                if (this.tools[toolIndex].status !== 'available') {
+                    this.showNotification('Esta herramienta no está disponible', 'warning');
+                    return;
+                }
+                
+                // Actualizar el estado de la herramienta
+                this.tools[toolIndex].status = 'in-use';
+                this.tools[toolIndex].operator = operator;
+                this.tools[toolIndex].station = station;
+                
+                // Agregar al historial
+                const now = new Date();
+                this.history.unshift({
+                    tool: this.tools[toolIndex].name,
+                    action: 'tomada',
+                    operator: operator,
+                    station: this.getStationName(station),
+                    time: now.toISOString()
+                });
+                
+                // Guardar en Firebase
+                await this.saveData();
+                
+                this.showNotification(`Herramienta "${this.tools[toolIndex].name}" tomada por ${operator}`, 'success');
+                
+                // Limpiar formulario
+                document.getElementById('tool-select').value = '';
+            }
+            
             async returnTool() {
                 const operator = this.userName;
                 const toolId = parseInt(document.getElementById('return-tool-select').value);
@@ -1312,7 +1269,7 @@
                     return;
                 }
                 
-                const tool = this.tools[toolIndex];
+                const toolName = this.tools[toolIndex].name;
                 
                 // Actualizar el estado de la herramienta
                 this.tools[toolIndex].status = 'available';
@@ -1322,8 +1279,7 @@
                 // Agregar al historial
                 const now = new Date();
                 this.history.unshift({
-                    tool: tool.name,
-                    serial: tool.serial,
+                    tool: toolName,
                     action: 'devuelta',
                     operator: operator,
                     station: 'Almacén',
@@ -1333,7 +1289,7 @@
                 // Guardar en Firebase
                 await this.saveData();
                 
-                this.showNotification(`Herramienta "${tool.name} - ${tool.serial}" devuelta correctamente`, 'success');
+                this.showNotification(`Herramienta "${toolName}" devuelta correctamente`, 'success');
                 
                 // Limpiar formulario
                 document.getElementById('return-tool-select').value = '';
@@ -1360,7 +1316,8 @@
                     return;
                 }
                 
-                const tool = this.tools[toolIndex];
+                const toolName = this.tools[toolIndex].name;
+                const previousStatus = this.tools[toolIndex].status;
                 
                 // Actualizar el estado de la herramienta
                 this.tools[toolIndex].status = 'maintenance';
@@ -1370,8 +1327,7 @@
                 // Agregar al historial
                 const now = new Date();
                 this.history.unshift({
-                    tool: tool.name,
-                    serial: tool.serial,
+                    tool: toolName,
                     action: 'mantenimiento',
                     operator: operator,
                     station: 'Taller de Mantenimiento',
@@ -1381,7 +1337,7 @@
                 // Guardar en Firebase
                 await this.saveData();
                 
-                this.showNotification(`Herramienta "${tool.name} - ${tool.serial}" enviada a mantenimiento`, 'warning');
+                this.showNotification(`Herramienta "${toolName}" enviada a mantenimiento`, 'warning');
                 
                 // Limpiar formulario
                 document.getElementById('maintenance-tool-select').value = '';
@@ -1413,7 +1369,7 @@
                     return;
                 }
                 
-                const tool = this.tools[toolIndex];
+                const toolName = this.tools[toolIndex].name;
                 
                 // Actualizar el estado de la herramienta
                 this.tools[toolIndex].status = 'available';
@@ -1421,8 +1377,7 @@
                 // Agregar al historial
                 const now = new Date();
                 this.history.unshift({
-                    tool: tool.name,
-                    serial: tool.serial,
+                    tool: toolName,
                     action: 'disponible',
                     operator: operator,
                     station: 'Almacén',
@@ -1432,7 +1387,7 @@
                 // Guardar en Firebase
                 await this.saveData();
                 
-                this.showNotification(`Herramienta "${tool.name} - ${tool.serial}" disponible nuevamente`, 'success');
+                this.showNotification(`Herramienta "${toolName}" disponible nuevamente`, 'success');
                 
                 // Limpiar formulario
                 document.getElementById('maintenance-tool-select').value = '';
