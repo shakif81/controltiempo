@@ -746,10 +746,10 @@
                 // Generar ID único para este usuario/sesión
                 this.userId = 'user_' + Math.random().toString(36).substr(2, 9);
                 
-                // Actualizar cada 10 segundos
+                // Actualizar cada 40 segundos
                 setInterval(() => {
                     this.updateUserPresence();
-                }, 30000);
+                }, 40000);
                 
                 // Actualizar al cargar
                 this.updateUserPresence();
