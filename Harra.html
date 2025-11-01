@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Control de Herramientas - Mejorado</title>
+    <title>Sistema de Control de Herramientas</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -560,16 +560,16 @@
 </head>
 <body>
     <div class="container">
-        <!-- Banner Firebase -->
+        <!-- Banner Firebase 
         <div class="firebase-banner">
             <h3><i class="fas fa-bolt"></i> Conectado a Firebase - Sincronización Activa</h3>
             <p>Todos los dispositivos están sincronizados en tiempo real</p>
-        </div>
+        </div> -->
         
         <header>
             <h1><i class="fas fa-tools"></i> Sistema de Control de Herramientas</h1>
             <p>
-                Taller de Producción - 
+                Linea TRAXX - 
                 <span id="sync-status" class="sync-status"><i class="fas fa-sync"></i> Sincronizado</span>
                 <span class="user-count"><i class="fas fa-users"></i> <span id="user-count">0</span> conectados</span>
             </p>
@@ -599,7 +599,7 @@
         
         <div class="dashboard">
             <div class="panel">
-                <h2><i class="fas fa-list"></i> Inventario de Herramientas</h2>
+                <h2><i class="fas fa-list"></i> Disponibilidad de Herramientas</h2>
                 
                 <div class="search-box">
                     <i class="fas fa-search"></i>
@@ -618,7 +618,7 @@
                 
                 <div class="form-group">
                     <label for="operator-name"><i class="fas fa-user"></i> Nombre del Operario</label>
-                    <input type="text" id="operator-name" placeholder="Ingrese su nombre completo">
+                    <input type="text" id="operator-name" placeholder="Ingrese su nombre/ID">
                 </div>
                 
                 <div class="form-group">
@@ -694,7 +694,7 @@
         </div>
         
         <footer>
-            <p>Sistema de Control de Herramientas &copy; 2023 - Taller de Producción | Sincronizado con Firebase</p>
+            <p>Sistema de Control de Herramientas - Linea TRAXX</p>
         </footer>
     </div>
     
@@ -823,11 +823,11 @@
             
             getDefaultStations() {
                 return [
-                    { id: "estacion-1", name: "Estación 1 - Ensamblaje" },
-                    { id: "estacion-2", name: "Estación 2 - Soldadura" },
-                    { id: "estacion-3", name: "Estación 3 - Pintura" },
-                    { id: "estacion-4", name: "Estación 4 - Control Calidad" },
-                    { id: "estacion-5", name: "Estación 5 - Empaque" }
+                    { id: "estacion-1", name: "Estación 0" },
+                    { id: "estacion-2", name: "Estación 1" },
+                    { id: "estacion-3", name: "Estación 2" },
+                    { id: "estacion-4", name: "Estación 3" },
+                    { id: "estacion-5", name: "Estación 4" }
                 ];
             }
             
