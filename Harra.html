@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Control de Herramientas - Sincronizado</title>
+    <title>Sistema de Control de Herramientas - Taller</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -34,6 +34,31 @@
             max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
+        }
+        
+        .github-banner {
+            background: linear-gradient(135deg, #24292e 0%, #3f4448 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border: 1px solid #444d56;
+        }
+        
+        .github-banner h3 {
+            margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .github-banner p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 0.95rem;
         }
         
         header {
@@ -462,62 +487,6 @@
             margin-top: 5px;
         }
         
-        .db-status {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            margin-left: 15px;
-        }
-        
-        .db-online {
-            background-color: var(--success-color);
-            color: white;
-        }
-        
-        .db-offline {
-            background-color: var(--danger-color);
-            color: white;
-        }
-        
-        .db-local {
-            background-color: var(--warning-color);
-            color: white;
-        }
-        
-        .tab-container {
-            margin-bottom: 20px;
-        }
-        
-        .tabs {
-            display: flex;
-            border-bottom: 2px solid var(--light-color);
-        }
-        
-        .tab {
-            padding: 12px 20px;
-            cursor: pointer;
-            font-weight: bold;
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s;
-        }
-        
-        .tab.active {
-            border-bottom-color: var(--secondary-color);
-            color: var(--secondary-color);
-        }
-        
-        .tab-content {
-            display: none;
-            padding: 20px 0;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
         .operator-tools {
             background-color: var(--light-color);
             padding: 15px;
@@ -535,1024 +504,682 @@
             font-size: 0.8rem;
             color: var(--gray-color);
             margin-top: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .user-count {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255,255,255,0.2);
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Banner GitHub Pages -->
+        <div class="github-banner">
+            <h3><i class="fab fa-github"></i> Hosteado en GitHub Pages - 100% Gratuito</h3>
+            <p>Todos los operarios deben usar la misma URL para estar sincronizados</p>
+        </div>
+        
         <header>
             <h1><i class="fas fa-tools"></i> Sistema de Control de Herramientas</h1>
             <p>
-                Gestión y seguimiento de herramientas en taller de producción - 
-                <span id="db-status" class="db-status db-local"><i class="fas fa-database"></i> Modo Local</span>
+                Taller de Producción - 
                 <span id="sync-status" class="sync-status"><i class="fas fa-sync"></i> Sincronizado</span>
+                <span class="user-count"><i class="fas fa-users"></i> <span id="user-count">1</span> conectados</span>
             </p>
         </header>
         
-        <div class="tab-container">
-            <div class="tabs">
-                <div class="tab active" data-tab="dashboard">Dashboard</div>
-                <div class="tab" data-tab="admin">Administración</div>
+        <div class="stats">
+            <div class="stat-card available">
+                <i class="fas fa-check-circle"></i>
+                <div class="stat-value" id="available-count">0</div>
+                <div class="stat-label">Disponibles</div>
             </div>
-            
-            <div class="tab-content active" id="dashboard-tab">
-                <div class="stats">
-                    <div class="stat-card available">
-                        <i class="fas fa-check-circle"></i>
-                        <div class="stat-value" id="available-count">0</div>
-                        <div class="stat-label">Disponibles</div>
-                    </div>
-                    <div class="stat-card in-use">
-                        <i class="fas fa-user-check"></i>
-                        <div class="stat-value" id="in-use-count">0</div>
-                        <div class="stat-label">En Uso</div>
-                    </div>
-                    <div class="stat-card maintenance">
-                        <i class="fas fa-toolbox"></i>
-                        <div class="stat-value" id="maintenance-count">0</div>
-                        <div class="stat-label">En Mantenimiento</div>
-                    </div>
+            <div class="stat-card in-use">
+                <i class="fas fa-user-check"></i>
+                <div class="stat-value" id="in-use-count">0</div>
+                <div class="stat-label">En Uso</div>
+            </div>
+            <div class="stat-card maintenance">
+                <i class="fas fa-toolbox"></i>
+                <div class="stat-value" id="maintenance-count">0</div>
+                <div class="stat-label">En Mantenimiento</div>
+            </div>
+        </div>
+        
+        <div class="last-update" id="last-update">
+            Última actualización: <span id="update-time">Cargando...</span>
+        </div>
+        
+        <div class="dashboard">
+            <div class="panel">
+                <h2><i class="fas fa-list"></i> Inventario de Herramientas</h2>
+                
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="search-tool" placeholder="Buscar herramienta...">
                 </div>
                 
-                <div class="last-update" id="last-update">
-                    Última actualización: <span id="update-time">Cargando...</span>
-                </div>
-                
-                <div class="dashboard">
-                    <div class="panel">
-                        <h2><i class="fas fa-list"></i> Inventario de Herramientas</h2>
-                        
-                        <div class="search-box">
-                            <i class="fas fa-search"></i>
-                            <input type="text" id="search-tool" placeholder="Buscar herramienta...">
-                        </div>
-                        
-                        <div class="tool-list" id="tool-list">
-                            <!-- Las herramientas se cargarán aquí dinámicamente -->
-                        </div>
-                    </div>
-                    
-                    <div class="panel">
-                        <h2><i class="fas fa-tasks"></i> Gestión de Herramientas</h2>
-                        
-                        <div class="form-group">
-                            <label for="operator-name"><i class="fas fa-user"></i> Nombre del Operario</label>
-                            <input type="text" id="operator-name" placeholder="Ingrese su nombre">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="station"><i class="fas fa-industry"></i> Estación de Trabajo</label>
-                            <select id="station">
-                                <option value="">Seleccione una estación</option>
-                            </select>
-                        </div>
-                        
-                        <!-- Sección para TOMAR herramienta -->
-                        <div class="form-group">
-                            <label for="tool-select"><i class="fas fa-wrench"></i> Seleccionar Herramienta para Tomar</label>
-                            <select id="tool-select">
-                                <option value="">Seleccione una herramienta disponible</option>
-                            </select>
-                        </div>
-                        
-                        <div class="action-buttons">
-                            <button class="btn btn-primary" id="take-tool">
-                                <i class="fas fa-hand-paper"></i> Tomar Herramienta
-                            </button>
-                        </div>
-
-                        <!-- Sección para DEVOLVER herramienta -->
-                        <div class="operator-tools" id="operator-tools-section" style="display: none;">
-                            <h3><i class="fas fa-toolbox"></i> Mis Herramientas en Uso</h3>
-                            <div class="form-group">
-                                <label for="return-tool-select"><i class="fas fa-undo"></i> Seleccionar Herramienta para Devolver</label>
-                                <select id="return-tool-select">
-                                    <option value="">Seleccione una herramienta en uso</option>
-                                </select>
-                            </div>
-                            <button class="btn btn-success" id="return-tool">
-                                <i class="fas fa-undo"></i> Devolver Herramienta Seleccionada
-                            </button>
-                        </div>
-                        
-                        <h2 style="margin-top: 30px;"><i class="fas fa-map-marker-alt"></i> Estaciones de Trabajo</h2>
-                        <div class="stations" id="stations">
-                            <!-- Las estaciones se cargarán aquí dinámicamente -->
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="panel">
-                    <h2><i class="fas fa-history"></i> Historial Reciente</h2>
-                    <div class="tool-history" id="tool-history">
-                        <!-- El historial se cargará aquí dinámicamente -->
-                    </div>
+                <div class="tool-list" id="tool-list">
+                    <!-- Las herramientas se cargarán aquí dinámicamente -->
                 </div>
             </div>
             
-            <div class="tab-content" id="admin-tab">
-                <div class="panel">
-                    <h2><i class="fas fa-cogs"></i> Configuración de Sincronización</h2>
-                    
-                    <div class="form-group">
-                        <label for="sync-interval">Intervalo de Sincronización (segundos)</label>
-                        <select id="sync-interval">
-                            <option value="2000">2 segundos</option>
-                            <option value="5000" selected>5 segundos</option>
-                            <option value="10000">10 segundos</option>
-                            <option value="30000">30 segundos</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="auto-sync">
-                            <input type="checkbox" id="auto-sync" checked> Sincronización automática
-                        </label>
-                    </div>
-                    
-                    <button class="btn btn-primary" id="manual-sync">
-                        <i class="fas fa-sync"></i> Sincronizar Manualmente
+            <div class="panel">
+                <h2><i class="fas fa-tasks"></i> Gestión de Herramientas</h2>
+                
+                <div class="form-group">
+                    <label for="operator-name"><i class="fas fa-user"></i> Nombre del Operario</label>
+                    <input type="text" id="operator-name" placeholder="Ingrese su nombre completo">
+                </div>
+                
+                <div class="form-group">
+                    <label for="station"><i class="fas fa-industry"></i> Estación de Trabajo</label>
+                    <select id="station">
+                        <option value="">Seleccione una estación</option>
+                    </select>
+                </div>
+                
+                <!-- Sección para TOMAR herramienta -->
+                <div class="form-group">
+                    <label for="tool-select"><i class="fas fa-wrench"></i> Seleccionar Herramienta para Tomar</label>
+                    <select id="tool-select">
+                        <option value="">Seleccione una herramienta disponible</option>
+                    </select>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="take-tool">
+                        <i class="fas fa-hand-paper"></i> Tomar Herramienta
                     </button>
-                    
-                    <div class="form-group" style="margin-top: 30px;">
-                        <label for="db-type">Tipo de Base de Datos</label>
-                        <select id="db-type">
-                            <option value="local">Almacenamiento Local (Sin servidor)</option>
-                            <option value="mysql">MySQL (Requiere servidor PHP)</option>
+                </div>
+
+                <!-- Sección para DEVOLVER herramienta -->
+                <div class="operator-tools" id="operator-tools-section" style="display: none;">
+                    <h3><i class="fas fa-toolbox"></i> Mis Herramientas en Uso</h3>
+                    <div class="form-group">
+                        <label for="return-tool-select"><i class="fas fa-undo"></i> Seleccionar Herramienta para Devolver</label>
+                        <select id="return-tool-select">
+                            <option value="">Seleccione una herramienta en uso</option>
                         </select>
                     </div>
-                    
-                    <div id="mysql-config" style="display: none;">
-                        <div class="form-group">
-                            <label for="db-host">Servidor</label>
-                            <input type="text" id="db-host" placeholder="localhost">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="db-name">Base de Datos</label>
-                            <input type="text" id="db-name" placeholder="taller_herramientas">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="db-user">Usuario</label>
-                            <input type="text" id="db-user" placeholder="usuario">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="db-pass">Contraseña</label>
-                            <input type="password" id="db-pass" placeholder="contraseña">
-                        </div>
-                        
-                        <button class="btn btn-primary" id="test-connection">
-                            <i class="fas fa-plug"></i> Probar Conexión
-                        </button>
-                    </div>
-                    
-                    <div class="action-buttons">
-                        <button class="btn btn-success" id="save-config">
-                            <i class="fas fa-save"></i> Guardar Configuración
-                        </button>
-                        <button class="btn btn-primary" id="export-data">
-                            <i class="fas fa-download"></i> Exportar Datos
-                        </button>
-                        <button class="btn btn-danger" id="reset-data">
-                            <i class="fas fa-trash"></i> Restablecer Datos
-                        </button>
-                    </div>
+                    <button class="btn btn-success" id="return-tool">
+                        <i class="fas fa-undo"></i> Devolver Herramienta Seleccionada
+                    </button>
+                </div>
+                
+                <h2 style="margin-top: 30px;"><i class="fas fa-map-marker-alt"></i> Estaciones de Trabajo</h2>
+                <div class="stations" id="stations">
+                    <!-- Las estaciones se cargarán aquí dinámicamente -->
                 </div>
             </div>
         </div>
         
+        <div class="panel">
+            <h2><i class="fas fa-history"></i> Historial Reciente</h2>
+            <div class="tool-history" id="tool-history">
+                <!-- El historial se cargará aquí dinámicamente -->
+            </div>
+        </div>
+        
         <footer>
-            <p>Sistema de Control de Herramientas &copy; 2023 - Taller de Producción</p>
+            <p>Sistema de Control de Herramientas &copy; 2023 - Taller de Producción | Hosteado en GitHub Pages</p>
         </footer>
     </div>
     
     <div class="notification" id="notification"></div>
 
     <script>
-        // Clase para manejar la base de datos con sincronización
-        class DatabaseManager {
+        // Sistema de Control de Herramientas para GitHub Pages
+        class TallerSystem {
             constructor() {
-                this.type = 'local';
-                this.config = this.loadConfig();
-                this.syncInterval = 5000; // 5 segundos por defecto
-                this.autoSync = true;
-                this.syncTimer = null;
-                this.lastSync = null;
+                this.storageKey = 'taller_herramientas_data_v2';
+                this.syncInterval = 3000; // 3 segundos
+                this.users = new Set();
+                this.currentUser = '';
                 this.init();
             }
             
             init() {
-                // Cargar configuración
-                if (this.config.type) {
-                    this.type = this.config.type;
-                }
-                
-                if (this.config.syncInterval) {
-                    this.syncInterval = this.config.syncInterval;
-                }
-                
-                if (this.config.autoSync !== undefined) {
-                    this.autoSync = this.config.autoSync;
-                }
-                
-                // Actualizar UI
-                this.updateUI();
-                
-                // Iniciar sincronización automática
-                if (this.autoSync) {
-                    this.startAutoSync();
-                }
+                this.loadData();
+                this.setupEventListeners();
+                this.startAutoSync();
+                this.setupStorageListener();
+                this.setupUserTracking();
+                this.updateUserCount();
             }
             
-            loadConfig() {
-                const config = localStorage.getItem('db_config');
-                return config ? JSON.parse(config) : { 
-                    type: 'local',
-                    syncInterval: 5000,
-                    autoSync: true
-                };
-            }
-            
-            saveConfig(config) {
-                this.config = { ...this.config, ...config };
-                localStorage.setItem('db_config', JSON.stringify(this.config));
-                this.updateUI();
-                
-                // Reiniciar sincronización si cambió el intervalo
-                if (this.autoSync) {
-                    this.stopAutoSync();
-                    this.startAutoSync();
-                }
-            }
-            
-            updateUI() {
-                document.getElementById('db-type').value = this.config.type;
-                document.getElementById('sync-interval').value = this.config.syncInterval || 5000;
-                document.getElementById('auto-sync').checked = this.config.autoSync !== false;
-                
-                if (this.config.type === 'mysql') {
-                    document.getElementById('mysql-config').style.display = 'block';
-                    document.getElementById('db-status').className = 'db-status db-online';
-                    document.getElementById('db-status').innerHTML = '<i class="fas fa-database"></i> MySQL Conectado';
-                } else {
-                    document.getElementById('mysql-config').style.display = 'none';
-                    document.getElementById('db-status').className = 'db-status db-local';
-                    document.getElementById('db-status').innerHTML = '<i class="fas fa-database"></i> Modo Local';
-                }
-            }
-            
-            // Sincronización automática
-            startAutoSync() {
-                if (this.syncTimer) {
-                    clearInterval(this.syncTimer);
-                }
-                
-                this.syncTimer = setInterval(() => {
-                    this.syncData();
-                }, this.syncInterval);
-                
-                this.updateSyncStatus(true);
-            }
-            
-            stopAutoSync() {
-                if (this.syncTimer) {
-                    clearInterval(this.syncTimer);
-                    this.syncTimer = null;
-                }
-                this.updateSyncStatus(false);
-            }
-            
-            updateSyncStatus(online) {
-                const syncStatus = document.getElementById('sync-status');
-                if (online) {
-                    syncStatus.className = 'sync-status';
-                    syncStatus.innerHTML = '<i class="fas fa-sync"></i> Sincronizado';
-                } else {
-                    syncStatus.className = 'sync-status offline';
-                    syncStatus.innerHTML = '<i class="fas fa-unlink"></i> Sin Sincronización';
-                }
-            }
-            
-            // Sincronizar datos
-            async syncData() {
-                try {
-                    if (this.type === 'mysql') {
-                        // En modo MySQL, los datos ya están centralizados
-                        await this.loadFromServer();
-                    } else {
-                        // En modo local, sincronizar con servidor si está configurado
-                        await this.syncWithServer();
+            loadData() {
+                const saved = localStorage.getItem(this.storageKey);
+                if (saved) {
+                    try {
+                        const data = JSON.parse(saved);
+                        this.tools = data.tools || this.getDefaultTools();
+                        this.stations = data.stations || this.getDefaultStations();
+                        this.history = data.history || [];
+                    } catch (e) {
+                        this.initializeDefaultData();
                     }
-                    
-                    this.lastSync = new Date();
-                    this.updateLastSyncTime();
-                    this.updateSyncStatus(true);
-                    
-                } catch (error) {
-                    console.error('Error en sincronización:', error);
-                    this.updateSyncStatus(false);
-                }
-            }
-            
-            async syncWithServer() {
-                // Aquí iría la lógica para sincronizar con un servidor central
-                // Por ahora, en modo local, recargamos los datos del localStorage
-                await this.loadFromLocal();
-            }
-            
-            async loadFromLocal() {
-                // Recargar datos del localStorage
-                const newTools = this.getFromLocalStorage('tools');
-                const newStations = this.getFromLocalStorage('stations');
-                const newHistory = this.getFromLocalStorage('history');
-                
-                // Verificar si hay cambios
-                const toolsChanged = JSON.stringify(newTools) !== JSON.stringify(window.tools);
-                const stationsChanged = JSON.stringify(newStations) !== JSON.stringify(window.stations);
-                const historyChanged = JSON.stringify(newHistory) !== JSON.stringify(window.history);
-                
-                if (toolsChanged || stationsChanged || historyChanged) {
-                    window.tools = newTools;
-                    window.stations = newStations;
-                    window.history = newHistory;
-                    
-                    // Actualizar interfaz si hay cambios
-                    if (typeof window.renderTools === 'function') window.renderTools();
-                    if (typeof window.updateToolSelect === 'function') window.updateToolSelect();
-                    if (typeof window.updateReturnToolSelect === 'function') window.updateReturnToolSelect();
-                    if (typeof window.renderStations === 'function') window.renderStations();
-                    if (typeof window.renderHistory === 'function') window.renderHistory();
-                    if (typeof window.updateStats === 'function') window.updateStats();
-                    
-                    console.log('Datos sincronizados:', new Date().toLocaleTimeString());
-                }
-            }
-            
-            async loadFromServer() {
-                // Cargar datos del servidor
-                const toolsResult = await this.getTools();
-                const stationsResult = await this.getStations();
-                const historyResult = await this.getHistory();
-                
-                if (toolsResult.success) window.tools = toolsResult.data;
-                if (stationsResult.success) window.stations = stationsResult.data;
-                if (historyResult.success) window.history = historyResult.data;
-                
-                // Actualizar interfaz
-                if (typeof window.renderTools === 'function') window.renderTools();
-                if (typeof window.updateToolSelect === 'function') window.updateToolSelect();
-                if (typeof window.updateReturnToolSelect === 'function') window.updateReturnToolSelect();
-                if (typeof window.renderStations === 'function') window.renderStations();
-                if (typeof window.renderHistory === 'function') window.renderHistory();
-                if (typeof window.updateStats === 'function') window.updateStats();
-            }
-            
-            updateLastSyncTime() {
-                const updateTime = document.getElementById('update-time');
-                if (this.lastSync) {
-                    updateTime.textContent = this.lastSync.toLocaleTimeString();
-                }
-            }
-            
-            // Métodos para herramientas
-            async getTools() {
-                if (this.type === 'mysql') {
-                    return await this.fetchFromServer('get_tools');
                 } else {
-                    return { success: true, data: this.getFromLocalStorage('tools') };
-                }
-            }
-            
-            async saveTool(tool) {
-                if (this.type === 'mysql') {
-                    return await this.fetchFromServer('save_tool', tool);
-                } else {
-                    return this.saveToLocalStorage('tools', tool);
-                }
-            }
-            
-            async updateTool(tool) {
-                if (this.type === 'mysql') {
-                    return await this.fetchFromServer('update_tool', tool);
-                } else {
-                    return this.updateInLocalStorage('tools', tool);
-                }
-            }
-            
-            // Métodos para estaciones
-            async getStations() {
-                if (this.type === 'mysql') {
-                    return await this.fetchFromServer('get_stations');
-                } else {
-                    return { success: true, data: this.getFromLocalStorage('stations') };
-                }
-            }
-            
-            // Métodos para historial
-            async getHistory() {
-                if (this.type === 'mysql') {
-                    return await this.fetchFromServer('get_history');
-                } else {
-                    return { success: true, data: this.getFromLocalStorage('history') };
-                }
-            }
-            
-            async addHistory(record) {
-                if (this.type === 'mysql') {
-                    return await this.fetchFromServer('add_history', record);
-                } else {
-                    return this.addToLocalStorage('history', record);
-                }
-            }
-            
-            // Métodos para localStorage
-            getFromLocalStorage(key) {
-                const data = localStorage.getItem(key);
-                return data ? JSON.parse(data) : [];
-            }
-            
-            saveToLocalStorage(key, item) {
-                const data = this.getFromLocalStorage(key);
-                data.push(item);
-                localStorage.setItem(key, JSON.stringify(data));
-                return { success: true, id: item.id || Date.now() };
-            }
-            
-            updateInLocalStorage(key, updatedItem) {
-                const data = this.getFromLocalStorage(key);
-                const index = data.findIndex(item => item.id === updatedItem.id);
-                if (index !== -1) {
-                    data[index] = updatedItem;
-                    localStorage.setItem(key, JSON.stringify(data));
-                    return { success: true };
-                }
-                return { success: false };
-            }
-            
-            addToLocalStorage(key, item) {
-                const data = this.getFromLocalStorage(key);
-                item.id = item.id || Date.now();
-                data.unshift(item);
-                localStorage.setItem(key, JSON.stringify(data));
-                return { success: true };
-            }
-            
-            // Métodos para servidor MySQL
-            async fetchFromServer(action, data = {}) {
-                try {
-                    const response = await fetch('api.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            action: action,
-                            ...data,
-                            config: this.config
-                        })
-                    });
-                    
-                    return await response.json();
-                } catch (error) {
-                    console.error('Error conectando al servidor:', error);
-                    return { success: false, error: error.message };
-                }
-            }
-            
-            // Exportar datos
-            exportData() {
-                const tools = this.getFromLocalStorage('tools');
-                const stations = this.getFromLocalStorage('stations');
-                const history = this.getFromLocalStorage('history');
-                
-                const data = {
-                    tools: tools,
-                    stations: stations,
-                    history: history,
-                    export_date: new Date().toISOString()
-                };
-                
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `herramientas_backup_${new Date().toISOString().split('T')[0]}.json`;
-                a.click();
-                URL.revokeObjectURL(url);
-            }
-            
-            // Restablecer datos
-            resetData() {
-                if (confirm('¿Está seguro de que desea eliminar todos los datos? Esta acción no se puede deshacer.')) {
-                    localStorage.removeItem('tools');
-                    localStorage.removeItem('stations');
-                    localStorage.removeItem('history');
                     this.initializeDefaultData();
-                    return { success: true };
                 }
-                return { success: false };
+                this.renderAll();
             }
             
-            // Inicializar datos por defecto
             initializeDefaultData() {
-                const defaultTools = [
+                this.tools = this.getDefaultTools();
+                this.stations = this.getDefaultStations();
+                this.history = [];
+                this.saveData();
+            }
+            
+            getDefaultTools() {
+                return [
                     { id: 1, name: "Llave Inglesa 10mm", status: "available", operator: "", station: "", icon: "fas fa-wrench" },
                     { id: 2, name: "Destornillador Plano", status: "available", operator: "", station: "", icon: "fas fa-screwdriver" },
                     { id: 3, name: "Alicate de Corte", status: "available", operator: "", station: "", icon: "fas fa-cut" },
-                    { id: 4, name: "Martillo de Goma", status: "in-use", operator: "Juan Pérez", station: "estacion-1", icon: "fas fa-hammer" },
-                    { id: 5, name: "Llave Allen Set", status: "available", operator: "", station: "", icon: "fas fa-toolbox" }
+                    { id: 4, name: "Martillo de Goma", status: "available", operator: "", station: "", icon: "fas fa-hammer" },
+                    { id: 5, name: "Llave Allen Set", status: "available", operator: "", station: "", icon: "fas fa-toolbox" },
+                    { id: 6, name: "Taladro Eléctrico", status: "available", operator: "", station: "", icon: "fas fa-bolt" },
+                    { id: 7, name: "Sierra Circular", status: "available", operator: "", station: "", icon: "fas fa-cut" },
+                    { id: 8, name: "Nivel Láser", status: "available", operator: "", station: "", icon: "fas fa-ruler-combined" },
+                    { id: 9, name: "Calibrador Pie de Rey", status: "available", operator: "", station: "", icon: "fas fa-ruler" },
+                    { id: 10, name: "Multímetro Digital", status: "available", operator: "", station: "", icon: "fas fa-tachometer-alt" }
                 ];
-                
-                const defaultStations = [
+            }
+            
+            getDefaultStations() {
+                return [
                     { id: "estacion-1", name: "Estación 1 - Ensamblaje" },
                     { id: "estacion-2", name: "Estación 2 - Soldadura" },
                     { id: "estacion-3", name: "Estación 3 - Pintura" },
                     { id: "estacion-4", name: "Estación 4 - Control Calidad" },
                     { id: "estacion-5", name: "Estación 5 - Empaque" }
                 ];
-                
-                const defaultHistory = [
-                    { id: 1, tool: "Taladro Eléctrico", action: "tomada", operator: "María García", station: "Estación 3 - Pintura", time: new Date().toISOString() }
-                ];
-                
-                localStorage.setItem('tools', JSON.stringify(defaultTools));
-                localStorage.setItem('stations', JSON.stringify(defaultStations));
-                localStorage.setItem('history', JSON.stringify(defaultHistory));
-            }
-        }
-
-        // Inicializar la aplicación
-        const db = new DatabaseManager();
-        let tools = [];
-        let stations = [];
-        let history = [];
-
-        // Elementos del DOM
-        const toolList = document.getElementById('tool-list');
-        const toolSelect = document.getElementById('tool-select');
-        const returnToolSelect = document.getElementById('return-tool-select');
-        const operatorName = document.getElementById('operator-name');
-        const stationSelect = document.getElementById('station');
-        const takeToolBtn = document.getElementById('take-tool');
-        const returnToolBtn = document.getElementById('return-tool');
-        const searchTool = document.getElementById('search-tool');
-        const stationsContainer = document.getElementById('stations');
-        const notification = document.getElementById('notification');
-        const toolHistory = document.getElementById('tool-history');
-        const availableCount = document.getElementById('available-count');
-        const inUseCount = document.getElementById('in-use-count');
-        const maintenanceCount = document.getElementById('maintenance-count');
-        const operatorToolsSection = document.getElementById('operator-tools-section');
-
-        // Función para cargar datos
-        async function loadData() {
-            const toolsResult = await db.getTools();
-            const stationsResult = await db.getStations();
-            const historyResult = await db.getHistory();
-            
-            if (toolsResult.success) tools = toolsResult.data;
-            if (stationsResult.success) stations = stationsResult.data;
-            if (historyResult.success) history = historyResult.data;
-            
-            // Si no hay datos, inicializar con valores por defecto
-            if (tools.length === 0) {
-                db.initializeDefaultData();
-                const toolsResult = await db.getTools();
-                const stationsResult = await db.getStations();
-                const historyResult = await db.getHistory();
-                
-                if (toolsResult.success) tools = toolsResult.data;
-                if (stationsResult.success) stations = stationsResult.data;
-                if (historyResult.success) history = historyResult.data;
             }
             
-            renderTools();
-            updateToolSelect();
-            updateReturnToolSelect();
-            renderStations();
-            renderHistory();
-            updateStats();
-            populateStationSelect();
-            
-            // Actualizar tiempo de última sincronización
-            db.updateLastSyncTime();
-        }
-
-        // Función para mostrar notificaciones
-        function showNotification(message, type = 'success') {
-            const icon = type === 'success' ? 'fas fa-check-circle' : 
-                         type === 'warning' ? 'fas fa-exclamation-triangle' : 
-                         'fas fa-exclamation-circle';
-            
-            notification.innerHTML = `<i class="${icon}"></i> ${message}`;
-            notification.className = `notification notification-${type} show`;
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 4000);
-        }
-
-        // Función para actualizar estadísticas
-        function updateStats() {
-            const available = tools.filter(tool => tool.status === 'available').length;
-            const inUse = tools.filter(tool => tool.status === 'in-use').length;
-            const maintenance = tools.filter(tool => tool.status === 'maintenance').length;
-            
-            availableCount.textContent = available;
-            inUseCount.textContent = inUse;
-            maintenanceCount.textContent = maintenance;
-        }
-
-        // Función para renderizar la lista de herramientas
-        function renderTools(filter = '') {
-            toolList.innerHTML = '';
-            
-            const filteredTools = tools.filter(tool => 
-                tool.name.toLowerCase().includes(filter.toLowerCase())
-            );
-            
-            if (filteredTools.length === 0) {
-                toolList.innerHTML = '<div class="tool-item" style="justify-content: center; color: var(--gray-color);">No se encontraron herramientas</div>';
-                return;
+            saveData() {
+                const data = {
+                    tools: this.tools,
+                    stations: this.stations,
+                    history: this.history,
+                    lastUpdate: new Date().toISOString(),
+                    users: Array.from(this.users)
+                };
+                localStorage.setItem(this.storageKey, JSON.stringify(data));
+                
+                // Disparar evento para sincronizar otras pestañas
+                window.dispatchEvent(new StorageEvent('storage', {
+                    key: this.storageKey,
+                    newValue: JSON.stringify(data)
+                }));
             }
             
-            filteredTools.forEach(tool => {
-                const toolItem = document.createElement('div');
-                toolItem.className = 'tool-item';
+            // Sincronización entre pestañas
+            setupStorageListener() {
+                window.addEventListener('storage', (e) => {
+                    if (e.key === this.storageKey && e.newValue) {
+                        try {
+                            const data = JSON.parse(e.newValue);
+                            this.tools = data.tools;
+                            this.stations = data.stations;
+                            this.history = data.history;
+                            this.users = new Set(data.users || []);
+                            this.renderAll();
+                            this.updateUserCount();
+                            this.showNotification('Sistema actualizado', 'success');
+                        } catch (error) {
+                            console.error('Error sincronizando datos:', error);
+                        }
+                    }
+                });
+            }
+            
+            // Seguimiento de usuarios conectados
+            setupUserTracking() {
+                // Generar ID único para este usuario/sesión
+                this.userId = 'user_' + Math.random().toString(36).substr(2, 9);
                 
-                const toolInfo = document.createElement('div');
-                toolInfo.className = 'tool-info';
+                // Actualizar cada 10 segundos
+                setInterval(() => {
+                    this.updateUserPresence();
+                }, 10000);
                 
-                const toolName = document.createElement('div');
-                toolName.className = 'tool-name';
-                toolName.innerHTML = `<i class="${tool.icon} tool-icon"></i> ${tool.name}`;
+                // Actualizar al cargar
+                this.updateUserPresence();
                 
-                const toolStatus = document.createElement('div');
-                toolStatus.className = `tool-status status-${tool.status}`;
+                // Limpiar al cerrar la pestaña
+                window.addEventListener('beforeunload', () => {
+                    this.removeUserPresence();
+                });
+            }
+            
+            updateUserPresence() {
+                this.users.add(this.userId);
+                this.saveData();
+            }
+            
+            removeUserPresence() {
+                this.users.delete(this.userId);
+                this.saveData();
+            }
+            
+            updateUserCount() {
+                const userCountElement = document.getElementById('user-count');
+                if (userCountElement) {
+                    userCountElement.textContent = this.users.size;
+                }
+            }
+            
+            startAutoSync() {
+                setInterval(() => {
+                    this.checkForUpdates();
+                }, this.syncInterval);
+            }
+            
+            checkForUpdates() {
+                // Verificar si hay cambios externos
+                const saved = localStorage.getItem(this.storageKey);
+                if (saved) {
+                    try {
+                        const externalData = JSON.parse(saved);
+                        const currentData = JSON.stringify({
+                            tools: this.tools,
+                            stations: this.stations,
+                            history: this.history
+                        });
+                        
+                        if (JSON.stringify(externalData) !== currentData) {
+                            this.loadData();
+                        }
+                    } catch (e) {
+                        console.error('Error verificando actualizaciones:', e);
+                    }
+                }
+            }
+            
+            setupEventListeners() {
+                // Tomar herramienta
+                document.getElementById('take-tool').addEventListener('click', () => {
+                    this.takeTool();
+                });
                 
-                if (tool.status === 'available') {
-                    toolStatus.textContent = 'Disponible';
-                } else if (tool.status === 'in-use') {
-                    toolStatus.textContent = `En uso por ${tool.operator} (${getStationName(tool.station)})`;
-                } else {
-                    toolStatus.textContent = 'En mantenimiento';
+                // Devolver herramienta
+                document.getElementById('return-tool').addEventListener('click', () => {
+                    this.returnTool();
+                });
+                
+                // Búsqueda
+                document.getElementById('search-tool').addEventListener('input', (e) => {
+                    this.renderTools(e.target.value);
+                });
+                
+                // Actualizar herramientas del operario
+                document.getElementById('operator-name').addEventListener('input', () => {
+                    this.updateReturnToolSelect();
+                });
+            }
+            
+            renderAll() {
+                this.renderTools();
+                this.updateToolSelect();
+                this.updateReturnToolSelect();
+                this.renderStations();
+                this.renderHistory();
+                this.updateStats();
+                this.populateStationSelect();
+                this.updateLastSyncTime();
+            }
+            
+            renderTools(filter = '') {
+                const toolList = document.getElementById('tool-list');
+                if (!toolList) return;
+                
+                toolList.innerHTML = '';
+                
+                const filteredTools = this.tools.filter(tool => 
+                    tool.name.toLowerCase().includes(filter.toLowerCase())
+                );
+                
+                if (filteredTools.length === 0) {
+                    toolList.innerHTML = '<div class="tool-item" style="justify-content: center; color: var(--gray-color);">No se encontraron herramientas</div>';
+                    return;
                 }
                 
-                toolInfo.appendChild(toolName);
-                toolInfo.appendChild(toolStatus);
-                toolItem.appendChild(toolInfo);
-                
-                toolList.appendChild(toolItem);
-            });
-        }
-
-        // Función para obtener el nombre de la estación por ID
-        function getStationName(stationId) {
-            const station = stations.find(s => s.id === stationId);
-            return station ? station.name : 'Desconocida';
-        }
-
-        // Función para actualizar el selector de herramientas para TOMAR
-        function updateToolSelect() {
-            toolSelect.innerHTML = '<option value="">Seleccione una herramienta disponible</option>';
+                filteredTools.forEach(tool => {
+                    const toolItem = document.createElement('div');
+                    toolItem.className = 'tool-item';
+                    
+                    const toolInfo = document.createElement('div');
+                    toolInfo.className = 'tool-info';
+                    
+                    const toolName = document.createElement('div');
+                    toolName.className = 'tool-name';
+                    toolName.innerHTML = `<i class="${tool.icon} tool-icon"></i> ${tool.name}`;
+                    
+                    const toolStatus = document.createElement('div');
+                    toolStatus.className = `tool-status status-${tool.status}`;
+                    
+                    if (tool.status === 'available') {
+                        toolStatus.textContent = 'Disponible';
+                    } else if (tool.status === 'in-use') {
+                        toolStatus.textContent = `En uso por ${tool.operator} (${this.getStationName(tool.station)})`;
+                    } else {
+                        toolStatus.textContent = 'En mantenimiento';
+                    }
+                    
+                    toolInfo.appendChild(toolName);
+                    toolInfo.appendChild(toolStatus);
+                    toolItem.appendChild(toolInfo);
+                    
+                    toolList.appendChild(toolItem);
+                });
+            }
             
-            tools.forEach(tool => {
-                if (tool.status === 'available') {
+            getStationName(stationId) {
+                const station = this.stations.find(s => s.id === stationId);
+                return station ? station.name : 'Desconocida';
+            }
+            
+            updateToolSelect() {
+                const toolSelect = document.getElementById('tool-select');
+                if (!toolSelect) return;
+                
+                toolSelect.innerHTML = '<option value="">Seleccione una herramienta disponible</option>';
+                
+                this.tools.forEach(tool => {
+                    if (tool.status === 'available') {
+                        const option = document.createElement('option');
+                        option.value = tool.id;
+                        option.textContent = tool.name;
+                        toolSelect.appendChild(option);
+                    }
+                });
+            }
+            
+            updateReturnToolSelect() {
+                const returnToolSelect = document.getElementById('return-tool-select');
+                const operatorToolsSection = document.getElementById('operator-tools-section');
+                const operatorName = document.getElementById('operator-name');
+                
+                if (!returnToolSelect || !operatorToolsSection || !operatorName) return;
+                
+                returnToolSelect.innerHTML = '<option value="">Seleccione una herramienta en uso</option>';
+                
+                const operator = operatorName.value.trim();
+                if (!operator) {
+                    operatorToolsSection.style.display = 'none';
+                    return;
+                }
+                
+                const operatorTools = this.tools.filter(tool => 
+                    tool.status === 'in-use' && tool.operator === operator
+                );
+                
+                if (operatorTools.length === 0) {
+                    operatorToolsSection.style.display = 'none';
+                    return;
+                }
+                
+                operatorToolsSection.style.display = 'block';
+                
+                operatorTools.forEach(tool => {
                     const option = document.createElement('option');
                     option.value = tool.id;
-                    option.textContent = tool.name;
-                    toolSelect.appendChild(option);
-                }
-            });
-        }
-
-        // Función para actualizar el selector de herramientas para DEVOLVER
-        function updateReturnToolSelect() {
-            returnToolSelect.innerHTML = '<option value="">Seleccione una herramienta en uso</option>';
-            
-            const operator = operatorName.value.trim();
-            if (!operator) {
-                operatorToolsSection.style.display = 'none';
-                return;
+                    option.textContent = `${tool.name} (${this.getStationName(tool.station)})`;
+                    returnToolSelect.appendChild(option);
+                });
             }
             
-            const operatorTools = tools.filter(tool => 
-                tool.status === 'in-use' && tool.operator === operator
-            );
-            
-            if (operatorTools.length === 0) {
-                operatorToolsSection.style.display = 'none';
-                return;
+            populateStationSelect() {
+                const stationSelect = document.getElementById('station');
+                if (!stationSelect) return;
+                
+                stationSelect.innerHTML = '<option value="">Seleccione una estación</option>';
+                
+                this.stations.forEach(station => {
+                    const option = document.createElement('option');
+                    option.value = station.id;
+                    option.textContent = station.name;
+                    stationSelect.appendChild(option);
+                });
             }
             
-            operatorToolsSection.style.display = 'block';
+            renderStations() {
+                const stationsContainer = document.getElementById('stations');
+                if (!stationsContainer) return;
+                
+                stationsContainer.innerHTML = '';
+                
+                this.stations.forEach(station => {
+                    const stationElement = document.createElement('div');
+                    stationElement.className = 'station';
+                    
+                    const stationName = document.createElement('h3');
+                    stationName.innerHTML = `<i class="fas fa-industry"></i> ${station.name}`;
+                    
+                    const stationTools = document.createElement('div');
+                    stationTools.className = 'station-tools';
+                    
+                    const toolsInStation = this.tools.filter(tool => 
+                        tool.station === station.id && tool.status === 'in-use'
+                    );
+                    
+                    if (toolsInStation.length === 0) {
+                        const noTools = document.createElement('div');
+                        noTools.className = 'empty-station';
+                        noTools.textContent = 'Sin herramientas en uso';
+                        stationTools.appendChild(noTools);
+                    } else {
+                        toolsInStation.forEach(tool => {
+                            const toolElement = document.createElement('div');
+                            toolElement.className = 'tool-in-station';
+                            toolElement.innerHTML = `<i class="${tool.icon}"></i> ${tool.name} <br><small>(${tool.operator})</small>`;
+                            stationTools.appendChild(toolElement);
+                        });
+                    }
+                    
+                    stationElement.appendChild(stationName);
+                    stationElement.appendChild(stationTools);
+                    stationsContainer.appendChild(stationElement);
+                });
+            }
             
-            operatorTools.forEach(tool => {
-                const option = document.createElement('option');
-                option.value = tool.id;
-                option.textContent = `${tool.name} (${getStationName(tool.station)})`;
-                returnToolSelect.appendChild(option);
-            });
-        }
-
-        // Función para poblar el selector de estaciones
-        function populateStationSelect() {
-            stationSelect.innerHTML = '<option value="">Seleccione una estación</option>';
-            
-            stations.forEach(station => {
-                const option = document.createElement('option');
-                option.value = station.id;
-                option.textContent = station.name;
-                stationSelect.appendChild(option);
-            });
-        }
-
-        // Función para renderizar las estaciones de trabajo
-        function renderStations() {
-            stationsContainer.innerHTML = '';
-            
-            stations.forEach(station => {
-                const stationElement = document.createElement('div');
-                stationElement.className = 'station';
+            renderHistory() {
+                const toolHistory = document.getElementById('tool-history');
+                if (!toolHistory) return;
                 
-                const stationName = document.createElement('h3');
-                stationName.innerHTML = `<i class="fas fa-industry"></i> ${station.name}`;
+                toolHistory.innerHTML = '';
                 
-                const stationTools = document.createElement('div');
-                stationTools.className = 'station-tools';
-                
-                // Encontrar herramientas en esta estación
-                const toolsInStation = tools.filter(tool => tool.station === station.id && tool.status === 'in-use');
-                
-                if (toolsInStation.length === 0) {
-                    const noTools = document.createElement('div');
-                    noTools.className = 'empty-station';
-                    noTools.textContent = 'Sin herramientas en uso';
-                    stationTools.appendChild(noTools);
-                } else {
-                    toolsInStation.forEach(tool => {
-                        const toolElement = document.createElement('div');
-                        toolElement.className = 'tool-in-station';
-                        toolElement.innerHTML = `<i class="${tool.icon}"></i> ${tool.name} <br><small>(${tool.operator})</small>`;
-                        stationTools.appendChild(toolElement);
-                    });
+                if (this.history.length === 0) {
+                    toolHistory.innerHTML = '<div class="history-item">No hay historial registrado</div>';
+                    return;
                 }
                 
-                stationElement.appendChild(stationName);
-                stationElement.appendChild(stationTools);
-                stationsContainer.appendChild(stationElement);
-            });
-        }
-
-        // Función para renderizar el historial
-        function renderHistory() {
-            toolHistory.innerHTML = '';
-            
-            if (history.length === 0) {
-                toolHistory.innerHTML = '<div class="history-item">No hay historial registrado</div>';
-                return;
-            }
-            
-            // Ordenar historial por tiempo (más reciente primero)
-            const sortedHistory = [...history].sort((a, b) => new Date(b.time) - new Date(a.time));
-            
-            sortedHistory.slice(0, 10).forEach(item => {
-                const historyItem = document.createElement('div');
-                historyItem.className = 'history-item';
+                const sortedHistory = [...this.history].sort((a, b) => 
+                    new Date(b.time) - new Date(a.time)
+                ).slice(0, 10);
                 
-                const actionText = item.action === 'tomada' ? 'tomada por' : 
-                                 item.action === 'devuelta' ? 'devuelta por' : 
-                                 item.action;
+                sortedHistory.forEach(item => {
+                    const historyItem = document.createElement('div');
+                    historyItem.className = 'history-item';
+                    
+                    const actionText = item.action === 'tomada' ? 'tomada por' : 
+                                     item.action === 'devuelta' ? 'devuelta por' : 
+                                     item.action;
+                    
+                    historyItem.innerHTML = `
+                        <strong>${item.tool}</strong> ${actionText} <strong>${item.operator}</strong> en ${item.station}
+                        <div class="history-time">${this.formatTime(item.time)}</div>
+                    `;
+                    
+                    toolHistory.appendChild(historyItem);
+                });
+            }
+            
+            formatTime(dateTimeString) {
+                const date = new Date(dateTimeString);
+                return date.toLocaleString('es-ES');
+            }
+            
+            updateStats() {
+                const available = this.tools.filter(tool => tool.status === 'available').length;
+                const inUse = this.tools.filter(tool => tool.status === 'in-use').length;
+                const maintenance = this.tools.filter(tool => tool.status === 'maintenance').length;
                 
-                historyItem.innerHTML = `
-                    <strong>${item.tool}</strong> ${actionText} <strong>${item.operator}</strong> en ${item.station}
-                    <div class="history-time">${formatTime(item.time)}</div>
-                `;
+                const availableCount = document.getElementById('available-count');
+                const inUseCount = document.getElementById('in-use-count');
+                const maintenanceCount = document.getElementById('maintenance-count');
                 
-                toolHistory.appendChild(historyItem);
-            });
-        }
-
-        // Función para formatear la fecha y hora
-        function formatTime(dateTimeString) {
-            const date = new Date(dateTimeString);
-            return date.toLocaleString('es-ES');
-        }
-
-        // Función para tomar una herramienta
-        async function takeTool() {
-            const toolId = parseInt(toolSelect.value);
-            const operator = operatorName.value.trim();
-            const station = stationSelect.value;
-            
-            if (!toolId || !operator || !station) {
-                showNotification('Por favor, complete todos los campos', 'warning');
-                return;
+                if (availableCount) availableCount.textContent = available;
+                if (inUseCount) inUseCount.textContent = inUse;
+                if (maintenanceCount) maintenanceCount.textContent = maintenance;
             }
             
-            const toolIndex = tools.findIndex(t => t.id === toolId);
-            
-            if (toolIndex === -1) {
-                showNotification('Herramienta no encontrada', 'warning');
-                return;
+            updateLastSyncTime() {
+                const updateTime = document.getElementById('update-time');
+                if (updateTime) {
+                    updateTime.textContent = new Date().toLocaleTimeString();
+                }
             }
             
-            if (tools[toolIndex].status !== 'available') {
-                showNotification('Esta herramienta no está disponible', 'warning');
-                return;
-            }
-            
-            // Actualizar el estado de la herramienta
-            tools[toolIndex].status = 'in-use';
-            tools[toolIndex].operator = operator;
-            tools[toolIndex].station = station;
-            
-            // Guardar en la base de datos
-            const result = await db.updateTool(tools[toolIndex]);
-            
-            if (!result.success) {
-                showNotification('Error al actualizar la herramienta', 'error');
-                return;
-            }
-            
-            // Agregar al historial
-            const now = new Date();
-            const historyRecord = {
-                tool: tools[toolIndex].name,
-                action: 'tomada',
-                operator: operator,
-                station: getStationName(station),
-                time: now.toISOString()
-            };
-            
-            await db.addHistory(historyRecord);
-            history.unshift(historyRecord);
-            
-            // Actualizar la interfaz
-            renderTools();
-            updateToolSelect();
-            updateReturnToolSelect();
-            renderStations();
-            renderHistory();
-            updateStats();
-            
-            showNotification(`Herramienta "${tools[toolIndex].name}" tomada por ${operator}`, 'success');
-            
-            // Limpiar formulario
-            toolSelect.value = '';
-        }
-
-        // Función para devolver una herramienta
-        async function returnTool() {
-            const toolId = parseInt(returnToolSelect.value);
-            const operator = operatorName.value.trim();
-            
-            if (!toolId) {
-                showNotification('Por favor, seleccione una herramienta para devolver', 'warning');
-                return;
-            }
-            
-            const toolIndex = tools.findIndex(t => t.id === toolId);
-            
-            if (toolIndex === -1) {
-                showNotification('Herramienta no encontrada', 'warning');
-                return;
-            }
-            
-            if (tools[toolIndex].status !== 'in-use') {
-                showNotification('Esta herramienta no está en uso', 'warning');
-                return;
-            }
-            
-            // Verificar que la herramienta pertenece al operario
-            if (tools[toolIndex].operator !== operator) {
-                showNotification('Esta herramienta no está asignada a usted', 'error');
-                return;
-            }
-            
-            const toolName = tools[toolIndex].name;
-            
-            // Actualizar el estado de la herramienta
-            tools[toolIndex].status = 'available';
-            tools[toolIndex].operator = '';
-            tools[toolIndex].station = '';
-            
-            // Guardar en la base de datos
-            const result = await db.updateTool(tools[toolIndex]);
-            
-            if (!result.success) {
-                showNotification('Error al actualizar la herramienta', 'error');
-                return;
-            }
-            
-            // Agregar al historial
-            const now = new Date();
-            const historyRecord = {
-                tool: toolName,
-                action: 'devuelta',
-                operator: operator,
-                station: 'Almacén',
-                time: now.toISOString()
-            };
-            
-            await db.addHistory(historyRecord);
-            history.unshift(historyRecord);
-            
-            // Actualizar la interfaz
-            renderTools();
-            updateToolSelect();
-            updateReturnToolSelect();
-            renderStations();
-            renderHistory();
-            updateStats();
-            
-            showNotification(`Herramienta "${toolName}" devuelta correctamente`, 'success');
-            
-            // Limpiar formulario
-            returnToolSelect.value = '';
-        }
-
-        // Configuración de pestañas
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            takeTool() {
+                const toolSelect = document.getElementById('tool-select');
+                const operatorName = document.getElementById('operator-name');
+                const stationSelect = document.getElementById('station');
                 
-                tab.classList.add('active');
-                document.getElementById(`${tab.dataset.tab}-tab`).classList.add('active');
-            });
-        });
-
-        // Configuración de sincronización
-        document.getElementById('sync-interval').addEventListener('change', function() {
-            db.saveConfig({ syncInterval: parseInt(this.value) });
-        });
-
-        document.getElementById('auto-sync').addEventListener('change', function() {
-            const autoSync = this.checked;
-            db.saveConfig({ autoSync: autoSync });
+                if (!toolSelect || !operatorName || !stationSelect) return;
+                
+                const toolId = parseInt(toolSelect.value);
+                const operator = operatorName.value.trim();
+                const station = stationSelect.value;
+                
+                if (!toolId || !operator || !station) {
+                    this.showNotification('Por favor, complete todos los campos', 'warning');
+                    return;
+                }
+                
+                const toolIndex = this.tools.findIndex(t => t.id === toolId);
+                
+                if (toolIndex === -1) {
+                    this.showNotification('Herramienta no encontrada', 'warning');
+                    return;
+                }
+                
+                if (this.tools[toolIndex].status !== 'available') {
+                    this.showNotification('Esta herramienta no está disponible', 'warning');
+                    return;
+                }
+                
+                // Actualizar el estado de la herramienta
+                this.tools[toolIndex].status = 'in-use';
+                this.tools[toolIndex].operator = operator;
+                this.tools[toolIndex].station = station;
+                
+                // Agregar al historial
+                const now = new Date();
+                this.history.unshift({
+                    tool: this.tools[toolIndex].name,
+                    action: 'tomada',
+                    operator: operator,
+                    station: this.getStationName(station),
+                    time: now.toISOString()
+                });
+                
+                // Guardar y sincronizar
+                this.saveData();
+                this.renderAll();
+                
+                this.showNotification(`Herramienta "${this.tools[toolIndex].name}" tomada por ${operator}`, 'success');
+                
+                // Limpiar formulario
+                toolSelect.value = '';
+            }
             
-            if (autoSync) {
-                db.startAutoSync();
-                showNotification('Sincronización automática activada', 'success');
-            } else {
-                db.stopAutoSync();
-                showNotification('Sincronización automática desactivada', 'warning');
+            returnTool() {
+                const returnToolSelect = document.getElementById('return-tool-select');
+                const operatorName = document.getElementById('operator-name');
+                
+                if (!returnToolSelect || !operatorName) return;
+                
+                const toolId = parseInt(returnToolSelect.value);
+                const operator = operatorName.value.trim();
+                
+                if (!toolId) {
+                    this.showNotification('Por favor, seleccione una herramienta para devolver', 'warning');
+                    return;
+                }
+                
+                const toolIndex = this.tools.findIndex(t => t.id === toolId);
+                
+                if (toolIndex === -1) {
+                    this.showNotification('Herramienta no encontrada', 'warning');
+                    return;
+                }
+                
+                if (this.tools[toolIndex].status !== 'in-use') {
+                    this.showNotification('Esta herramienta no está en uso', 'warning');
+                    return;
+                }
+                
+                if (this.tools[toolIndex].operator !== operator) {
+                    this.showNotification('Esta herramienta no está asignada a usted', 'error');
+                    return;
+                }
+                
+                const toolName = this.tools[toolIndex].name;
+                
+                // Actualizar el estado de la herramienta
+                this.tools[toolIndex].status = 'available';
+                this.tools[toolIndex].operator = '';
+                this.tools[toolIndex].station = '';
+                
+                // Agregar al historial
+                const now = new Date();
+                this.history.unshift({
+                    tool: toolName,
+                    action: 'devuelta',
+                    operator: operator,
+                    station: 'Almacén',
+                    time: now.toISOString()
+                });
+                
+                // Guardar y sincronizar
+                this.saveData();
+                this.renderAll();
+                
+                this.showNotification(`Herramienta "${toolName}" devuelta correctamente`, 'success');
+                
+                // Limpiar formulario
+                returnToolSelect.value = '';
             }
-        });
-
-        document.getElementById('manual-sync').addEventListener('click', function() {
-            db.syncData();
-            showNotification('Sincronización manual ejecutada', 'success');
-        });
-
-        // Configuración de base de datos
-        document.getElementById('db-type').addEventListener('change', function() {
-            db.saveConfig({ type: this.value });
-        });
-
-        document.getElementById('save-config').addEventListener('click', function() {
-            if (db.config.type === 'mysql') {
-                const mysqlConfig = {
-                    host: document.getElementById('db-host').value,
-                    name: document.getElementById('db-name').value,
-                    user: document.getElementById('db-user').value,
-                    pass: document.getElementById('db-pass').value
-                };
-                db.saveConfig(mysqlConfig);
+            
+            showNotification(message, type = 'success') {
+                const notification = document.getElementById('notification');
+                if (!notification) return;
+                
+                const icon = type === 'success' ? 'fas fa-check-circle' : 
+                             type === 'warning' ? 'fas fa-exclamation-triangle' : 
+                             'fas fa-exclamation-circle';
+                
+                notification.innerHTML = `<i class="${icon}"></i> ${message}`;
+                notification.className = `notification notification-${type} show`;
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 4000);
             }
-            showNotification('Configuración guardada correctamente', 'success');
-        });
+        }
 
-        document.getElementById('export-data').addEventListener('click', function() {
-            db.exportData();
-            showNotification('Datos exportados correctamente', 'success');
-        });
-
-        document.getElementById('reset-data').addEventListener('click', async function() {
-            const result = db.resetData();
-            if (result.success) {
-                await loadData();
-                showNotification('Datos restablecidos correctamente', 'success');
-            }
-        });
-
-        // Event Listeners
-        takeToolBtn.addEventListener('click', takeTool);
-        returnToolBtn.addEventListener('click', returnTool);
-        
-        searchTool.addEventListener('input', (e) => {
-            renderTools(e.target.value);
-        });
-
-        // Actualizar lista de herramientas del operario cuando cambia el nombre
-        operatorName.addEventListener('input', updateReturnToolSelect);
-
-        // Inicializar la aplicación
-        document.addEventListener('DOMContentLoaded', async () => {
-            await loadData();
+        // Inicializar el sistema cuando se carga la página
+        document.addEventListener('DOMContentLoaded', () => {
+            window.tallerSystem = new TallerSystem();
         });
     </script>
 </body>
