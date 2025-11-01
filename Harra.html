@@ -3,76 +3,436 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Control de Herramientas</title>
+    <title>Sistema de Control de Herramientas - Taller</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #34495e;
+            --gray-color: #95a5a6;
+        }
+        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         body {
-            background: #f5f7fa;
-            padding: 20px;
+            background-color: #f5f7fa;
+            color: var(--dark-color);
+            line-height: 1.6;
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .firebase-banner {
+            background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .firebase-banner h3 {
+            margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--success-color), var(--warning-color), var(--danger-color));
+        }
+        
+        header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .sync-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-left: 15px;
+            background-color: var(--success-color);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        .sync-status.offline {
+            background-color: var(--danger-color);
+            animation: none;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 25px;
+        }
+        
+        @media (max-width: 1100px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
         }
         
         .panel {
-            background: white;
-            padding: 20px;
-            margin: 10px 0;
+            background-color: white;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
         }
         
-        .btn {
-            background: #3498db;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 5px;
+        .panel:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
         }
         
-        .btn-success { background: #27ae60; }
-        .btn-warning { background: #f39c12; }
-        .btn-danger { background: #e74c3c; }
+        .panel h2 {
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--light-color);
+            padding-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
         
-        input, select {
-            width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+        .panel h2 i {
+            color: var(--secondary-color);
+        }
+        
+        .tool-list {
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid var(--light-color);
+            border-radius: 8px;
         }
         
         .tool-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             padding: 15px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--light-color);
+            transition: background-color 0.3s;
             cursor: pointer;
         }
         
-        .tool-item:hover {
-            background: #f9f9f9;
+        .tool-item:last-child {
+            border-bottom: none;
         }
         
-        .status-available { color: #27ae60; font-weight: bold; }
-        .status-in-use { color: #f39c12; }
-        .status-maintenance { color: #e74c3c; }
+        .tool-item:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .tool-info {
+            flex-grow: 1;
+        }
+        
+        .tool-name {
+            font-weight: bold;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .tool-serial {
+            font-size: 0.85em;
+            color: var(--gray-color);
+            margin-left: 10px;
+        }
+        
+        .tool-icon {
+            color: var(--secondary-color);
+        }
+        
+        .tool-status {
+            font-size: 0.85em;
+            padding: 5px 10px;
+            border-radius: 20px;
+            margin-top: 8px;
+            display: inline-block;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .tool-status:hover {
+            transform: scale(1.05);
+        }
+        
+        .status-available {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .status-in-use {
+            background-color: var(--warning-color);
+            color: white;
+        }
+        
+        .status-maintenance {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #219653;
+            transform: translateY(-2px);
+        }
+        
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background-color: #e67e22;
+            transform: translateY(-2px);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--dark-color);
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border 0.3s;
+        }
+        
+        input:focus, select:focus {
+            border-color: var(--secondary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        
+        .stations {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .station {
+            background: linear-gradient(135deg, var(--light-color), #dfe6e9);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            transition: transform 0.3s;
+            border-left: 5px solid var(--secondary-color);
+        }
+        
+        .station:hover {
+            transform: translateY(-5px);
+        }
+        
+        .station h3 {
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .station-tools {
+            min-height: 120px;
+        }
+        
+        .tool-in-station {
+            background-color: white;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .tool-in-station i {
+            color: var(--secondary-color);
+        }
+        
+        .empty-station {
+            color: var(--gray-color);
+            font-style: italic;
+            padding: 20px 0;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            padding: 18px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            opacity: 0;
+            transform: translateX(100px);
+            transition: opacity 0.5s, transform 0.5s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            max-width: 400px;
+        }
+        
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .notification-success {
+            background-color: var(--success-color);
+            border-left: 5px solid #1e8449;
+        }
+        
+        .notification-warning {
+            background-color: var(--warning-color);
+            border-left: 5px solid #b7950b;
+        }
+        
+        .notification-error {
+            background-color: var(--danger-color);
+            border-left: 5px solid #a93226;
+        }
+        
+        .search-box {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-color);
+        }
+        
+        .search-box input {
+            padding-left: 45px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+        }
+        
+        .action-buttons .btn {
+            flex: 1;
+            justify-content: center;
+        }
         
         .stats {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
         
         .stat-card {
@@ -80,129 +440,312 @@
             padding: 20px;
             border-radius: 8px;
             text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
         }
         
-        table {
+        .stat-card i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .stat-card.available i {
+            color: var(--success-color);
+        }
+        
+        .stat-card.in-use i {
+            color: var(--warning-color);
+        }
+        
+        .stat-card.maintenance i {
+            color: var(--danger-color);
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            color: var(--gray-color);
+            font-size: 0.9rem;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: var(--gray-color);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--light-color);
+        }
+        
+        .tool-history {
+            margin-top: 30px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid var(--light-color);
+            border-radius: 8px;
+            padding: 15px;
+        }
+        
+        .history-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
+            margin-top: 15px;
         }
         
-        th, td {
+        .history-table th,
+        .history-table td {
             padding: 12px;
             text-align: left;
-            border-bottom: 1px solid #ddd;
+            border-bottom: 1px solid var(--light-color);
         }
         
-        th {
-            background: #f8f9fa;
+        .history-table th {
+            background-color: var(--light-color);
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .history-table tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .history-time {
+            color: var(--gray-color);
+            font-size: 0.8rem;
+        }
+        
+        .operator-tools {
+            background-color: var(--light-color);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .operator-tools h3 {
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+        
+        .last-update {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--gray-color);
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .user-count {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255,255,255,0.2);
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 10px;
         }
         
         .loading {
             text-align: center;
             padding: 40px;
-            color: #666;
+            color: var(--gray-color);
         }
         
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            background: #27ae60;
-            color: white;
-            border-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        .maintenance-controls {
+            background-color: var(--light-color);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .maintenance-controls h4 {
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+        
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .quick-actions .btn {
+            flex: 1;
+        }
+        
+        .quick-take-section {
+            background-color: var(--light-color);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="panel">
-            <h1>🛠️ Sistema de Control de Herramientas</h1>
-            <div id="status">🔄 Conectando...</div>
+        <!-- Banner Firebase -->
+        <div class="firebase-banner">
+            <h3><i class="fas fa-bolt"></i> Conectado a Firebase - Sincronización Activa</h3>
+            <p>Todos los dispositivos están sincronizados en tiempo real</p>
         </div>
-
+        
+        <header>
+            <h1><i class="fas fa-tools"></i> Sistema de Control de Herramientas</h1>
+            <p>
+                Taller de Producción - 
+                <span id="sync-status" class="sync-status"><i class="fas fa-sync"></i> Sincronizado</span>
+                <span class="user-count"><i class="fas fa-users"></i> <span id="user-count">0</span> conectados</span>
+            </p>
+        </header>
+        
         <div class="stats">
-            <div class="stat-card">
-                <div style="font-size: 2em; color: #27ae60;" id="available-count">0</div>
-                <div>Disponibles</div>
+            <div class="stat-card available">
+                <i class="fas fa-check-circle"></i>
+                <div class="stat-value" id="available-count">0</div>
+                <div class="stat-label">Disponibles</div>
             </div>
-            <div class="stat-card">
-                <div style="font-size: 2em; color: #f39c12;" id="in-use-count">0</div>
-                <div>En Uso</div>
+            <div class="stat-card in-use">
+                <i class="fas fa-user-check"></i>
+                <div class="stat-value" id="in-use-count">0</div>
+                <div class="stat-label">En Uso</div>
             </div>
-            <div class="stat-card">
-                <div style="font-size: 2em; color: #e74c3c;" id="maintenance-count">0</div>
-                <div>Mantenimiento</div>
+            <div class="stat-card maintenance">
+                <i class="fas fa-toolbox"></i>
+                <div class="stat-value" id="maintenance-count">0</div>
+                <div class="stat-label">En Mantenimiento</div>
             </div>
         </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <!-- Columna Izquierda -->
+        
+        <div class="last-update" id="last-update">
+            Última actualización: <span id="update-time">Cargando...</span>
+        </div>
+        
+        <div class="dashboard">
             <div class="panel">
-                <h3>📋 Inventario de Herramientas</h3>
-                <input type="text" id="search-tool" placeholder="Buscar herramienta...">
-                <div id="tools-list" class="loading">Cargando herramientas...</div>
-            </div>
-
-            <!-- Columna Derecha -->
-            <div class="panel">
-                <h3>👤 Gestión</h3>
-                <input type="text" id="operator-name" placeholder="Nombre del operario">
+                <h2><i class="fas fa-list"></i> Inventario de Herramientas</h2>
                 
-                <!-- Sección Toma Rápida -->
-                <div id="quick-take-section" style="display: none; background: #e8f4fd; padding: 15px; border-radius: 5px; margin: 10px 0;">
-                    <h4>Tomar: <span id="selected-tool-name"></span></h4>
-                    <select id="quick-station">
-                        <option value="">Seleccionar estación</option>
-                    </select>
-                    <button class="btn btn-success" onclick="confirmQuickTake()">✅ Confirmar</button>
-                    <button class="btn btn-danger" onclick="cancelQuickTake()">❌ Cancelar</button>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="search-tool" placeholder="Buscar herramienta o número de serie...">
+                </div>
+                
+                <div class="tool-list" id="tool-list">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i> Cargando herramientas...
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h2><i class="fas fa-tasks"></i> Gestión de Herramientas</h2>
+                
+                <div class="form-group">
+                    <label for="operator-name"><i class="fas fa-user"></i> Nombre del Operario</label>
+                    <input type="text" id="operator-name" placeholder="Ingrese su nombre completo">
+                </div>
+                
+                <!-- Sección para TOMAR RÁPIDO (aparece al hacer click en disponible) -->
+                <div class="quick-take-section" id="quick-take-section" style="display: none;">
+                    <h3><i class="fas fa-hand-paper"></i> Tomar Herramienta</h3>
+                    <div class="form-group">
+                        <label><strong>Herramienta seleccionada:</strong></label>
+                        <div id="selected-tool-info" style="padding: 10px; background: white; border-radius: 5px;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="quick-station"><i class="fas fa-industry"></i> Estación de Trabajo</label>
+                        <select id="quick-station">
+                            <option value="">Seleccione una estación</option>
+                        </select>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" id="quick-take-btn">
+                            <i class="fas fa-hand-paper"></i> Confirmar Toma
+                        </button>
+                        <button class="btn btn-danger" id="cancel-quick-take">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Herramientas del Usuario -->
-                <div id="my-tools-section" style="display: none;">
-                    <h4>🛠️ Mis Herramientas</h4>
-                    <select id="my-tools-select">
-                        <option value="">Seleccionar herramienta para devolver</option>
-                    </select>
-                    <button class="btn" onclick="returnTool()">↩️ Devolver</button>
+                <!-- Sección para DEVOLVER herramienta -->
+                <div class="operator-tools" id="operator-tools-section" style="display: none;">
+                    <h3><i class="fas fa-toolbox"></i> Mis Herramientas en Uso</h3>
+                    <div class="form-group">
+                        <label for="return-tool-select"><i class="fas fa-undo"></i> Seleccionar Herramienta para Devolver</label>
+                        <select id="return-tool-select">
+                            <option value="">Seleccione una herramienta en uso</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-success" id="return-tool">
+                        <i class="fas fa-undo"></i> Devolver Herramienta Seleccionada
+                    </button>
                 </div>
-
-                <!-- Mantenimiento -->
-                <div style="margin-top: 20px;">
-                    <h4>🔧 Mantenimiento</h4>
-                    <select id="maintenance-tool">
-                        <option value="">Seleccionar herramienta</option>
-                    </select>
-                    <button class="btn btn-warning" onclick="sendToMaintenance()">🛠️ Enviar a Mantenimiento</button>
-                    <button class="btn btn-success" onclick="returnFromMaintenance()">✅ Volver de Mantenimiento</button>
+                
+                <!-- Controles de Mantenimiento -->
+                <div class="maintenance-controls">
+                    <h4><i class="fas fa-cogs"></i> Gestión de Mantenimiento</h4>
+                    <div class="form-group">
+                        <label for="maintenance-tool-select">Seleccionar Herramienta para Mantenimiento</label>
+                        <select id="maintenance-tool-select">
+                            <option value="">Seleccione una herramienta</option>
+                        </select>
+                    </div>
+                    <div class="quick-actions">
+                        <button class="btn btn-warning" id="send-maintenance">
+                            <i class="fas fa-tools"></i> Enviar a Mantenimiento
+                        </button>
+                        <button class="btn btn-success" id="return-from-maintenance">
+                            <i class="fas fa-undo"></i> Volver de Mantenimiento
+                        </button>
+                    </div>
+                </div>
+                
+                <h2 style="margin-top: 30px;"><i class="fas fa-map-marker-alt"></i> Estaciones de Trabajo</h2>
+                <div class="stations" id="stations">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i> Cargando estaciones...
+                    </div>
                 </div>
             </div>
         </div>
-
-        <!-- Historial -->
+        
         <div class="panel">
-            <h3>📊 Historial de Uso</h3>
-            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <select id="filter-tool">
-                    <option value="">Todas las herramientas</option>
-                </select>
-                <select id="filter-operator">
-                    <option value="">Todos los operarios</option>
-                </select>
-                <button class="btn" onclick="refreshHistory()">🔄 Actualizar</button>
-            </div>
-            <div id="history-table">
-                <div class="loading">Cargando historial...</div>
+            <h2><i class="fas fa-history"></i> Historial Detallado de Uso</h2>
+            
+            <div class="tool-history">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha/Hora</th>
+                            <th>Herramienta</th>
+                            <th>N° Serie</th>
+                            <th>Operario</th>
+                            <th>Acción</th>
+                            <th>Estación</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table-body">
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 40px;">
+                                <i class="fas fa-spinner fa-spin"></i> Cargando historial...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
+        
+        <footer>
+            <p>Sistema de Control de Herramientas &copy; 2023 - Taller de Producción | Sincronizado con Firebase</p>
+        </footer>
     </div>
+    
+    <div class="notification" id="notification"></div>
 
     <script>
-        // Configuración Firebase
+        // Configuración de Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAZ-3ECzy2SyvhlWs9fO65kL5YgrRYSKPA",
             authDomain: "control-herramientas-7d1a3.firebaseapp.com",
@@ -213,463 +756,710 @@
             measurementId: "G-K2RE12GLX2"
         };
 
-        // Variables globales
-        let db = null;
-        let currentTools = [];
-        let currentStations = [];
-        let currentHistory = [];
-        let selectedTool = null;
-        let userName = localStorage.getItem('taller_user') || '';
-
-        // Inicializar
-        async function init() {
-            try {
-                // Firebase
-                firebase.initializeApp(firebaseConfig);
-                db = firebase.firestore();
-                
-                // Cargar usuario
-                if (userName) {
-                    document.getElementById('operator-name').value = userName;
-                }
-                
-                // Configurar listener
-                setupRealtimeListener();
-                
-                showNotification('Sistema conectado', 'success');
-                
-            } catch (error) {
-                console.error('Error:', error);
-                showNotification('Error: ' + error.message, 'error');
+        // Sistema de Control de Herramientas con Firebase
+        class TallerSystem {
+            constructor() {
+                this.db = null;
+                this.unsubscribe = null;
+                this.userId = 'user_' + Math.random().toString(36).substr(2, 9);
+                this.userName = localStorage.getItem('taller_user_name') || '';
+                this.selectedToolForQuickTake = null;
+                this.init();
             }
-        }
-
-        // Listener en tiempo real
-        function setupRealtimeListener() {
-            db.collection('tallerData').doc('herramientas')
-                .onSnapshot((doc) => {
-                    if (doc.exists) {
-                        const data = doc.data();
-                        currentTools = data.tools || getDefaultTools();
-                        currentStations = data.stations || getDefaultStations();
-                        currentHistory = data.history || [];
-                        
-                        updateUI();
-                    } else {
-                        createInitialData();
+            
+            async init() {
+                try {
+                    // Inicializar Firebase
+                    firebase.initializeApp(firebaseConfig);
+                    this.db = firebase.firestore();
+                    
+                    // Configurar persistencia para trabajo offline
+                    await this.db.enablePersistence();
+                    
+                    // Cargar nombre de usuario guardado
+                    if (this.userName) {
+                        document.getElementById('operator-name').value = this.userName;
                     }
-                }, (error) => {
-                    console.error('Error listener:', error);
-                    document.getElementById('status').innerHTML = '❌ Error de conexión';
+                    
+                    this.setupEventListeners();
+                    this.setupRealtimeListener();
+                    this.showNotification('Sistema conectado correctamente', 'success');
+                    
+                } catch (error) {
+                    console.error('Error inicializando Firebase:', error);
+                    this.showNotification('Error de conexión: ' + error.message, 'error');
+                }
+            }
+            
+            setupEventListeners() {
+                // Quick take tool
+                document.getElementById('quick-take-btn').addEventListener('click', () => {
+                    this.confirmQuickTake();
                 });
-        }
-
-        // Datos por defecto
-        function getDefaultTools() {
-            return [
-                { id: 1, name: "Llave Dinamométrica 6Nm", serial: "LD6N-001", status: "available", operator: "", station: "" },
-                { id: 2, name: "Llave Dinamométrica 6Nm", serial: "LD6N-002", status: "available", operator: "", station: "" },
-                { id: 3, name: "Llave Dinamométrica 6Nm", serial: "LD6N-003", status: "available", operator: "", station: "" },
-                { id: 4, name: "Llave Dinamométrica 6Nm", serial: "LD6N-004", status: "available", operator: "", station: "" },
-                { id: 5, name: "Llave Dinamométrica 6Nm", serial: "LD6N-005", status: "available", operator: "", station: "" },
-                { id: 6, name: "Destornillador Plano", serial: "DPL-001", status: "available", operator: "", station: "" },
-                { id: 7, name: "Taladro Eléctrico", serial: "TEL-001", status: "available", operator: "", station: "" }
-            ];
-        }
-
-        function getDefaultStations() {
-            return [
-                { id: "estacion-1", name: "Estación 1 - Ensamblaje" },
-                { id: "estacion-2", name: "Estación 2 - Soldadura" },
-                { id: "estacion-3", name: "Estación 3 - Pintura" }
-            ];
-        }
-
-        async function createInitialData() {
-            const data = {
-                tools: getDefaultTools(),
-                stations: getDefaultStations(),
-                history: [],
-                lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            await db.collection('tallerData').doc('herramientas').set(data);
-        }
-
-        // Actualizar interfaz
-        function updateUI() {
-            updateStats();
-            renderTools();
-            updateMyTools();
-            updateMaintenanceSelect();
-            updateHistory();
-            updateFilters();
-            populateStations();
+                
+                // Cancel quick take
+                document.getElementById('cancel-quick-take').addEventListener('click', () => {
+                    this.cancelQuickTake();
+                });
+                
+                // Devolver herramienta
+                document.getElementById('return-tool').addEventListener('click', () => {
+                    this.returnTool();
+                });
+                
+                // Enviar a mantenimiento
+                document.getElementById('send-maintenance').addEventListener('click', () => {
+                    this.sendToMaintenance();
+                });
+                
+                // Volver de mantenimiento
+                document.getElementById('return-from-maintenance').addEventListener('click', () => {
+                    this.returnFromMaintenance();
+                });
+                
+                // Búsqueda
+                document.getElementById('search-tool').addEventListener('input', (e) => {
+                    this.renderTools(e.target.value);
+                });
+                
+                // Guardar nombre de usuario cuando cambie
+                document.getElementById('operator-name').addEventListener('input', (e) => {
+                    this.userName = e.target.value;
+                    localStorage.setItem('taller_user_name', this.userName);
+                    this.updateReturnToolSelect();
+                });
+            }
             
-            document.getElementById('status').innerHTML = '✅ Conectado';
-        }
-
-        function updateStats() {
-            const available = currentTools.filter(t => t.status === 'available').length;
-            const inUse = currentTools.filter(t => t.status === 'in-use').length;
-            const maintenance = currentTools.filter(t => t.status === 'maintenance').length;
+            setupRealtimeListener() {
+                // Escuchar cambios en tiempo real en la base de datos
+                this.unsubscribe = this.db.collection('tallerData').doc('herramientas')
+                    .onSnapshot((doc) => {
+                        if (doc.exists) {
+                            const data = doc.data();
+                            this.tools = data.tools || this.getDefaultTools();
+                            this.stations = data.stations || this.getDefaultStations();
+                            this.history = data.history || [];
+                            this.users = data.users || {};
+                            
+                            // Actualizar interfaz
+                            this.renderAll();
+                            this.updateUserCount();
+                            this.updateLastSyncTime();
+                            this.updateSyncStatus(true);
+                        } else {
+                            // Crear datos iniciales si no existen
+                            this.createInitialData();
+                        }
+                    }, (error) => {
+                        console.error('Error en listener:', error);
+                        this.updateSyncStatus(false);
+                    });
+            }
             
-            document.getElementById('available-count').textContent = available;
-            document.getElementById('in-use-count').textContent = inUse;
-            document.getElementById('maintenance-count').textContent = maintenance;
-        }
-
-        function renderTools() {
-            const search = document.getElementById('search-tool').value.toLowerCase();
-            const toolsList = document.getElementById('tools-list');
+            getDefaultTools() {
+                return [
+                    { id: 1, name: "Llave Dinamométrica 6Nm", serial: "LD6N-001", status: "available", operator: "", station: "", icon: "fas fa-wrench" },
+                    { id: 2, name: "Llave Dinamométrica 6Nm", serial: "LD6N-002", status: "available", operator: "", station: "", icon: "fas fa-wrench" },
+                    { id: 3, name: "Llave Dinamométrica 6Nm", serial: "LD6N-003", status: "available", operator: "", station: "", icon: "fas fa-wrench" },
+                    { id: 4, name: "Llave Dinamométrica 6Nm", serial: "LD6N-004", status: "available", operator: "", station: "", icon: "fas fa-wrench" },
+                    { id: 5, name: "Llave Dinamométrica 6Nm", serial: "LD6N-005", status: "available", operator: "", station: "", icon: "fas fa-wrench" },
+                    { id: 6, name: "Destornillador Plano", serial: "DPL-001", status: "available", operator: "", station: "", icon: "fas fa-screwdriver" },
+                    { id: 7, name: "Alicate de Corte", serial: "ALC-001", status: "available", operator: "", station: "", icon: "fas fa-cut" },
+                    { id: 8, name: "Martillo de Goma", serial: "MTG-001", status: "available", operator: "", station: "", icon: "fas fa-hammer" },
+                    { id: 9, name: "Taladro Eléctrico", serial: "TLE-001", status: "available", operator: "", station: "", icon: "fas fa-bolt" },
+                    { id: 10, name: "Sierra Circular", serial: "SRC-001", status: "available", operator: "", station: "", icon: "fas fa-cut" }
+                ];
+            }
             
-            let html = '';
-            currentTools.forEach(tool => {
-                if (search && !tool.name.toLowerCase().includes(search) && !tool.serial.toLowerCase().includes(search)) {
+            getDefaultStations() {
+                return [
+                    { id: "estacion-1", name: "Estación 1 - Ensamblaje" },
+                    { id: "estacion-2", name: "Estación 2 - Soldadura" },
+                    { id: "estacion-3", name: "Estación 3 - Pintura" },
+                    { id: "estacion-4", name: "Estación 4 - Control Calidad" },
+                    { id: "estacion-5", name: "Estación 5 - Empaque" }
+                ];
+            }
+            
+            async createInitialData() {
+                const defaultData = {
+                    tools: this.getDefaultTools(),
+                    stations: this.getDefaultStations(),
+                    history: [],
+                    users: {
+                        [this.userId]: {
+                            name: this.userName || 'Sistema',
+                            lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+                        }
+                    },
+                    lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                await this.db.collection('tallerData').doc('herramientas').set(defaultData);
+            }
+            
+            async saveData() {
+                try {
+                    // Actualizar timestamp del usuario
+                    const userUpdate = {};
+                    userUpdate[`users.${this.userId}.lastSeen`] = firebase.firestore.FieldValue.serverTimestamp();
+                    userUpdate[`users.${this.userId}.name`] = this.userName || 'Anónimo';
+                    
+                    await this.db.collection('tallerData').doc('herramientas').update({
+                        tools: this.tools,
+                        stations: this.stations,
+                        history: this.history,
+                        ...userUpdate,
+                        lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } catch (error) {
+                    console.error('Error guardando datos:', error);
+                    this.showNotification('Error guardando datos', 'error');
+                }
+            }
+            
+            renderAll() {
+                this.renderTools();
+                this.updateReturnToolSelect();
+                this.updateMaintenanceSelect();
+                this.renderStations();
+                this.renderHistoryTable();
+                this.updateStats();
+                this.populateStationSelect();
+            }
+            
+            renderTools(filter = '') {
+                const toolList = document.getElementById('tool-list');
+                if (!toolList) return;
+                
+                toolList.innerHTML = '';
+                
+                const filteredTools = this.tools.filter(tool => 
+                    tool.name.toLowerCase().includes(filter.toLowerCase()) ||
+                    (tool.serial && tool.serial.toLowerCase().includes(filter.toLowerCase()))
+                );
+                
+                if (filteredTools.length === 0) {
+                    toolList.innerHTML = '<div class="tool-item" style="justify-content: center; color: var(--gray-color);">No se encontraron herramientas</div>';
                     return;
                 }
                 
-                let statusClass = 'status-available';
-                let statusText = 'Disponible';
-                
-                if (tool.status === 'in-use') {
-                    statusClass = 'status-in-use';
-                    statusText = `En uso por ${tool.operator}`;
-                } else if (tool.status === 'maintenance') {
-                    statusClass = 'status-maintenance';
-                    statusText = 'En mantenimiento';
+                filteredTools.forEach(tool => {
+                    const toolItem = document.createElement('div');
+                    toolItem.className = 'tool-item';
+                    toolItem.onclick = () => {
+                        if (tool.status === 'available') {
+                            this.startQuickTake(tool);
+                        }
+                    };
+                    
+                    const toolInfo = document.createElement('div');
+                    toolInfo.className = 'tool-info';
+                    
+                    const toolName = document.createElement('div');
+                    toolName.className = 'tool-name';
+                    toolName.innerHTML = `
+                        <i class="${tool.icon} tool-icon"></i> 
+                        ${tool.name}
+                        <span class="tool-serial">${tool.serial}</span>
+                    `;
+                    
+                    const toolStatus = document.createElement('div');
+                    toolStatus.className = `tool-status status-${tool.status}`;
+                    
+                    if (tool.status === 'available') {
+                        toolStatus.textContent = 'Disponible (Click para tomar)';
+                        toolStatus.style.cursor = 'pointer';
+                    } else if (tool.status === 'in-use') {
+                        toolStatus.textContent = `En uso por ${tool.operator}`;
+                    } else {
+                        toolStatus.textContent = 'En mantenimiento';
+                    }
+                    
+                    toolInfo.appendChild(toolName);
+                    toolInfo.appendChild(toolStatus);
+                    toolItem.appendChild(toolInfo);
+                    
+                    toolList.appendChild(toolItem);
+                });
+            }
+            
+            startQuickTake(tool) {
+                if (!this.userName) {
+                    this.showNotification('Primero ingresa tu nombre', 'warning');
+                    document.getElementById('operator-name').focus();
+                    return;
                 }
                 
-                html += `
-                    <div class="tool-item" onclick="quickTakeTool(${tool.id})">
-                        <strong>${tool.name}</strong> 
-                        <small>(${tool.serial})</small>
-                        <div class="${statusClass}">${statusText}</div>
-                    </div>
+                this.selectedToolForQuickTake = tool;
+                
+                // Mostrar información de la herramienta seleccionada
+                document.getElementById('selected-tool-info').innerHTML = `
+                    <strong>${tool.name}</strong><br>
+                    <small>Número de Serie: ${tool.serial}</small>
                 `;
-            });
-            
-            toolsList.innerHTML = html || '<div>No se encontraron herramientas</div>';
-        }
-
-        // Toma rápida
-        function quickTakeTool(toolId) {
-            userName = document.getElementById('operator-name').value.trim();
-            if (!userName) {
-                showNotification('Primero ingresa tu nombre', 'warning');
-                document.getElementById('operator-name').focus();
-                return;
+                
+                // Mostrar sección de toma rápida
+                document.getElementById('quick-take-section').style.display = 'block';
+                
+                this.showNotification(`Seleccionada: ${tool.name} - ${tool.serial}. Ahora selecciona la estación.`, 'success');
             }
             
-            localStorage.setItem('taller_user', userName);
-            
-            const tool = currentTools.find(t => t.id === toolId);
-            if (!tool || tool.status !== 'available') {
-                showNotification('Herramienta no disponible', 'warning');
-                return;
+            async confirmQuickTake() {
+                if (!this.selectedToolForQuickTake) return;
+                
+                const station = document.getElementById('quick-station').value;
+                
+                if (!station) {
+                    this.showNotification('Selecciona una estación de trabajo', 'warning');
+                    return;
+                }
+                
+                const tool = this.selectedToolForQuickTake;
+                const toolIndex = this.tools.findIndex(t => t.id === tool.id);
+                
+                if (toolIndex === -1) {
+                    this.showNotification('Herramienta no encontrada', 'warning');
+                    return;
+                }
+                
+                if (this.tools[toolIndex].status !== 'available') {
+                    this.showNotification('Esta herramienta ya no está disponible', 'warning');
+                    return;
+                }
+                
+                // Actualizar el estado de la herramienta
+                this.tools[toolIndex].status = 'in-use';
+                this.tools[toolIndex].operator = this.userName;
+                this.tools[toolIndex].station = station;
+                
+                // Agregar al historial
+                const now = new Date();
+                this.history.unshift({
+                    tool: tool.name,
+                    serial: tool.serial,
+                    action: 'tomada',
+                    operator: this.userName,
+                    station: this.getStationName(station),
+                    time: now.toISOString()
+                });
+                
+                // Guardar en Firebase
+                await this.saveData();
+                
+                this.showNotification(`Herramienta "${tool.name} - ${tool.serial}" tomada por ${this.userName}`, 'success');
+                
+                // Limpiar selección rápida
+                this.cancelQuickTake();
             }
             
-            selectedTool = tool;
-            document.getElementById('selected-tool-name').textContent = `${tool.name} (${tool.serial})`;
-            document.getElementById('quick-take-section').style.display = 'block';
-        }
-
-        function cancelQuickTake() {
-            selectedTool = null;
-            document.getElementById('quick-take-section').style.display = 'none';
-        }
-
-        async function confirmQuickTake() {
-            if (!selectedTool) return;
-            
-            const station = document.getElementById('quick-station').value;
-            if (!station) {
-                showNotification('Selecciona una estación', 'warning');
-                return;
+            cancelQuickTake() {
+                this.selectedToolForQuickTake = null;
+                document.getElementById('quick-take-section').style.display = 'none';
+                document.getElementById('quick-station').value = '';
+                document.getElementById('selected-tool-info').innerHTML = '';
             }
             
-            // Actualizar herramienta
-            const updatedTools = currentTools.map(tool => 
-                tool.id === selectedTool.id 
-                    ? { ...tool, status: 'in-use', operator: userName, station: station }
-                    : tool
-            );
-            
-            // Agregar al historial
-            const newHistory = [{
-                tool: selectedTool.name,
-                serial: selectedTool.serial,
-                action: 'tomada',
-                operator: userName,
-                station: getStationName(station),
-                time: new Date().toISOString()
-            }, ...currentHistory];
-            
-            // Guardar
-            await saveData(updatedTools, newHistory);
-            
-            showNotification(`Herramienta ${selectedTool.serial} tomada`, 'success');
-            cancelQuickTake();
-        }
-
-        // Devolver herramienta
-        function updateMyTools() {
-            userName = document.getElementById('operator-name').value.trim();
-            const myToolsSection = document.getElementById('my-tools-section');
-            const myToolsSelect = document.getElementById('my-tools-select');
-            
-            if (!userName) {
-                myToolsSection.style.display = 'none';
-                return;
+            getStationName(stationId) {
+                const station = this.stations.find(s => s.id === stationId);
+                return station ? station.name : 'Desconocida';
             }
             
-            const myTools = currentTools.filter(tool => 
-                tool.status === 'in-use' && tool.operator === userName
-            );
-            
-            if (myTools.length === 0) {
-                myToolsSection.style.display = 'none';
-                return;
+            updateReturnToolSelect() {
+                const returnToolSelect = document.getElementById('return-tool-select');
+                const operatorToolsSection = document.getElementById('operator-tools-section');
+                
+                if (!returnToolSelect || !operatorToolsSection) return;
+                
+                returnToolSelect.innerHTML = '<option value="">Seleccione una herramienta en uso</option>';
+                
+                const operator = this.userName;
+                if (!operator) {
+                    operatorToolsSection.style.display = 'none';
+                    return;
+                }
+                
+                const operatorTools = this.tools.filter(tool => 
+                    tool.status === 'in-use' && tool.operator === operator
+                );
+                
+                if (operatorTools.length === 0) {
+                    operatorToolsSection.style.display = 'none';
+                    return;
+                }
+                
+                operatorToolsSection.style.display = 'block';
+                
+                operatorTools.forEach(tool => {
+                    const option = document.createElement('option');
+                    option.value = tool.id;
+                    option.textContent = `${tool.name} - ${tool.serial} (${this.getStationName(tool.station)})`;
+                    returnToolSelect.appendChild(option);
+                });
             }
             
-            myToolsSection.style.display = 'block';
-            myToolsSelect.innerHTML = '<option value="">Seleccionar herramienta para devolver</option>';
-            myTools.forEach(tool => {
-                const option = document.createElement('option');
-                option.value = tool.id;
-                option.textContent = `${tool.name} (${tool.serial})`;
-                myToolsSelect.appendChild(option);
-            });
-        }
-
-        async function returnTool() {
-            const toolId = parseInt(document.getElementById('my-tools-select').value);
-            if (!toolId) {
-                showNotification('Selecciona una herramienta', 'warning');
-                return;
+            updateMaintenanceSelect() {
+                const maintenanceSelect = document.getElementById('maintenance-tool-select');
+                if (!maintenanceSelect) return;
+                
+                maintenanceSelect.innerHTML = '<option value="">Seleccione una herramienta</option>';
+                
+                this.tools.forEach(tool => {
+                    const option = document.createElement('option');
+                    option.value = tool.id;
+                    option.textContent = `${tool.name} - ${tool.serial} (${tool.status})`;
+                    maintenanceSelect.appendChild(option);
+                });
             }
             
-            const tool = currentTools.find(t => t.id === toolId);
-            if (!tool) return;
-            
-            // Actualizar herramienta
-            const updatedTools = currentTools.map(t => 
-                t.id === toolId 
-                    ? { ...t, status: 'available', operator: '', station: '' }
-                    : t
-            );
-            
-            // Agregar al historial
-            const newHistory = [{
-                tool: tool.name,
-                serial: tool.serial,
-                action: 'devuelta',
-                operator: userName,
-                station: 'Almacén',
-                time: new Date().toISOString()
-            }, ...currentHistory];
-            
-            await saveData(updatedTools, newHistory);
-            showNotification(`Herramienta ${tool.serial} devuelta`, 'success');
-        }
-
-        // Mantenimiento
-        function updateMaintenanceSelect() {
-            const select = document.getElementById('maintenance-tool');
-            select.innerHTML = '<option value="">Seleccionar herramienta</option>';
-            
-            currentTools.forEach(tool => {
-                const option = document.createElement('option');
-                option.value = tool.id;
-                option.textContent = `${tool.name} (${tool.serial}) - ${tool.status}`;
-                select.appendChild(option);
-            });
-        }
-
-        async function sendToMaintenance() {
-            const toolId = parseInt(document.getElementById('maintenance-tool').value);
-            if (!toolId) {
-                showNotification('Selecciona una herramienta', 'warning');
-                return;
+            populateStationSelect() {
+                const quickStation = document.getElementById('quick-station');
+                if (!quickStation) return;
+                
+                quickStation.innerHTML = '<option value="">Seleccione una estación</option>';
+                
+                this.stations.forEach(station => {
+                    const option = document.createElement('option');
+                    option.value = station.id;
+                    option.textContent = station.name;
+                    quickStation.appendChild(option);
+                });
             }
             
-            const tool = currentTools.find(t => t.id === toolId);
-            if (!tool) return;
-            
-            const updatedTools = currentTools.map(t => 
-                t.id === toolId 
-                    ? { ...t, status: 'maintenance', operator: '', station: '' }
-                    : t
-            );
-            
-            const newHistory = [{
-                tool: tool.name,
-                serial: tool.serial,
-                action: 'mantenimiento',
-                operator: userName,
-                station: 'Taller Mantenimiento',
-                time: new Date().toISOString()
-            }, ...currentHistory];
-            
-            await saveData(updatedTools, newHistory);
-            showNotification(`Herramienta ${tool.serial} en mantenimiento`, 'warning');
-        }
-
-        async function returnFromMaintenance() {
-            const toolId = parseInt(document.getElementById('maintenance-tool').value);
-            if (!toolId) {
-                showNotification('Selecciona una herramienta', 'warning');
-                return;
+            renderStations() {
+                const stationsContainer = document.getElementById('stations');
+                if (!stationsContainer) return;
+                
+                stationsContainer.innerHTML = '';
+                
+                this.stations.forEach(station => {
+                    const stationElement = document.createElement('div');
+                    stationElement.className = 'station';
+                    
+                    const stationName = document.createElement('h3');
+                    stationName.innerHTML = `<i class="fas fa-industry"></i> ${station.name}`;
+                    
+                    const stationTools = document.createElement('div');
+                    stationTools.className = 'station-tools';
+                    
+                    const toolsInStation = this.tools.filter(tool => 
+                        tool.station === station.id && tool.status === 'in-use'
+                    );
+                    
+                    if (toolsInStation.length === 0) {
+                        const noTools = document.createElement('div');
+                        noTools.className = 'empty-station';
+                        noTools.textContent = 'Sin herramientas en uso';
+                        stationTools.appendChild(noTools);
+                    } else {
+                        toolsInStation.forEach(tool => {
+                            const toolElement = document.createElement('div');
+                            toolElement.className = 'tool-in-station';
+                            toolElement.innerHTML = `<i class="${tool.icon}"></i> ${tool.name} - ${tool.serial} <br><small>(${tool.operator})</small>`;
+                            stationTools.appendChild(toolElement);
+                        });
+                    }
+                    
+                    stationElement.appendChild(stationName);
+                    stationElement.appendChild(stationTools);
+                    stationsContainer.appendChild(stationElement);
+                });
             }
             
-            const tool = currentTools.find(t => t.id === toolId);
-            if (!tool || tool.status !== 'maintenance') {
-                showNotification('La herramienta no está en mantenimiento', 'warning');
-                return;
-            }
-            
-            const updatedTools = currentTools.map(t => 
-                t.id === toolId 
-                    ? { ...t, status: 'available' }
-                    : t
-            );
-            
-            const newHistory = [{
-                tool: tool.name,
-                serial: tool.serial,
-                action: 'disponible',
-                operator: userName,
-                station: 'Almacén',
-                time: new Date().toISOString()
-            }, ...currentHistory];
-            
-            await saveData(updatedTools, newHistory);
-            showNotification(`Herramienta ${tool.serial} disponible`, 'success');
-        }
-
-        // Historial
-        function updateHistory() {
-            const toolFilter = document.getElementById('filter-tool').value;
-            const operatorFilter = document.getElementById('filter-operator').value;
-            
-            let filteredHistory = currentHistory;
-            
-            if (toolFilter) {
-                filteredHistory = filteredHistory.filter(item => item.tool === toolFilter);
-            }
-            if (operatorFilter) {
-                filteredHistory = filteredHistory.filter(item => item.operator === operatorFilter);
-            }
-            
-            let html = '<table><tr><th>Fecha/Hora</th><th>Herramienta</th><th>Serie</th><th>Operario</th><th>Acción</th><th>Estación</th></tr>';
-            
-            if (filteredHistory.length === 0) {
-                html += '<tr><td colspan="6" style="text-align: center;">No hay registros</td></tr>';
-            } else {
-                filteredHistory.slice(0, 20).forEach(item => {
-                    html += `
+            renderHistoryTable() {
+                const historyBody = document.getElementById('history-table-body');
+                if (!historyBody) return;
+                
+                if (this.history.length === 0) {
+                    historyBody.innerHTML = `
                         <tr>
-                            <td>${formatDateTime(item.time)}</td>
-                            <td>${item.tool}</td>
-                            <td>${item.serial}</td>
-                            <td>${item.operator}</td>
-                            <td>${item.action}</td>
-                            <td>${item.station}</td>
+                            <td colspan="6" style="text-align: center; padding: 40px; color: var(--gray-color);">
+                                No hay registros de historial
+                            </td>
                         </tr>
                     `;
+                    return;
+                }
+                
+                historyBody.innerHTML = '';
+                
+                this.history.slice(0, 50).forEach(item => {
+                    const row = document.createElement('tr');
+                    
+                    row.innerHTML = `
+                        <td>
+                            <div>${this.formatDate(item.time)}</div>
+                            <div class="history-time">${this.formatTime(item.time)}</div>
+                        </td>
+                        <td>${item.tool}</td>
+                        <td>${item.serial}</td>
+                        <td>${item.operator}</td>
+                        <td>
+                            <span class="tool-status status-${this.getActionStatus(item.action)}">
+                                ${this.getActionText(item.action)}
+                            </span>
+                        </td>
+                        <td>${item.station}</td>
+                    `;
+                    
+                    historyBody.appendChild(row);
                 });
             }
             
-            html += '</table>';
-            document.getElementById('history-table').innerHTML = html;
-        }
-
-        function updateFilters() {
-            // Herramientas únicas
-            const tools = [...new Set(currentHistory.map(item => item.tool))];
-            const toolFilter = document.getElementById('filter-tool');
-            toolFilter.innerHTML = '<option value="">Todas las herramientas</option>';
-            tools.forEach(tool => {
-                const option = document.createElement('option');
-                option.value = tool;
-                option.textContent = tool;
-                toolFilter.appendChild(option);
-            });
+            getActionStatus(action) {
+                switch(action) {
+                    case 'tomada': return 'in-use';
+                    case 'devuelta': return 'available';
+                    case 'mantenimiento': return 'maintenance';
+                    case 'disponible': return 'available';
+                    default: return 'available';
+                }
+            }
             
-            // Operarios únicos
-            const operators = [...new Set(currentHistory.map(item => item.operator))];
-            const operatorFilter = document.getElementById('filter-operator');
-            operatorFilter.innerHTML = '<option value="">Todos los operarios</option>';
-            operators.forEach(operator => {
-                const option = document.createElement('option');
-                option.value = operator;
-                option.textContent = operator;
-                operatorFilter.appendChild(option);
-            });
-        }
-
-        function refreshHistory() {
-            updateHistory();
-        }
-
-        // Utilidades
-        function populateStations() {
-            const select = document.getElementById('quick-station');
-            select.innerHTML = '<option value="">Seleccionar estación</option>';
-            currentStations.forEach(station => {
-                const option = document.createElement('option');
-                option.value = station.id;
-                option.textContent = station.name;
-                select.appendChild(option);
-            });
-        }
-
-        function getStationName(stationId) {
-            const station = currentStations.find(s => s.id === stationId);
-            return station ? station.name : 'Desconocida';
-        }
-
-        function formatDateTime(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleString('es-ES');
-        }
-
-        async function saveData(tools, history) {
-            try {
-                await db.collection('tallerData').doc('herramientas').update({
-                    tools: tools,
-                    history: history,
-                    lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+            getActionText(action) {
+                switch(action) {
+                    case 'tomada': return 'Tomada';
+                    case 'devuelta': return 'Devuelta';
+                    case 'mantenimiento': return 'Mantenimiento';
+                    case 'disponible': return 'Disponible';
+                    default: return action;
+                }
+            }
+            
+            formatDate(dateString) {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('es-ES');
+            }
+            
+            formatTime(dateString) {
+                const date = new Date(dateString);
+                return date.toLocaleTimeString('es-ES');
+            }
+            
+            updateStats() {
+                const available = this.tools.filter(tool => tool.status === 'available').length;
+                const inUse = this.tools.filter(tool => tool.status === 'in-use').length;
+                const maintenance = this.tools.filter(tool => tool.status === 'maintenance').length;
+                
+                const availableCount = document.getElementById('available-count');
+                const inUseCount = document.getElementById('in-use-count');
+                const maintenanceCount = document.getElementById('maintenance-count');
+                
+                if (availableCount) availableCount.textContent = available;
+                if (inUseCount) inUseCount.textContent = inUse;
+                if (maintenanceCount) maintenanceCount.textContent = maintenance;
+            }
+            
+            updateLastSyncTime() {
+                const updateTime = document.getElementById('update-time');
+                if (updateTime) {
+                    updateTime.textContent = new Date().toLocaleTimeString();
+                }
+            }
+            
+            updateUserCount() {
+                const userCount = document.getElementById('user-count');
+                if (userCount) {
+                    // Contar usuarios activos (últimos 5 minutos)
+                    const now = new Date();
+                    const activeUsers = Object.values(this.users).filter(user => 
+                        user.lastSeen && (now - new Date(user.lastSeen.toDate())) < 5 * 60 * 1000
+                    );
+                    userCount.textContent = activeUsers.length;
+                }
+            }
+            
+            updateSyncStatus(online) {
+                const syncStatus = document.getElementById('sync-status');
+                if (syncStatus) {
+                    if (online) {
+                        syncStatus.className = 'sync-status';
+                        syncStatus.innerHTML = '<i class="fas fa-sync"></i> Sincronizado';
+                    } else {
+                        syncStatus.className = 'sync-status offline';
+                        syncStatus.innerHTML = '<i class="fas fa-unlink"></i> Sin conexión';
+                    }
+                }
+            }
+            
+            async returnTool() {
+                const operator = this.userName;
+                const toolId = parseInt(document.getElementById('return-tool-select').value);
+                
+                if (!operator) {
+                    this.showNotification('Primero ingresa tu nombre', 'warning');
+                    return;
+                }
+                
+                if (!toolId) {
+                    this.showNotification('Por favor, seleccione una herramienta para devolver', 'warning');
+                    return;
+                }
+                
+                const toolIndex = this.tools.findIndex(t => t.id === toolId);
+                
+                if (toolIndex === -1) {
+                    this.showNotification('Herramienta no encontrada', 'warning');
+                    return;
+                }
+                
+                if (this.tools[toolIndex].status !== 'in-use') {
+                    this.showNotification('Esta herramienta no está en uso', 'warning');
+                    return;
+                }
+                
+                if (this.tools[toolIndex].operator !== operator) {
+                    this.showNotification('Esta herramienta no está asignada a usted', 'error');
+                    return;
+                }
+                
+                const tool = this.tools[toolIndex];
+                
+                // Actualizar el estado de la herramienta
+                this.tools[toolIndex].status = 'available';
+                this.tools[toolIndex].operator = '';
+                this.tools[toolIndex].station = '';
+                
+                // Agregar al historial
+                const now = new Date();
+                this.history.unshift({
+                    tool: tool.name,
+                    serial: tool.serial,
+                    action: 'devuelta',
+                    operator: operator,
+                    station: 'Almacén',
+                    time: now.toISOString()
                 });
-            } catch (error) {
-                console.error('Error guardando:', error);
-                showNotification('Error guardando datos', 'error');
+                
+                // Guardar en Firebase
+                await this.saveData();
+                
+                this.showNotification(`Herramienta "${tool.name} - ${tool.serial}" devuelta correctamente`, 'success');
+                
+                // Limpiar formulario
+                document.getElementById('return-tool-select').value = '';
+            }
+            
+            async sendToMaintenance() {
+                const operator = this.userName;
+                const toolId = parseInt(document.getElementById('maintenance-tool-select').value);
+                
+                if (!operator) {
+                    this.showNotification('Primero ingresa tu nombre', 'warning');
+                    return;
+                }
+                
+                if (!toolId) {
+                    this.showNotification('Selecciona una herramienta', 'warning');
+                    return;
+                }
+                
+                const toolIndex = this.tools.findIndex(t => t.id === toolId);
+                
+                if (toolIndex === -1) {
+                    this.showNotification('Herramienta no encontrada', 'warning');
+                    return;
+                }
+                
+                const tool = this.tools[toolIndex];
+                
+                // Actualizar el estado de la herramienta
+                this.tools[toolIndex].status = 'maintenance';
+                this.tools[toolIndex].operator = '';
+                this.tools[toolIndex].station = '';
+                
+                // Agregar al historial
+                const now = new Date();
+                this.history.unshift({
+                    tool: tool.name,
+                    serial: tool.serial,
+                    action: 'mantenimiento',
+                    operator: operator,
+                    station: 'Taller de Mantenimiento',
+                    time: now.toISOString()
+                });
+                
+                // Guardar en Firebase
+                await this.saveData();
+                
+                this.showNotification(`Herramienta "${tool.name} - ${tool.serial}" enviada a mantenimiento`, 'warning');
+                
+                // Limpiar formulario
+                document.getElementById('maintenance-tool-select').value = '';
+            }
+            
+            async returnFromMaintenance() {
+                const operator = this.userName;
+                const toolId = parseInt(document.getElementById('maintenance-tool-select').value);
+                
+                if (!operator) {
+                    this.showNotification('Primero ingresa tu nombre', 'warning');
+                    return;
+                }
+                
+                if (!toolId) {
+                    this.showNotification('Selecciona una herramienta', 'warning');
+                    return;
+                }
+                
+                const toolIndex = this.tools.findIndex(t => t.id === toolId);
+                
+                if (toolIndex === -1) {
+                    this.showNotification('Herramienta no encontrada', 'warning');
+                    return;
+                }
+                
+                if (this.tools[toolIndex].status !== 'maintenance') {
+                    this.showNotification('Esta herramienta no está en mantenimiento', 'warning');
+                    return;
+                }
+                
+                const tool = this.tools[toolIndex];
+                
+                // Actualizar el estado de la herramienta
+                this.tools[toolIndex].status = 'available';
+                
+                // Agregar al historial
+                const now = new Date();
+                this.history.unshift({
+                    tool: tool.name,
+                    serial: tool.serial,
+                    action: 'disponible',
+                    operator: operator,
+                    station: 'Almacén',
+                    time: now.toISOString()
+                });
+                
+                // Guardar en Firebase
+                await this.saveData();
+                
+                this.showNotification(`Herramienta "${tool.name} - ${tool.serial}" disponible nuevamente`, 'success');
+                
+                // Limpiar formulario
+                document.getElementById('maintenance-tool-select').value = '';
+            }
+            
+            showNotification(message, type = 'success') {
+                const notification = document.getElementById('notification');
+                if (!notification) return;
+                
+                const icon = type === 'success' ? 'fas fa-check-circle' : 
+                             type === 'warning' ? 'fas fa-exclamation-triangle' : 
+                             'fas fa-exclamation-circle';
+                
+                notification.innerHTML = `<i class="${icon}"></i> ${message}`;
+                notification.className = `notification notification-${type} show`;
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 4000);
             }
         }
 
-        function showNotification(message, type) {
-            // Crear notificación simple
-            const div = document.createElement('div');
-            div.className = 'notification';
-            div.style.background = type === 'success' ? '#27ae60' : type === 'warning' ? '#f39c12' : '#e74c3c';
-            div.textContent = message;
-            document.body.appendChild(div);
-            
-            setTimeout(() => {
-                document.body.removeChild(div);
-            }, 3000);
-        }
-
-        // Event listeners
-        document.getElementById('operator-name').addEventListener('input', function() {
-            userName = this.value.trim();
-            localStorage.setItem('taller_user', userName);
-            updateMyTools();
+        // Inicializar el sistema cuando se carga la página
+        document.addEventListener('DOMContentLoaded', () => {
+            window.tallerSystem = new TallerSystem();
         });
-
-        document.getElementById('search-tool').addEventListener('input', renderTools);
-
-        // Inicializar
-        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
