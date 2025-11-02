@@ -617,6 +617,15 @@
             max-height: 400px;
             overflow-y: auto;
         }
+        
+        .torque-badge {
+            background-color: #9b59b6;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            margin-left: 8px;
+        }
     </style>
 </head>
 <body>
@@ -865,6 +874,8 @@
                             this.history = data.history || [];
                             this.users = data.users || {};
                             
+                            console.log("Datos cargados:", this.tools); // Debug
+                            
                             // Actualizar interfaz
                             this.renderAll();
                             this.updateUserCount();
@@ -982,7 +993,14 @@
                     
                     const toolName = document.createElement('div');
                     toolName.className = 'tool-name';
-                    toolName.innerHTML = `<i class="${tool.icon} tool-icon"></i> ${tool.name}`;
+                    
+                    // Agregar badge para herramientas dinamométricas
+                    let toolNameHTML = `<i class="${tool.icon} tool-icon"></i> ${tool.name}`;
+                    if (tool.isTorque) {
+                        toolNameHTML += `<span class="torque-badge">DINAM.</span>`;
+                    }
+                    
+                    toolName.innerHTML = toolNameHTML;
                     
                     const toolStatus = document.createElement('div');
                     toolStatus.className = `tool-status status-${tool.status}`;
@@ -1011,6 +1029,8 @@
             }
             
             showQuickTakeSection(tool) {
+                console.log("Mostrando sección para herramienta:", tool); // Debug
+                
                 this.selectedTool = tool;
                 
                 // Mostrar la sección de toma rápida
@@ -1018,14 +1038,20 @@
                 quickTakeSection.style.display = 'block';
                 
                 // Mostrar información de la herramienta seleccionada
-                document.getElementById('selected-tool-name').textContent = tool.name;
+                let toolNameHTML = tool.name;
+                if (tool.isTorque) {
+                    toolNameHTML += ' <span class="torque-badge">DINAMOMÉTRICA</span>';
+                }
+                document.getElementById('selected-tool-name').innerHTML = toolNameHTML;
                 
                 // Mostrar campo de número de serie solo si es una herramienta dinamométrica
                 const serialNumberGroup = document.getElementById('serial-number-group');
                 if (tool.isTorque) {
+                    console.log("Es herramienta dinamométrica, mostrando campo de serie");
                     serialNumberGroup.style.display = 'block';
                     document.getElementById('serial-number').value = '';
                 } else {
+                    console.log("No es herramienta dinamométrica, ocultando campo de serie");
                     serialNumberGroup.style.display = 'none';
                 }
                 
