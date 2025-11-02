@@ -626,6 +626,47 @@
             font-size: 0.7em;
             margin-left: 8px;
         }
+        
+        /* Estilos para los filtros del historial */
+        .history-filters {
+            background-color: var(--light-color);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .history-filters h3 {
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+        
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .filter-group label {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+        
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .operation-number-field {
+            background-color: #fffacd;
+            border-left: 4px solid var(--warning-color);
+        }
     </style>
 </head>
 <body>
@@ -683,6 +724,11 @@
                 <div class="form-group">
                     <label for="operator-name"><i class="fas fa-user"></i> Nombre del Operario</label>
                     <input type="text" id="operator-name" placeholder="Ingrese su nombre/ID">
+                </div>
+                
+                <div class="form-group operation-number-field">
+                    <label for="operation-number"><i class="fas fa-hashtag"></i> Número de Operación *</label>
+                    <input type="text" id="operation-number" placeholder="Ingrese el número de operación" required>
                 </div>
                 
                 <!-- Sección para TOMAR herramienta rápida -->
@@ -755,6 +801,40 @@
         
         <div class="panel">
             <h2><i class="fas fa-history"></i> Historial Detallado</h2>
+            
+            <!-- Filtros del historial -->
+            <div class="history-filters">
+                <h3><i class="fas fa-filter"></i> Filtros</h3>
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="filter-date">Fecha</label>
+                        <input type="date" id="filter-date">
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-serial">Número de Serie</label>
+                        <input type="text" id="filter-serial" placeholder="Buscar por serie...">
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-station">Estación</label>
+                        <select id="filter-station">
+                            <option value="">Todas las estaciones</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-operation">Número de Operación</label>
+                        <input type="text" id="filter-operation" placeholder="Buscar por operación...">
+                    </div>
+                </div>
+                <div class="filter-actions">
+                    <button class="btn btn-primary" id="apply-filters">
+                        <i class="fas fa-filter"></i> Aplicar Filtros
+                    </button>
+                    <button class="btn btn-secondary" id="reset-filters">
+                        <i class="fas fa-undo"></i> Limpiar Filtros
+                    </button>
+                </div>
+            </div>
+            
             <div class="history-table-container">
                 <table class="history-table" id="history-table">
                     <thead>
@@ -763,13 +843,14 @@
                             <th>Herramienta</th>
                             <th>Número de Serie</th>
                             <th>Operario</th>
+                            <th>N° Operación</th>
                             <th>Acción</th>
                             <th>Estación</th>
                         </tr>
                     </thead>
                     <tbody id="history-table-body">
                         <tr>
-                            <td colspan="6" style="text-align: center;">Cargando historial...</td>
+                            <td colspan="7" style="text-align: center;">Cargando historial...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -801,7 +882,14 @@
                 this.unsubscribe = null;
                 this.userId = 'user_' + Math.random().toString(36).substr(2, 9);
                 this.userName = localStorage.getItem('taller_user_name') || '';
+                this.operationNumber = localStorage.getItem('taller_operation_number') || '';
                 this.selectedTool = null;
+                this.currentFilters = {
+                    date: '',
+                    serial: '',
+                    station: '',
+                    operation: ''
+                };
                 this.init();
             }
             
@@ -814,9 +902,12 @@
                     // Configurar persistencia para trabajo offline
                     await this.db.enablePersistence();
                     
-                    // Cargar nombre de usuario guardado
+                    // Cargar nombre de usuario y número de operación guardados
                     if (this.userName) {
                         document.getElementById('operator-name').value = this.userName;
+                    }
+                    if (this.operationNumber) {
+                        document.getElementById('operation-number').value = this.operationNumber;
                     }
                     
                     this.setupEventListeners();
@@ -861,6 +952,21 @@
                     localStorage.setItem('taller_user_name', this.userName);
                     this.updateReturnToolSelect();
                 });
+                
+                // Guardar número de operación cuando cambie
+                document.getElementById('operation-number').addEventListener('input', (e) => {
+                    this.operationNumber = e.target.value;
+                    localStorage.setItem('taller_operation_number', this.operationNumber);
+                });
+                
+                // Filtros del historial
+                document.getElementById('apply-filters').addEventListener('click', () => {
+                    this.applyFilters();
+                });
+                
+                document.getElementById('reset-filters').addEventListener('click', () => {
+                    this.resetFilters();
+                });
             }
             
             setupRealtimeListener() {
@@ -873,8 +979,6 @@
                             this.stations = data.stations || this.getDefaultStations();
                             this.history = data.history || [];
                             this.users = data.users || {};
-                            
-                            console.log("Datos cargados:", this.tools); // Debug
                             
                             // Actualizar interfaz
                             this.renderAll();
@@ -962,6 +1066,7 @@
                 this.updateStats();
                 this.populateStationSelect();
                 this.populateQuickTakeStationSelect();
+                this.populateFilterStationSelect();
             }
             
             renderTools(filter = '') {
@@ -1029,8 +1134,6 @@
             }
             
             showQuickTakeSection(tool) {
-                console.log("Mostrando sección para herramienta:", tool); // Debug
-                
                 this.selectedTool = tool;
                 
                 // Mostrar la sección de toma rápida
@@ -1047,11 +1150,9 @@
                 // Mostrar campo de número de serie solo si es una herramienta dinamométrica
                 const serialNumberGroup = document.getElementById('serial-number-group');
                 if (tool.isTorque) {
-                    console.log("Es herramienta dinamométrica, mostrando campo de serie");
                     serialNumberGroup.style.display = 'block';
                     document.getElementById('serial-number').value = '';
                 } else {
-                    console.log("No es herramienta dinamométrica, ocultando campo de serie");
                     serialNumberGroup.style.display = 'none';
                 }
                 
@@ -1139,6 +1240,20 @@
                 });
             }
             
+            populateFilterStationSelect() {
+                const filterStationSelect = document.getElementById('filter-station');
+                if (!filterStationSelect) return;
+                
+                filterStationSelect.innerHTML = '<option value="">Todas las estaciones</option>';
+                
+                this.stations.forEach(station => {
+                    const option = document.createElement('option');
+                    option.value = station.name;
+                    option.textContent = station.name;
+                    filterStationSelect.appendChild(option);
+                });
+            }
+            
             renderStations() {
                 const stationsContainer = document.getElementById('stations');
                 if (!stationsContainer) return;
@@ -1186,13 +1301,46 @@
                 historyTableBody.innerHTML = '';
                 
                 if (this.history.length === 0) {
-                    historyTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No hay historial registrado</td></tr>';
+                    historyTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No hay historial registrado</td></tr>';
                     return;
                 }
                 
-                const sortedHistory = [...this.history].sort((a, b) => 
+                let filteredHistory = [...this.history];
+                
+                // Aplicar filtros
+                if (this.currentFilters.date) {
+                    filteredHistory = filteredHistory.filter(item => {
+                        const itemDate = new Date(item.time).toISOString().split('T')[0];
+                        return itemDate === this.currentFilters.date;
+                    });
+                }
+                
+                if (this.currentFilters.serial) {
+                    filteredHistory = filteredHistory.filter(item => 
+                        item.serialNumber && item.serialNumber.toLowerCase().includes(this.currentFilters.serial.toLowerCase())
+                    );
+                }
+                
+                if (this.currentFilters.station) {
+                    filteredHistory = filteredHistory.filter(item => 
+                        item.station && item.station.includes(this.currentFilters.station)
+                    );
+                }
+                
+                if (this.currentFilters.operation) {
+                    filteredHistory = filteredHistory.filter(item => 
+                        item.operationNumber && item.operationNumber.includes(this.currentFilters.operation)
+                    );
+                }
+                
+                const sortedHistory = filteredHistory.sort((a, b) => 
                     new Date(b.time) - new Date(a.time)
                 );
+                
+                if (sortedHistory.length === 0) {
+                    historyTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No hay resultados para los filtros aplicados</td></tr>';
+                    return;
+                }
                 
                 sortedHistory.forEach(item => {
                     const historyRow = document.createElement('tr');
@@ -1209,6 +1357,9 @@
                     const operatorCell = document.createElement('td');
                     operatorCell.textContent = item.operator;
                     
+                    const operationCell = document.createElement('td');
+                    operationCell.textContent = item.operationNumber || '-';
+                    
                     const actionCell = document.createElement('td');
                     actionCell.textContent = this.getActionText(item.action);
                     
@@ -1219,11 +1370,41 @@
                     historyRow.appendChild(toolCell);
                     historyRow.appendChild(serialCell);
                     historyRow.appendChild(operatorCell);
+                    historyRow.appendChild(operationCell);
                     historyRow.appendChild(actionCell);
                     historyRow.appendChild(stationCell);
                     
                     historyTableBody.appendChild(historyRow);
                 });
+            }
+            
+            applyFilters() {
+                this.currentFilters = {
+                    date: document.getElementById('filter-date').value,
+                    serial: document.getElementById('filter-serial').value,
+                    station: document.getElementById('filter-station').value,
+                    operation: document.getElementById('filter-operation').value
+                };
+                
+                this.renderHistoryTable();
+                this.showNotification('Filtros aplicados correctamente', 'success');
+            }
+            
+            resetFilters() {
+                document.getElementById('filter-date').value = '';
+                document.getElementById('filter-serial').value = '';
+                document.getElementById('filter-station').value = '';
+                document.getElementById('filter-operation').value = '';
+                
+                this.currentFilters = {
+                    date: '',
+                    serial: '',
+                    station: '',
+                    operation: ''
+                };
+                
+                this.renderHistoryTable();
+                this.showNotification('Filtros limpiados', 'success');
             }
             
             getActionText(action) {
@@ -1290,12 +1471,19 @@
             
             async quickTakeTool() {
                 const operator = this.userName;
+                const operationNumber = document.getElementById('operation-number').value;
                 const station = document.getElementById('quick-take-station').value;
                 const serialNumber = document.getElementById('serial-number').value;
                 
                 if (!operator) {
                     this.showNotification('Primero ingresa tu nombre', 'warning');
                     document.getElementById('operator-name').focus();
+                    return;
+                }
+                
+                if (!operationNumber) {
+                    this.showNotification('Ingresa el número de operación', 'warning');
+                    document.getElementById('operation-number').focus();
                     return;
                 }
                 
@@ -1334,6 +1522,7 @@
                     tool: this.tools[toolIndex].name,
                     action: 'tomada',
                     operator: operator,
+                    operationNumber: operationNumber,
                     station: this.getStationName(station),
                     time: now.toISOString(),
                     serialNumber: this.selectedTool.isTorque ? serialNumber : null
@@ -1355,10 +1544,17 @@
             
             async returnTool() {
                 const operator = this.userName;
+                const operationNumber = document.getElementById('operation-number').value;
                 const toolId = parseInt(document.getElementById('return-tool-select').value);
                 
                 if (!operator) {
                     this.showNotification('Primero ingresa tu nombre', 'warning');
+                    return;
+                }
+                
+                if (!operationNumber) {
+                    this.showNotification('Ingresa el número de operación', 'warning');
+                    document.getElementById('operation-number').focus();
                     return;
                 }
                 
@@ -1397,6 +1593,7 @@
                     tool: toolName,
                     action: 'devuelta',
                     operator: operator,
+                    operationNumber: operationNumber,
                     station: 'Almacén',
                     time: now.toISOString()
                 });
@@ -1412,10 +1609,17 @@
             
             async sendToMaintenance() {
                 const operator = this.userName;
+                const operationNumber = document.getElementById('operation-number').value;
                 const toolId = parseInt(document.getElementById('maintenance-tool-select').value);
                 
                 if (!operator) {
                     this.showNotification('Primero ingresa tu nombre', 'warning');
+                    return;
+                }
+                
+                if (!operationNumber) {
+                    this.showNotification('Ingresa el número de operación', 'warning');
+                    document.getElementById('operation-number').focus();
                     return;
                 }
                 
@@ -1445,6 +1649,7 @@
                     tool: toolName,
                     action: 'mantenimiento',
                     operator: operator,
+                    operationNumber: operationNumber,
                     station: 'Taller de Mantenimiento',
                     time: now.toISOString()
                 });
@@ -1460,10 +1665,17 @@
             
             async returnFromMaintenance() {
                 const operator = this.userName;
+                const operationNumber = document.getElementById('operation-number').value;
                 const toolId = parseInt(document.getElementById('maintenance-tool-select').value);
                 
                 if (!operator) {
                     this.showNotification('Primero ingresa tu nombre', 'warning');
+                    return;
+                }
+                
+                if (!operationNumber) {
+                    this.showNotification('Ingresa el número de operación', 'warning');
+                    document.getElementById('operation-number').focus();
                     return;
                 }
                 
@@ -1495,6 +1707,7 @@
                     tool: toolName,
                     action: 'disponible',
                     operator: operator,
+                    operationNumber: operationNumber,
                     station: 'Almacén',
                     time: now.toISOString()
                 });
