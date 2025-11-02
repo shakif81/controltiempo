@@ -779,6 +779,62 @@
             padding: 8px 12px;
             margin: 8px 0;
         }
+
+        /* Estilos para el panel de gestión de herramientas */
+        .tool-management-form {
+            background-color: var(--light-color);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .tool-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--secondary-color);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .tool-card-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .tool-card h4 {
+            margin: 0;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .tool-card-info {
+            font-size: 0.9em;
+            color: var(--dark-color);
+        }
+        
+        .tool-card-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 8px;
+        }
     </style>
 </head>
 <body>
@@ -823,12 +879,6 @@
                     <div class="search-box">
                         <i class="fas fa-search"></i>
                         <input type="text" id="search-tool" placeholder="Buscar herramienta...">
-                    </div>
-                    <div class="form-group">
-                        <label for="filter-location"><i class="fas fa-map-marker-alt"></i> Filtrar por Ubicación</label>
-                        <select id="filter-location">
-                            <option value="">Todas las ubicaciones</option>
-                        </select>
                     </div>
                     <div class="form-group">
                         <label for="filter-status"><i class="fas fa-filter"></i> Filtrar por Estado</label>
@@ -934,7 +984,7 @@
                     </div>
                 </div>
                 
-                <h2 style="margin-top: 30px;"><i class="fas fa-map-marker-alt"></i> Estaciones de Trabajo</h2>
+                <h2 style="margin-top: 30px;"><i class="fas fa-industry"></i> Estaciones de Trabajo</h2>
                 <div class="stations" id="stations">
                     <div class="loading">
                         <i class="fas fa-spinner fa-spin"></i> Cargando estaciones...
@@ -943,33 +993,53 @@
             </div>
         </div>
         
-        <!-- Panel de Ubicaciones -->
+        <!-- Panel de GESTIÓN DE HERRAMIENTAS (modificado) -->
         <div class="panel locations-panel">
-            <h2><i class="fas fa-map-marked-alt"></i> Gestión de Ubicaciones</h2>
+            <h2><i class="fas fa-tools"></i> Gestión de Herramientas y Ubicaciones</h2>
             
-            <div class="form-group">
-                <label for="location-name">Nombre de Ubicación</label>
-                <input type="text" id="location-name" placeholder="Ej: Estante B-3">
+            <div class="tool-management-form">
+                <h3><i class="fas fa-plus-circle"></i> Agregar Nueva Herramienta</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="new-tool-name">Nombre de la Herramienta</label>
+                        <input type="text" id="new-tool-name" placeholder="Ej: Llave Inglesa 10mm">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-tool-icon">Icono</label>
+                        <select id="new-tool-icon">
+                            <option value="fas fa-wrench">Llave</option>
+                            <option value="fas fa-screwdriver">Destornillador</option>
+                            <option value="fas fa-cut">Alicate</option>
+                            <option value="fas fa-hammer">Martillo</option>
+                            <option value="fas fa-toolbox">Set de herramientas</option>
+                            <option value="fas fa-bolt">Eléctrica</option>
+                            <option value="fas fa-ruler-combined">Medición</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="new-tool-location">Ubicación</label>
+                        <select id="new-tool-location">
+                            <option value="">Seleccione una ubicación</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-tool-torque">Tipo de Herramienta</label>
+                        <select id="new-tool-torque">
+                            <option value="false">Herramienta Normal</option>
+                            <option value="true">Herramienta Dinamométrica</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="add-tool">
+                    <i class="fas fa-plus"></i> Agregar Herramienta
+                </button>
             </div>
             
-            <div class="form-group">
-                <label for="location-type">Tipo de Ubicación</label>
-                <select id="location-type">
-                    <option value="estante">Estante</option>
-                    <option value="cajon">Cajón</option>
-                    <option value="panel">Panel de Pared</option>
-                    <option value="carro">Carro de Herramientas</option>
-                    <option value="especial">Área Especial</option>
-                    <option value="almacen">Almacén</option>
-                </select>
-            </div>
-            
-            <button class="btn btn-primary" id="add-location">
-                <i class="fas fa-plus"></i> Agregar Ubicación
-            </button>
-            
-            <div class="locations-grid" id="locations-list" style="margin-top: 20px;">
-                <!-- Lista de ubicaciones se cargará aquí -->
+            <h3><i class="fas fa-list"></i> Herramientas del Sistema</h3>
+            <div class="tools-grid" id="tools-list">
+                <!-- Lista de herramientas se cargará aquí -->
             </div>
         </div>
         
@@ -978,7 +1048,7 @@
             
             <!-- Filtros del historial -->
             <div class="history-filters">
-                <h3><i class="fas fa-filter"></i> Filtros</h3>
+                <h3><i class="fas fa-filter"></i> Filtros en Tiempo Real</h3>
                 <div class="filter-row">
                     <div class="filter-group">
                         <label for="filter-date">Fecha</label>
@@ -989,23 +1059,12 @@
                         <input type="text" id="filter-serial" placeholder="Buscar por serie...">
                     </div>
                     <div class="filter-group">
-                        <label for="filter-station">Estación</label>
-                        <select id="filter-station">
-                            <option value="">Todas las estaciones</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
                         <label for="filter-operation">Número de Operación</label>
                         <input type="text" id="filter-operation" placeholder="Buscar por operación...">
                     </div>
                 </div>
-                <div class="filter-actions">
-                    <button class="btn btn-primary" id="apply-filters">
-                        <i class="fas fa-filter"></i> Aplicar Filtros
-                    </button>
-                    <button class="btn btn-secondary" id="reset-filters">
-                        <i class="fas fa-undo"></i> Limpiar Filtros
-                    </button>
+                <div class="filter-info">
+                    Los filtros se aplican automáticamente mientras escribes/seleccionas
                 </div>
             </div>
             
@@ -1061,12 +1120,10 @@
                 this.currentFilters = {
                     date: '',
                     serial: '',
-                    station: '',
                     operation: ''
                 };
                 this.realTimeFilters = {
                     search: '',
-                    location: '',
                     status: ''
                 };
                 this.filterTimeout = null;
@@ -1128,12 +1185,6 @@
                     this.applyRealTimeFilters();
                 });
                 
-                // Filtro de ubicación en tiempo real
-                document.getElementById('filter-location').addEventListener('change', (e) => {
-                    this.realTimeFilters.location = e.target.value;
-                    this.applyRealTimeFilters();
-                });
-                
                 // Filtro de estado en tiempo real
                 document.getElementById('filter-status').addEventListener('change', (e) => {
                     this.realTimeFilters.status = e.target.value;
@@ -1153,18 +1204,22 @@
                     localStorage.setItem('taller_operation_number', this.operationNumber);
                 });
                 
-                // Filtros del historial
-                document.getElementById('apply-filters').addEventListener('click', () => {
+                // Filtros del historial en tiempo real
+                document.getElementById('filter-date').addEventListener('change', () => {
                     this.applyFilters();
                 });
                 
-                document.getElementById('reset-filters').addEventListener('click', () => {
-                    this.resetFilters();
+                document.getElementById('filter-serial').addEventListener('input', () => {
+                    this.applyFilters();
                 });
                 
-                // Gestión de ubicaciones
-                document.getElementById('add-location').addEventListener('click', () => {
-                    this.addLocation();
+                document.getElementById('filter-operation').addEventListener('input', () => {
+                    this.applyFilters();
+                });
+                
+                // Gestión de herramientas
+                document.getElementById('add-tool').addEventListener('click', () => {
+                    this.addTool();
                 });
             }
             
@@ -1236,6 +1291,14 @@
             }
             
             async createInitialData() {
+                // Verificar si ya existen datos antes de crear nuevos
+                const doc = await this.db.collection('tallerData').doc('herramientas').get();
+                
+                if (doc.exists) {
+                    // Ya existen datos, no sobrescribir
+                    return;
+                }
+                
                 const defaultData = {
                     tools: this.getDefaultTools(),
                     stations: this.getDefaultStations(),
@@ -1251,6 +1314,7 @@
                 };
                 
                 await this.db.collection('tallerData').doc('herramientas').set(defaultData);
+                this.showNotification('Datos iniciales creados correctamente', 'success');
             }
             
             async saveData() {
@@ -1281,11 +1345,9 @@
                 this.renderStations();
                 this.renderHistoryTable();
                 this.updateStats();
-                this.populateStationSelect();
                 this.populateQuickTakeStationSelect();
-                this.populateFilterStationSelect();
-                this.populateLocationFilter();
-                this.renderLocations();
+                this.populateLocationSelect();
+                this.renderToolsManagement();
             }
             
             applyRealTimeFilters() {
@@ -1306,12 +1368,6 @@
                     // Filtro de búsqueda por nombre
                     if (this.realTimeFilters.search && 
                         !tool.name.toLowerCase().includes(this.realTimeFilters.search.toLowerCase())) {
-                        return false;
-                    }
-                    
-                    // Filtro por ubicación
-                    if (this.realTimeFilters.location && 
-                        tool.location !== this.realTimeFilters.location) {
                         return false;
                     }
                     
@@ -1389,21 +1445,140 @@
                 });
             }
             
+            renderToolsManagement() {
+                const toolsList = document.getElementById('tools-list');
+                if (!toolsList) return;
+                
+                toolsList.innerHTML = '';
+                
+                this.tools.forEach(tool => {
+                    const toolCard = document.createElement('div');
+                    toolCard.className = 'tool-card';
+                    
+                    const toolHeader = document.createElement('div');
+                    toolHeader.className = 'tool-card-header';
+                    
+                    const toolName = document.createElement('h4');
+                    let toolNameHTML = `<i class="${tool.icon}"></i> ${tool.name}`;
+                    if (tool.isTorque) {
+                        toolNameHTML += `<span class="torque-badge">DINAM.</span>`;
+                    }
+                    toolName.innerHTML = toolNameHTML;
+                    
+                    const toolInfo = document.createElement('div');
+                    toolInfo.className = 'tool-card-info';
+                    
+                    const toolStatus = document.createElement('div');
+                    toolStatus.innerHTML = `<strong>Estado:</strong> ${this.getStatusText(tool.status)}`;
+                    
+                    const toolLocation = document.createElement('div');
+                    const locationName = this.getLocationName(tool.location);
+                    toolLocation.innerHTML = `<strong>Ubicación:</strong> ${locationName}`;
+                    
+                    const toolActions = document.createElement('div');
+                    toolActions.className = 'tool-card-actions';
+                    
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'btn btn-primary btn-sm';
+                    editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+                    editBtn.onclick = () => this.editTool(tool.id);
+                    
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'btn btn-danger btn-sm';
+                    deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                    deleteBtn.onclick = () => this.deleteTool(tool.id);
+                    
+                    toolActions.appendChild(editBtn);
+                    toolActions.appendChild(deleteBtn);
+                    
+                    toolHeader.appendChild(toolName);
+                    toolCard.appendChild(toolHeader);
+                    toolCard.appendChild(toolStatus);
+                    toolCard.appendChild(toolLocation);
+                    toolCard.appendChild(toolActions);
+                    
+                    toolsList.appendChild(toolCard);
+                });
+            }
+            
+            getStatusText(status) {
+                const statusMap = {
+                    'available': 'Disponible',
+                    'in-use': 'En Uso',
+                    'maintenance': 'Mantenimiento'
+                };
+                return statusMap[status] || status;
+            }
+            
+            async addTool() {
+                const name = document.getElementById('new-tool-name').value;
+                const icon = document.getElementById('new-tool-icon').value;
+                const location = document.getElementById('new-tool-location').value;
+                const isTorque = document.getElementById('new-tool-torque').value === 'true';
+                
+                if (!name) {
+                    this.showNotification('Ingresa un nombre para la herramienta', 'warning');
+                    return;
+                }
+                
+                if (!location) {
+                    this.showNotification('Selecciona una ubicación para la herramienta', 'warning');
+                    return;
+                }
+                
+                // Crear nueva herramienta
+                const newTool = {
+                    id: Math.max(...this.tools.map(t => t.id)) + 1,
+                    name: name,
+                    icon: icon,
+                    status: 'available',
+                    operator: '',
+                    station: '',
+                    isTorque: isTorque,
+                    location: location
+                };
+                
+                this.tools.push(newTool);
+                
+                // Guardar en Firebase
+                await this.saveData();
+                
+                // Limpiar formulario
+                document.getElementById('new-tool-name').value = '';
+                
+                this.showNotification(`Herramienta "${name}" agregada correctamente`, 'success');
+            }
+            
+            async editTool(toolId) {
+                // Implementar edición de herramienta
+                this.showNotification('Funcionalidad de edición en desarrollo', 'warning');
+            }
+            
+            async deleteTool(toolId) {
+                if (confirm('¿Estás seguro de que quieres eliminar esta herramienta?')) {
+                    this.tools = this.tools.filter(tool => tool.id !== toolId);
+                    await this.saveData();
+                    this.showNotification('Herramienta eliminada correctamente', 'success');
+                }
+            }
+            
             getLocationName(locationId) {
                 const location = this.locations.find(l => l.id === locationId);
                 return location ? location.name : 'Ubicación no definida';
             }
             
-            getLocationTypeIcon(type) {
-                const icons = {
-                    'estante': 'fas fa-shelves',
-                    'cajon': 'fas fa-drawer',
-                    'panel': 'fas fa-th-large',
-                    'carro': 'fas fa-dolly',
-                    'especial': 'fas fa-star',
-                    'almacen': 'fas fa-warehouse'
-                };
-                return icons[type] || 'fas fa-map-marker-alt';
+            populateLocationSelect() {
+                const locationSelect = document.getElementById('new-tool-location');
+                if (!locationSelect) return;
+                
+                locationSelect.innerHTML = '<option value="">Seleccione una ubicación</option>';
+                
+                this.locations.forEach(location => {
+                    const option = document.createElement('option');
+                    option.value = location.id;
+                    option.textContent = location.name;
+                    locationSelect.appendChild(option);
+                });
             }
             
             showQuickTakeSection(tool) {
@@ -1489,20 +1664,6 @@
                 });
             }
             
-            populateStationSelect() {
-                const stationSelect = document.getElementById('station');
-                if (!stationSelect) return;
-                
-                stationSelect.innerHTML = '<option value="">Seleccione una estación</option>';
-                
-                this.stations.forEach(station => {
-                    const option = document.createElement('option');
-                    option.value = station.id;
-                    option.textContent = station.name;
-                    stationSelect.appendChild(option);
-                });
-            }
-            
             populateQuickTakeStationSelect() {
                 const quickTakeStationSelect = document.getElementById('quick-take-station');
                 if (!quickTakeStationSelect) return;
@@ -1514,34 +1675,6 @@
                     option.value = station.id;
                     option.textContent = station.name;
                     quickTakeStationSelect.appendChild(option);
-                });
-            }
-            
-            populateFilterStationSelect() {
-                const filterStationSelect = document.getElementById('filter-station');
-                if (!filterStationSelect) return;
-                
-                filterStationSelect.innerHTML = '<option value="">Todas las estaciones</option>';
-                
-                this.stations.forEach(station => {
-                    const option = document.createElement('option');
-                    option.value = station.name;
-                    option.textContent = station.name;
-                    filterStationSelect.appendChild(option);
-                });
-            }
-            
-            populateLocationFilter() {
-                const filterLocation = document.getElementById('filter-location');
-                if (!filterLocation) return;
-                
-                filterLocation.innerHTML = '<option value="">Todas las ubicaciones</option>';
-                
-                this.locations.forEach(location => {
-                    const option = document.createElement('option');
-                    option.value = location.id;
-                    option.textContent = location.name;
-                    filterLocation.appendChild(option);
                 });
             }
             
@@ -1585,77 +1718,6 @@
                 });
             }
             
-            renderLocations() {
-                const locationsList = document.getElementById('locations-list');
-                if (!locationsList) return;
-                
-                locationsList.innerHTML = '';
-                
-                this.locations.forEach(location => {
-                    const locationCard = document.createElement('div');
-                    locationCard.className = 'location-card';
-                    
-                    const locationName = document.createElement('h4');
-                    locationName.innerHTML = `<i class="${this.getLocationTypeIcon(location.type)}"></i> ${location.name}`;
-                    
-                    const locationType = document.createElement('div');
-                    locationType.className = 'location-type';
-                    locationType.textContent = `Tipo: ${location.type}`;
-                    
-                    const locationTools = document.createElement('div');
-                    locationTools.className = 'location-tools';
-                    
-                    const toolsInLocation = this.tools.filter(tool => 
-                        tool.location === location.id && tool.status === 'available'
-                    );
-                    
-                    if (toolsInLocation.length === 0) {
-                        locationTools.textContent = 'Sin herramientas disponibles';
-                    } else {
-                        locationTools.textContent = `${toolsInLocation.length} herramienta(s) disponible(s)`;
-                    }
-                    
-                    locationCard.appendChild(locationName);
-                    locationCard.appendChild(locationType);
-                    locationCard.appendChild(locationTools);
-                    locationsList.appendChild(locationCard);
-                });
-            }
-            
-            async addLocation() {
-                const name = document.getElementById('location-name').value;
-                const type = document.getElementById('location-type').value;
-                
-                if (!name) {
-                    this.showNotification('Ingresa un nombre para la ubicación', 'warning');
-                    return;
-                }
-                
-                // Crear ID único
-                const id = name.toLowerCase().replace(/\s+/g, '-');
-                
-                // Verificar si ya existe
-                if (this.locations.find(l => l.id === id)) {
-                    this.showNotification('Ya existe una ubicación con ese nombre', 'warning');
-                    return;
-                }
-                
-                // Agregar nueva ubicación
-                this.locations.push({
-                    id: id,
-                    name: name,
-                    type: type
-                });
-                
-                // Guardar en Firebase
-                await this.saveData();
-                
-                // Limpiar formulario
-                document.getElementById('location-name').value = '';
-                
-                this.showNotification(`Ubicación "${name}" agregada correctamente`, 'success');
-            }
-            
             renderHistoryTable() {
                 const historyTableBody = document.getElementById('history-table-body');
                 if (!historyTableBody) return;
@@ -1669,7 +1731,7 @@
                 
                 let filteredHistory = [...this.history];
                 
-                // Aplicar filtros
+                // Aplicar filtros en tiempo real
                 if (this.currentFilters.date) {
                     filteredHistory = filteredHistory.filter(item => {
                         const itemDate = new Date(item.time).toISOString().split('T')[0];
@@ -1680,12 +1742,6 @@
                 if (this.currentFilters.serial) {
                     filteredHistory = filteredHistory.filter(item => 
                         item.serialNumber && item.serialNumber.toLowerCase().includes(this.currentFilters.serial.toLowerCase())
-                    );
-                }
-                
-                if (this.currentFilters.station) {
-                    filteredHistory = filteredHistory.filter(item => 
-                        item.station && item.station.includes(this.currentFilters.station)
                     );
                 }
                 
@@ -1744,29 +1800,10 @@
                 this.currentFilters = {
                     date: document.getElementById('filter-date').value,
                     serial: document.getElementById('filter-serial').value,
-                    station: document.getElementById('filter-station').value,
                     operation: document.getElementById('filter-operation').value
                 };
                 
                 this.renderHistoryTable();
-                this.showNotification('Filtros aplicados correctamente', 'success');
-            }
-            
-            resetFilters() {
-                document.getElementById('filter-date').value = '';
-                document.getElementById('filter-serial').value = '';
-                document.getElementById('filter-station').value = '';
-                document.getElementById('filter-operation').value = '';
-                
-                this.currentFilters = {
-                    date: '',
-                    serial: '',
-                    station: '',
-                    operation: ''
-                };
-                
-                this.renderHistoryTable();
-                this.showNotification('Filtros limpiados', 'success');
             }
             
             getActionText(action) {
