@@ -8,6 +8,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <style>
+        /* TODOS LOS ESTILOS ANTERIORES SE MANTIENEN IGUAL */
         :root {
             --primary-color: #2c3e50;
             --secondary-color: #3498db;
@@ -747,6 +748,37 @@
             margin-top: 8px;
             font-style: italic;
         }
+        
+        /* NUEVOS ESTILOS PARA LA INFORMACIÓN DE UBICACIÓN AL TOMAR HERRAMIENTA */
+        .current-location-info {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border-left: 4px solid #2196f3;
+        }
+        
+        .current-location-info h5 {
+            margin: 0 0 5px 0;
+            color: #1976d2;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .current-location-info p {
+            margin: 0;
+            font-weight: bold;
+            color: #0d47a1;
+        }
+        
+        .location-highlight {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 8px 12px;
+            margin: 8px 0;
+        }
     </style>
 </head>
 <body>
@@ -839,7 +871,17 @@
                     <div class="selected-tool-info" id="selected-tool-info">
                         <h4>Herramienta seleccionada:</h4>
                         <p id="selected-tool-name"></p>
-                        <p id="selected-tool-location" class="tool-location"></p>
+                        
+                        <!-- NUEVA SECCIÓN: INFORMACIÓN DE UBICACIÓN ACTUAL -->
+                        <div class="current-location-info">
+                            <h5><i class="fas fa-map-marker-alt"></i> UBICACIÓN ACTUAL:</h5>
+                            <p id="selected-tool-current-location">Cargando ubicación...</p>
+                        </div>
+                        
+                        <div class="location-highlight">
+                            <i class="fas fa-info-circle"></i> 
+                            <strong>Instrucción:</strong> Dirígete a la ubicación indicada para recoger la herramienta
+                        </div>
                     </div>
                     
                     <div class="form-group" id="serial-number-group" style="display: none;">
@@ -848,7 +890,7 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="quick-take-station"><i class="fas fa-industry"></i> Estación de Trabajo</label>
+                        <label for="quick-take-station"><i class="fas fa-industry"></i> Estación de Trabajo Destino</label>
                         <select id="quick-take-station">
                             <option value="">Seleccione una estación</option>
                         </select>
@@ -1161,10 +1203,10 @@
                     { id: 4, name: "Martillo de Goma", status: "available", operator: "", station: "", icon: "fas fa-hammer", isTorque: false, location: "estante-a2" },
                     { id: 5, name: "Llave Allen Set", status: "available", operator: "", station: "", icon: "fas fa-toolbox", isTorque: false, location: "cajon-herramientas" },
                     { id: 6, name: "Taladro Eléctrico", status: "available", operator: "", station: "", icon: "fas fa-bolt", isTorque: false, location: "panel-pared" },
-                    { id: 7, name: "Llave Dinamométrica 50-200Nm", status: "available", operator: "", station: "", icon: "fas fa-wrench", isTorque: true, location: "area-calibracion" },
+                    { id: 7, name: "Llave Dinamométrica 50-200Nm", status: "available", operator: "", station: "", icon: "fas fa-wrench", isTorque: true, location: "estante-1" },
                     { id: 8, name: "Nivel Láser", status: "available", operator: "", station: "", icon: "fas fa-ruler-combined", isTorque: false, location: "estante-b1" },
                     { id: 9, name: "Calibrador Pie de Rey", status: "available", operator: "", station: "", icon: "fas fa-ruler", isTorque: false, location: "estante-b1" },
-                    { id: 10, name: "Llave Dinamométrica 10-50Nm", status: "available", operator: "", station: "", icon: "fas fa-wrench", isTorque: true, location: "area-calibracion" }
+                    { id: 10, name: "Llave Dinamométrica 10-50Nm", status: "available", operator: "", station: "", icon: "fas fa-wrench", isTorque: true, location: "estante-1" }
                 ];
             }
             
@@ -1180,10 +1222,11 @@
             
             getDefaultLocations() {
                 return [
-                    { id: "estante-a1", name: "Estante A-1", type: "estante" },
-                    { id: "estante-a2", name: "Estante A-2", type: "estante" },
-                    { id: "estante-b1", name: "Estante B-1", type: "estante" },
-                    { id: "estante-b2", name: "Estante B-2", type: "estante" },
+                    { id: "estante-1", name: "Estante 1 - Dinamométricas", type: "estante" },
+                    { id: "estante-2", name: "Estante 2 - Alicates", type: "estante" },
+                    { id: "estante-a1", name: "Estante A-1 - Herramientas Básicas", type: "estante" },
+                    { id: "estante-a2", name: "Estante A-2 - Herramientas Básicas", type: "estante" },
+                    { id: "estante-b1", name: "Estante B-1 - Instrumentos", type: "estante" },
                     { id: "cajon-herramientas", name: "Cajón de Herramientas", type: "cajon" },
                     { id: "panel-pared", name: "Panel de Pared", type: "panel" },
                     { id: "carro-herramientas", name: "Carro de Herramientas", type: "carro" },
@@ -1377,9 +1420,9 @@
                 }
                 document.getElementById('selected-tool-name').innerHTML = toolNameHTML;
                 
-                // Mostrar ubicación actual
+                // MOSTRAR UBICACIÓN ACTUAL DE LA HERRAMIENTA
                 const locationName = this.getLocationName(tool.location);
-                document.getElementById('selected-tool-location').innerHTML = `<i class="fas fa-map-marker-alt"></i> Ubicación actual: ${locationName}`;
+                document.getElementById('selected-tool-current-location').textContent = locationName;
                 
                 // Mostrar campo de número de serie solo si es una herramienta dinamométrica
                 const serialNumberGroup = document.getElementById('serial-number-group');
