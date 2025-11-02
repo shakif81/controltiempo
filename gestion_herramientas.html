@@ -303,13 +303,83 @@
             gap: 15px;
             margin-bottom: 25px;
         }
+
+        /* NUEVOS ESTILOS PARA SISTEMA DE GRUPOS */
+        .tool-serial {
+            font-size: 0.75em;
+            color: var(--gray-color);
+            margin-left: 8px;
+        }
+
+        .tool-group {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            margin: 20px 0 10px 0;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tool-group h3 {
+            margin: 0;
+            font-size: 1.1em;
+        }
+
+        .group-stats {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .availability-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-left: 10px;
+        }
+
+        .availability-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .availability-dot.available { background-color: var(--success-color); }
+        .availability-dot.in-use { background-color: var(--warning-color); }
+        .availability-dot.maintenance { background-color: var(--danger-color); }
+
+        .group-management {
+            background: var(--light-color);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .group-form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .tools-in-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1><i class="fas fa-tools"></i> Gestión de Herramientas</h1>
-            <p>Administración completa del inventario de herramientas</p>
+            <p>Administración completa del inventario de herramientas - Sistema de Grupos</p>
         </header>
         
         <div class="nav-buttons">
@@ -342,6 +412,24 @@
                 </div>
                 <div class="form-row">
                     <div class="form-group">
+                        <label for="new-tool-grupo">Grupo de Herramienta</label>
+                        <select id="new-tool-grupo">
+                            <option value="">Seleccione un grupo</option>
+                            <option value="llave-10mm">Llave Inglesa 10mm</option>
+                            <option value="destornillador-plano">Destornillador Plano</option>
+                            <option value="alicate-corte">Alicate de Corte</option>
+                            <option value="dinamometrica-50-200">Llave Dinamométrica 50-200Nm</option>
+                            <option value="dinamometrica-10-50">Llave Dinamométrica 10-50Nm</option>
+                            <option value="nuevo-grupo">+ Crear nuevo grupo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-tool-serial">Número de Serie</label>
+                        <input type="text" id="new-tool-serial" placeholder="Ej: LE10-001">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
                         <label for="new-tool-location">Ubicación</label>
                         <select id="new-tool-location">
                             <option value="">Seleccione una ubicación</option>
@@ -359,10 +447,31 @@
                     <i class="fas fa-plus"></i> Agregar Herramienta
                 </button>
             </div>
+
+            <!-- NUEVA SECCIÓN: CREAR NUEVO GRUPO -->
+            <div class="group-management" id="new-group-section" style="display: none;">
+                <h3><i class="fas fa-object-group"></i> Crear Nuevo Grupo</h3>
+                <div class="group-form-row">
+                    <div class="form-group">
+                        <label for="new-group-name">Nombre del Nuevo Grupo</label>
+                        <input type="text" id="new-group-name" placeholder="Ej: Martillo de Bola">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-group-id">ID del Grupo (sin espacios)</label>
+                        <input type="text" id="new-group-id" placeholder="Ej: martillo-bola">
+                    </div>
+                </div>
+                <button class="btn btn-success" id="create-group">
+                    <i class="fas fa-save"></i> Crear Grupo
+                </button>
+            </div>
             
-            <h3><i class="fas fa-list"></i> Herramientas del Sistema</h3>
-            <div class="tools-grid" id="tools-list">
-                <!-- Lista de herramientas se cargará aquí -->
+            <h3><i class="fas fa-list"></i> Herramientas del Sistema por Grupo</h3>
+            <div id="tools-by-group">
+                <!-- Las herramientas se organizarán por grupo aquí -->
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i> Cargando herramientas...
+                </div>
             </div>
         </div>
     </div>
@@ -391,7 +500,9 @@
             
             async init() {
                 try {
-                    firebase.initializeApp(firebaseConfig);
+                    if (!firebase.apps.length) {
+                        firebase.initializeApp(firebaseConfig);
+                    }
                     this.db = firebase.firestore();
                     
                     this.setupEventListeners();
@@ -408,6 +519,18 @@
                 document.getElementById('add-tool').addEventListener('click', () => {
                     this.addTool();
                 });
+
+                document.getElementById('new-tool-grupo').addEventListener('change', (e) => {
+                    if (e.target.value === 'nuevo-grupo') {
+                        document.getElementById('new-group-section').style.display = 'block';
+                    } else {
+                        document.getElementById('new-group-section').style.display = 'none';
+                    }
+                });
+
+                document.getElementById('create-group').addEventListener('click', () => {
+                    this.createNewGroup();
+                });
             }
             
             setupRealtimeListener() {
@@ -418,8 +541,9 @@
                             this.tools = data.tools || [];
                             this.locations = data.locations || this.getDefaultLocations();
                             
-                            this.renderToolsManagement();
+                            this.renderToolsByGroup();
                             this.populateLocationSelect();
+                            this.updateSerialNumberSuggestions();
                         }
                     }, (error) => {
                         console.error('Error en listener:', error);
@@ -428,11 +552,16 @@
             
             getDefaultLocations() {
                 return [
-                    { id: "estante-1", name: "Estante 1", type: "estante" },
-                    { id: "estante-2", name: "Estante 2", type: "estante" },
-                    { id: "estante-3", name: "Estante 3", type: "estante" },
-                    { id: "estante-4", name: "Estante 4", type: "estante" },
-                    { id: "estante-5", name: "Estante 5", type: "estante" },
+                    { id: "estante-1", name: "Estante 1 - Dinamométricas", type: "estante" },
+                    { id: "estante-2", name: "Estante 2 - Alicates", type: "estante" },
+                    { id: "estante-a1", name: "Estante A-1 - Herramientas Básicas", type: "estante" },
+                    { id: "estante-a2", name: "Estante A-2 - Herramientas Básicas", type: "estante" },
+                    { id: "estante-b1", name: "Estante B-1 - Instrumentos", type: "estante" },
+                    { id: "cajon-herramientas", name: "Cajón de Herramientas", type: "cajon" },
+                    { id: "panel-pared", name: "Panel de Pared", type: "panel" },
+                    { id: "carro-herramientas", name: "Carro de Herramientas", type: "carro" },
+                    { id: "area-calibracion", name: "Área de Calibración", type: "especial" },
+                    { id: "almacen-principal", name: "Almacén Principal", type: "almacen" }
                 ];
             }
             
@@ -448,65 +577,130 @@
                     this.showNotification('Error guardando datos', 'error');
                 }
             }
-            
-            renderToolsManagement() {
-                const toolsList = document.getElementById('tools-list');
-                if (!toolsList) return;
-                
-                toolsList.innerHTML = '';
-                
+
+            // NUEVO MÉTODO: Renderizar herramientas por grupo
+            renderToolsByGroup() {
+                const toolsByGroup = document.getElementById('tools-by-group');
+                toolsByGroup.innerHTML = '';
+
+                // Agrupar herramientas
+                const groupedTools = {};
                 this.tools.forEach(tool => {
-                    const toolCard = document.createElement('div');
-                    toolCard.className = 'tool-card';
-                    
-                    const toolHeader = document.createElement('div');
-                    toolHeader.className = 'tool-card-header';
-                    
-                    const toolName = document.createElement('h4');
-                    let toolNameHTML = `<i class="${tool.icon}"></i> ${tool.name}`;
-                    if (tool.isTorque) {
-                        toolNameHTML += `<span class="torque-badge">DINAM.</span>`;
+                    if (!groupedTools[tool.grupo]) {
+                        groupedTools[tool.grupo] = [];
                     }
-                    toolName.innerHTML = toolNameHTML;
-                    
-                    const toolInfo = document.createElement('div');
-                    toolInfo.className = 'tool-card-info';
-                    
-                    const toolStatus = document.createElement('div');
-                    toolStatus.innerHTML = `<strong>Estado:</strong> ${this.getStatusText(tool.status)}`;
-                    
-                    const toolLocation = document.createElement('div');
-                    const locationName = this.getLocationName(tool.location);
-                    toolLocation.innerHTML = `<strong>Ubicación:</strong> ${locationName}`;
-                    
-                    const toolType = document.createElement('div');
-                    toolType.innerHTML = `<strong>Tipo:</strong> ${tool.isTorque ? 'Dinamométrica' : 'Normal'}`;
-                    
-                    const toolActions = document.createElement('div');
-                    toolActions.className = 'tool-card-actions';
-                    
-                    const editBtn = document.createElement('button');
-                    editBtn.className = 'btn btn-primary btn-sm';
-                    editBtn.innerHTML = '<i class="fas fa-edit"></i> Editar';
-                    editBtn.onclick = () => this.editTool(tool.id);
-                    
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'btn btn-danger btn-sm';
-                    deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Eliminar';
-                    deleteBtn.onclick = () => this.deleteTool(tool.id);
-                    
-                    toolActions.appendChild(editBtn);
-                    toolActions.appendChild(deleteBtn);
-                    
-                    toolHeader.appendChild(toolName);
-                    toolCard.appendChild(toolHeader);
-                    toolCard.appendChild(toolStatus);
-                    toolCard.appendChild(toolLocation);
-                    toolCard.appendChild(toolType);
-                    toolCard.appendChild(toolActions);
-                    
-                    toolsList.appendChild(toolCard);
+                    groupedTools[tool.grupo].push(tool);
                 });
+
+                if (Object.keys(groupedTools).length === 0) {
+                    toolsByGroup.innerHTML = '<div class="loading">No hay herramientas en el sistema</div>';
+                    return;
+                }
+
+                // Renderizar cada grupo
+                Object.keys(groupedTools).forEach(grupoId => {
+                    const grupo = groupedTools[grupoId];
+                    const primeraHerramienta = grupo[0];
+                    const disponibles = grupo.filter(tool => tool.status === 'disponible').length;
+                    const enUso = grupo.filter(tool => tool.status === 'en-uso').length;
+                    const mantenimiento = grupo.filter(tool => tool.status === 'mantenimiento').length;
+                    const total = grupo.length;
+
+                    // Header del grupo
+                    const groupHeader = document.createElement('div');
+                    groupHeader.className = 'tool-group';
+                    groupHeader.innerHTML = `
+                        <h3>${primeraHerramienta.name}</h3>
+                        <div class="group-stats">
+                            ${disponibles}/${total} disponibles
+                            <div class="availability-indicator">
+                                <span class="availability-dot available"></span>${disponibles}
+                                <span class="availability-dot in-use"></span>${enUso}
+                                <span class="availability-dot maintenance"></span>${mantenimiento}
+                            </div>
+                        </div>
+                    `;
+                    toolsByGroup.appendChild(groupHeader);
+
+                    // Contenedor para herramientas del grupo
+                    const toolsContainer = document.createElement('div');
+                    toolsContainer.className = 'tools-in-group';
+
+                    // Renderizar cada herramienta del grupo
+                    grupo.forEach(tool => {
+                        const toolCard = this.createToolCard(tool);
+                        toolsContainer.appendChild(toolCard);
+                    });
+
+                    toolsByGroup.appendChild(toolsContainer);
+                });
+            }
+
+            createToolCard(tool) {
+                const toolCard = document.createElement('div');
+                toolCard.className = 'tool-card';
+                
+                const toolHeader = document.createElement('div');
+                toolHeader.className = 'tool-card-header';
+                
+                const toolName = document.createElement('h4');
+                let toolNameHTML = `<i class="${tool.icon}"></i> ${tool.name}`;
+                toolNameHTML += `<span class="tool-serial">${tool.numeroSerie}</span>`;
+                
+                if (tool.isTorque) {
+                    toolNameHTML += `<span class="torque-badge">DINAM.</span>`;
+                }
+                toolName.innerHTML = toolNameHTML;
+                
+                const toolInfo = document.createElement('div');
+                toolInfo.className = 'tool-card-info';
+                
+                const toolStatus = document.createElement('div');
+                toolStatus.innerHTML = `<strong>Estado:</strong> ${this.getStatusText(tool.status)}`;
+                
+                const toolLocation = document.createElement('div');
+                const locationName = this.getLocationName(tool.location);
+                toolLocation.innerHTML = `<strong>Ubicación:</strong> ${locationName}`;
+                
+                const toolOperator = document.createElement('div');
+                if (tool.status === 'en-uso') {
+                    toolOperator.innerHTML = `<strong>Operario:</strong> ${tool.operator}`;
+                }
+                
+                const toolStation = document.createElement('div');
+                if (tool.status === 'en-uso') {
+                    toolStation.innerHTML = `<strong>Estación:</strong> ${this.getStationName(tool.station)}`;
+                }
+                
+                const toolActions = document.createElement('div');
+                toolActions.className = 'tool-card-actions';
+                
+                const editBtn = document.createElement('button');
+                editBtn.className = 'btn btn-primary btn-sm';
+                editBtn.innerHTML = '<i class="fas fa-edit"></i> Editar';
+                editBtn.onclick = () => this.editTool(tool.id);
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn btn-danger btn-sm';
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Eliminar';
+                deleteBtn.onclick = () => this.deleteTool(tool.id);
+                
+                toolActions.appendChild(editBtn);
+                toolActions.appendChild(deleteBtn);
+                
+                toolHeader.appendChild(toolName);
+                toolCard.appendChild(toolHeader);
+                toolCard.appendChild(toolStatus);
+                toolCard.appendChild(toolLocation);
+                
+                if (tool.status === 'en-uso') {
+                    toolCard.appendChild(toolOperator);
+                    toolCard.appendChild(toolStation);
+                }
+                
+                toolCard.appendChild(toolActions);
+                
+                return toolCard;
             }
             
             async editTool(toolId) {
@@ -527,6 +721,11 @@
                         </div>
                         
                         <div class="form-group">
+                            <label for="edit-tool-serial">Número de Serie</label>
+                            <input type="text" id="edit-tool-serial" value="${tool.numeroSerie || ''}">
+                        </div>
+                        
+                        <div class="form-group">
                             <label for="edit-tool-icon">Icono</label>
                             <select id="edit-tool-icon">
                                 <option value="fas fa-wrench" ${tool.icon === 'fas fa-wrench' ? 'selected' : ''}>Llave</option>
@@ -536,6 +735,17 @@
                                 <option value="fas fa-toolbox" ${tool.icon === 'fas fa-toolbox' ? 'selected' : ''}>Set de herramientas</option>
                                 <option value="fas fa-bolt" ${tool.icon === 'fas fa-bolt' ? 'selected' : ''}>Eléctrica</option>
                                 <option value="fas fa-ruler-combined" ${tool.icon === 'fas fa-ruler-combined' ? 'selected' : ''}>Medición</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="edit-tool-grupo">Grupo</label>
+                            <select id="edit-tool-grupo">
+                                <option value="llave-10mm" ${tool.grupo === 'llave-10mm' ? 'selected' : ''}>Llave Inglesa 10mm</option>
+                                <option value="destornillador-plano" ${tool.grupo === 'destornillador-plano' ? 'selected' : ''}>Destornillador Plano</option>
+                                <option value="alicate-corte" ${tool.grupo === 'alicate-corte' ? 'selected' : ''}>Alicate de Corte</option>
+                                <option value="dinamometrica-50-200" ${tool.grupo === 'dinamometrica-50-200' ? 'selected' : ''}>Llave Dinamométrica 50-200Nm</option>
+                                <option value="dinamometrica-10-50" ${tool.grupo === 'dinamometrica-10-50' ? 'selected' : ''}>Llave Dinamométrica 10-50Nm</option>
                             </select>
                         </div>
                         
@@ -584,7 +794,9 @@
 
                 document.getElementById('save-edit').addEventListener('click', async () => {
                     const name = document.getElementById('edit-tool-name').value;
+                    const numeroSerie = document.getElementById('edit-tool-serial').value;
                     const icon = document.getElementById('edit-tool-icon').value;
+                    const grupo = document.getElementById('edit-tool-grupo').value;
                     const location = document.getElementById('edit-tool-location').value;
                     const isTorque = document.getElementById('edit-tool-torque').value === 'true';
 
@@ -593,8 +805,23 @@
                         return;
                     }
 
+                    if (!numeroSerie) {
+                        this.showNotification('El número de serie es requerido', 'warning');
+                        return;
+                    }
+
                     if (!location) {
                         this.showNotification('Selecciona una ubicación', 'warning');
+                        return;
+                    }
+
+                    // Verificar si el número de serie ya existe (excluyendo la herramienta actual)
+                    const serialExists = this.tools.some(t => 
+                        t.numeroSerie === numeroSerie && t.id !== toolId
+                    );
+
+                    if (serialExists) {
+                        this.showNotification('Ya existe una herramienta con este número de serie', 'warning');
                         return;
                     }
 
@@ -604,13 +831,15 @@
                         this.tools[toolIndex] = {
                             ...this.tools[toolIndex],
                             name: name,
+                            numeroSerie: numeroSerie,
                             icon: icon,
+                            grupo: grupo,
                             location: location,
                             isTorque: isTorque
                         };
 
                         await this.saveData();
-                        this.showNotification(`Herramienta "${name}" actualizada correctamente`, 'success');
+                        this.showNotification(`Herramienta "${name} (${numeroSerie})" actualizada correctamente`, 'success');
                     }
 
                     document.body.removeChild(modal);
@@ -625,7 +854,10 @@
             }
             
             async deleteTool(toolId) {
-                if (confirm('¿Estás seguro de que quieres eliminar esta herramienta?')) {
+                const tool = this.tools.find(t => t.id === toolId);
+                if (!tool) return;
+
+                if (confirm(`¿Estás seguro de que quieres eliminar la herramienta "${tool.name} (${tool.numeroSerie})"?`)) {
                     this.tools = this.tools.filter(tool => tool.id !== toolId);
                     await this.saveData();
                     this.showNotification('Herramienta eliminada correctamente', 'success');
@@ -640,10 +872,29 @@
                 };
                 return statusMap[status] || status;
             }
+
+            getLocationName(locationId) {
+                const location = this.locations.find(l => l.id === locationId);
+                return location ? location.name : 'Ubicación no definida';
+            }
+
+            getStationName(stationId) {
+                // Para simplificar, asumimos estaciones básicas
+                const stations = {
+                    'estacion-1': 'Estación 1',
+                    'estacion-2': 'Estación 2',
+                    'estacion-3': 'Estación 3',
+                    'estacion-4': 'Estación 4',
+                    'estacion-5': 'Estación 5'
+                };
+                return stations[stationId] || stationId;
+            }
             
             async addTool() {
                 const name = document.getElementById('new-tool-name').value;
                 const icon = document.getElementById('new-tool-icon').value;
+                const grupo = document.getElementById('new-tool-grupo').value;
+                const numeroSerie = document.getElementById('new-tool-serial').value;
                 const location = document.getElementById('new-tool-location').value;
                 const isTorque = document.getElementById('new-tool-torque').value === 'true';
                 
@@ -652,8 +903,25 @@
                     return;
                 }
                 
+                if (!grupo || grupo === 'nuevo-grupo') {
+                    this.showNotification('Selecciona un grupo para la herramienta', 'warning');
+                    return;
+                }
+                
+                if (!numeroSerie) {
+                    this.showNotification('Ingresa un número de serie', 'warning');
+                    return;
+                }
+
                 if (!location) {
                     this.showNotification('Selecciona una ubicación para la herramienta', 'warning');
+                    return;
+                }
+
+                // Verificar si el número de serie ya existe
+                const serialExists = this.tools.some(tool => tool.numeroSerie === numeroSerie);
+                if (serialExists) {
+                    this.showNotification('Ya existe una herramienta con este número de serie', 'warning');
                     return;
                 }
                 
@@ -665,18 +933,57 @@
                     operator: '',
                     station: '',
                     isTorque: isTorque,
-                    location: location
+                    location: location,
+                    grupo: grupo,
+                    numeroSerie: numeroSerie
                 };
                 
                 this.tools.push(newTool);
                 await this.saveData();
+                
+                // Limpiar formulario
                 document.getElementById('new-tool-name').value = '';
-                this.showNotification(`Herramienta "${name}" agregada correctamente`, 'success');
+                document.getElementById('new-tool-serial').value = '';
+                document.getElementById('new-tool-grupo').value = '';
+                
+                this.showNotification(`Herramienta "${name} (${numeroSerie})" agregada correctamente al grupo`, 'success');
             }
-            
-            getLocationName(locationId) {
-                const location = this.locations.find(l => l.id === locationId);
-                return location ? location.name : 'Ubicación no definida';
+
+            async createNewGroup() {
+                const groupName = document.getElementById('new-group-name').value;
+                const groupId = document.getElementById('new-group-id').value;
+
+                if (!groupName) {
+                    this.showNotification('Ingresa un nombre para el grupo', 'warning');
+                    return;
+                }
+
+                if (!groupId) {
+                    this.showNotification('Ingresa un ID para el grupo', 'warning');
+                    return;
+                }
+
+                // Verificar si el grupo ya existe
+                const existingGroups = [...new Set(this.tools.map(tool => tool.grupo))];
+                if (existingGroups.includes(groupId)) {
+                    this.showNotification('Ya existe un grupo con este ID', 'warning');
+                    return;
+                }
+
+                // Actualizar el select de grupos
+                const grupoSelect = document.getElementById('new-tool-grupo');
+                const newOption = document.createElement('option');
+                newOption.value = groupId;
+                newOption.textContent = groupName;
+                grupoSelect.insertBefore(newOption, grupoSelect.lastChild);
+
+                // Limpiar y ocultar sección de nuevo grupo
+                document.getElementById('new-group-name').value = '';
+                document.getElementById('new-group-id').value = '';
+                document.getElementById('new-group-section').style.display = 'none';
+                document.getElementById('new-tool-grupo').value = groupId;
+
+                this.showNotification(`Grupo "${groupName}" creado correctamente`, 'success');
             }
             
             populateLocationSelect() {
@@ -691,6 +998,19 @@
                     option.textContent = location.name;
                     locationSelect.appendChild(option);
                 });
+            }
+
+            updateSerialNumberSuggestions() {
+                // Obtener grupos existentes para sugerir números de serie
+                const grupos = {};
+                this.tools.forEach(tool => {
+                    if (!grupos[tool.grupo]) {
+                        grupos[tool.grupo] = [];
+                    }
+                    grupos[tool.grupo].push(tool);
+                });
+
+                // Podríamos agregar sugerencias automáticas aquí si es necesario
             }
             
             showNotification(message, type = 'success') {
