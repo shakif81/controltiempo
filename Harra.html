@@ -192,6 +192,19 @@
             color: var(--secondary-color);
         }
         
+        .tool-location {
+            font-size: 0.85em;
+            color: var(--gray-color);
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .tool-location i {
+            color: var(--secondary-color);
+        }
+        
         .tool-status {
             font-size: 0.85em;
             padding: 5px 10px;
@@ -557,7 +570,6 @@
             flex: 1;
         }
         
-        /* Nuevos estilos para las modificaciones */
         .quick-take-section {
             background-color: var(--light-color);
             padding: 20px;
@@ -627,7 +639,6 @@
             margin-left: 8px;
         }
         
-        /* Estilos para los filtros del historial */
         .history-filters {
             background-color: var(--light-color);
             padding: 15px;
@@ -666,6 +677,75 @@
         .operation-number-field {
             background-color: #fffacd;
             border-left: 4px solid var(--warning-color);
+        }
+        
+        .location-badge {
+            background-color: #3498db;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            margin-left: 8px;
+        }
+        
+        .locations-panel {
+            margin-top: 25px;
+        }
+        
+        .locations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .location-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--success-color);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .location-card h4 {
+            margin-bottom: 8px;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .location-type {
+            font-size: 0.8em;
+            color: var(--gray-color);
+            margin-bottom: 8px;
+        }
+        
+        .location-tools {
+            font-size: 0.9em;
+            color: var(--dark-color);
+        }
+        
+        .real-time-filters {
+            background-color: var(--light-color);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .real-time-filters h3 {
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .filter-info {
+            font-size: 0.9em;
+            color: var(--gray-color);
+            margin-top: 8px;
+            font-style: italic;
         }
     </style>
 </head>
@@ -706,9 +786,30 @@
             <div class="panel">
                 <h2><i class="fas fa-list"></i> Disponibilidad de Herramientas</h2>
                 
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="search-tool" placeholder="Buscar herramienta...">
+                <div class="real-time-filters">
+                    <h3><i class="fas fa-filter"></i> Filtros en Tiempo Real</h3>
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="search-tool" placeholder="Buscar herramienta...">
+                    </div>
+                    <div class="form-group">
+                        <label for="filter-location"><i class="fas fa-map-marker-alt"></i> Filtrar por Ubicación</label>
+                        <select id="filter-location">
+                            <option value="">Todas las ubicaciones</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="filter-status"><i class="fas fa-filter"></i> Filtrar por Estado</label>
+                        <select id="filter-status">
+                            <option value="">Todos los estados</option>
+                            <option value="available">Disponible</option>
+                            <option value="in-use">En Uso</option>
+                            <option value="maintenance">Mantenimiento</option>
+                        </select>
+                    </div>
+                    <div class="filter-info">
+                        Los filtros se aplican automáticamente mientras escribes/seleccionas
+                    </div>
                 </div>
                 
                 <div class="tool-list" id="tool-list">
@@ -738,6 +839,7 @@
                     <div class="selected-tool-info" id="selected-tool-info">
                         <h4>Herramienta seleccionada:</h4>
                         <p id="selected-tool-name"></p>
+                        <p id="selected-tool-location" class="tool-location"></p>
                     </div>
                     
                     <div class="form-group" id="serial-number-group" style="display: none;">
@@ -796,6 +898,36 @@
                         <i class="fas fa-spinner fa-spin"></i> Cargando estaciones...
                     </div>
                 </div>
+            </div>
+        </div>
+        
+        <!-- Panel de Ubicaciones -->
+        <div class="panel locations-panel">
+            <h2><i class="fas fa-map-marked-alt"></i> Gestión de Ubicaciones</h2>
+            
+            <div class="form-group">
+                <label for="location-name">Nombre de Ubicación</label>
+                <input type="text" id="location-name" placeholder="Ej: Estante B-3">
+            </div>
+            
+            <div class="form-group">
+                <label for="location-type">Tipo de Ubicación</label>
+                <select id="location-type">
+                    <option value="estante">Estante</option>
+                    <option value="cajon">Cajón</option>
+                    <option value="panel">Panel de Pared</option>
+                    <option value="carro">Carro de Herramientas</option>
+                    <option value="especial">Área Especial</option>
+                    <option value="almacen">Almacén</option>
+                </select>
+            </div>
+            
+            <button class="btn btn-primary" id="add-location">
+                <i class="fas fa-plus"></i> Agregar Ubicación
+            </button>
+            
+            <div class="locations-grid" id="locations-list" style="margin-top: 20px;">
+                <!-- Lista de ubicaciones se cargará aquí -->
             </div>
         </div>
         
@@ -890,6 +1022,13 @@
                     station: '',
                     operation: ''
                 };
+                this.realTimeFilters = {
+                    search: '',
+                    location: '',
+                    status: ''
+                };
+                this.filterTimeout = null;
+                this.locations = [];
                 this.init();
             }
             
@@ -941,9 +1080,22 @@
                     this.returnFromMaintenance();
                 });
                 
-                // Búsqueda
+                // Búsqueda en tiempo real
                 document.getElementById('search-tool').addEventListener('input', (e) => {
-                    this.renderTools(e.target.value);
+                    this.realTimeFilters.search = e.target.value;
+                    this.applyRealTimeFilters();
+                });
+                
+                // Filtro de ubicación en tiempo real
+                document.getElementById('filter-location').addEventListener('change', (e) => {
+                    this.realTimeFilters.location = e.target.value;
+                    this.applyRealTimeFilters();
+                });
+                
+                // Filtro de estado en tiempo real
+                document.getElementById('filter-status').addEventListener('change', (e) => {
+                    this.realTimeFilters.status = e.target.value;
+                    this.applyRealTimeFilters();
                 });
                 
                 // Guardar nombre de usuario cuando cambie
@@ -967,6 +1119,11 @@
                 document.getElementById('reset-filters').addEventListener('click', () => {
                     this.resetFilters();
                 });
+                
+                // Gestión de ubicaciones
+                document.getElementById('add-location').addEventListener('click', () => {
+                    this.addLocation();
+                });
             }
             
             setupRealtimeListener() {
@@ -977,6 +1134,7 @@
                             const data = doc.data();
                             this.tools = data.tools || this.getDefaultTools();
                             this.stations = data.stations || this.getDefaultStations();
+                            this.locations = data.locations || this.getDefaultLocations();
                             this.history = data.history || [];
                             this.users = data.users || {};
                             
@@ -997,16 +1155,16 @@
             
             getDefaultTools() {
                 return [
-                    { id: 1, name: "Llave Inglesa 10mm", status: "available", operator: "", station: "", icon: "fas fa-wrench", isTorque: false },
-                    { id: 2, name: "Destornillador Plano", status: "available", operator: "", station: "", icon: "fas fa-screwdriver", isTorque: false },
-                    { id: 3, name: "Alicate de Corte", status: "available", operator: "", station: "", icon: "fas fa-cut", isTorque: false },
-                    { id: 4, name: "Martillo de Goma", status: "available", operator: "", station: "", icon: "fas fa-hammer", isTorque: false },
-                    { id: 5, name: "Llave Allen Set", status: "available", operator: "", station: "", icon: "fas fa-toolbox", isTorque: false },
-                    { id: 6, name: "Taladro Eléctrico", status: "available", operator: "", station: "", icon: "fas fa-bolt", isTorque: false },
-                    { id: 7, name: "Llave Dinamométrica 50-200Nm", status: "available", operator: "", station: "", icon: "fas fa-wrench", isTorque: true },
-                    { id: 8, name: "Nivel Láser", status: "available", operator: "", station: "", icon: "fas fa-ruler-combined", isTorque: false },
-                    { id: 9, name: "Calibrador Pie de Rey", status: "available", operator: "", station: "", icon: "fas fa-ruler", isTorque: false },
-                    { id: 10, name: "Llave Dinamométrica 10-50Nm", status: "available", operator: "", station: "", icon: "fas fa-wrench", isTorque: true }
+                    { id: 1, name: "Llave Inglesa 10mm", status: "available", operator: "", station: "", icon: "fas fa-wrench", isTorque: false, location: "estante-a1" },
+                    { id: 2, name: "Destornillador Plano", status: "available", operator: "", station: "", icon: "fas fa-screwdriver", isTorque: false, location: "estante-a1" },
+                    { id: 3, name: "Alicate de Corte", status: "available", operator: "", station: "", icon: "fas fa-cut", isTorque: false, location: "estante-a2" },
+                    { id: 4, name: "Martillo de Goma", status: "available", operator: "", station: "", icon: "fas fa-hammer", isTorque: false, location: "estante-a2" },
+                    { id: 5, name: "Llave Allen Set", status: "available", operator: "", station: "", icon: "fas fa-toolbox", isTorque: false, location: "cajon-herramientas" },
+                    { id: 6, name: "Taladro Eléctrico", status: "available", operator: "", station: "", icon: "fas fa-bolt", isTorque: false, location: "panel-pared" },
+                    { id: 7, name: "Llave Dinamométrica 50-200Nm", status: "available", operator: "", station: "", icon: "fas fa-wrench", isTorque: true, location: "area-calibracion" },
+                    { id: 8, name: "Nivel Láser", status: "available", operator: "", station: "", icon: "fas fa-ruler-combined", isTorque: false, location: "estante-b1" },
+                    { id: 9, name: "Calibrador Pie de Rey", status: "available", operator: "", station: "", icon: "fas fa-ruler", isTorque: false, location: "estante-b1" },
+                    { id: 10, name: "Llave Dinamométrica 10-50Nm", status: "available", operator: "", station: "", icon: "fas fa-wrench", isTorque: true, location: "area-calibracion" }
                 ];
             }
             
@@ -1020,10 +1178,25 @@
                 ];
             }
             
+            getDefaultLocations() {
+                return [
+                    { id: "estante-a1", name: "Estante A-1", type: "estante" },
+                    { id: "estante-a2", name: "Estante A-2", type: "estante" },
+                    { id: "estante-b1", name: "Estante B-1", type: "estante" },
+                    { id: "estante-b2", name: "Estante B-2", type: "estante" },
+                    { id: "cajon-herramientas", name: "Cajón de Herramientas", type: "cajon" },
+                    { id: "panel-pared", name: "Panel de Pared", type: "panel" },
+                    { id: "carro-herramientas", name: "Carro de Herramientas", type: "carro" },
+                    { id: "area-calibracion", name: "Área de Calibración", type: "especial" },
+                    { id: "almacen-principal", name: "Almacén Principal", type: "almacen" }
+                ];
+            }
+            
             async createInitialData() {
                 const defaultData = {
                     tools: this.getDefaultTools(),
                     stations: this.getDefaultStations(),
+                    locations: this.getDefaultLocations(),
                     history: [],
                     users: {
                         [this.userId]: {
@@ -1047,6 +1220,7 @@
                     await this.db.collection('tallerData').doc('herramientas').update({
                         tools: this.tools,
                         stations: this.stations,
+                        locations: this.locations,
                         history: this.history,
                         ...userUpdate,
                         lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
@@ -1067,20 +1241,48 @@
                 this.populateStationSelect();
                 this.populateQuickTakeStationSelect();
                 this.populateFilterStationSelect();
+                this.populateLocationFilter();
+                this.renderLocations();
             }
             
-            renderTools(filter = '') {
+            applyRealTimeFilters() {
+                // Debounce para evitar múltiples renderizados
+                clearTimeout(this.filterTimeout);
+                this.filterTimeout = setTimeout(() => {
+                    this.renderTools();
+                }, 300);
+            }
+            
+            renderTools() {
                 const toolList = document.getElementById('tool-list');
                 if (!toolList) return;
                 
                 toolList.innerHTML = '';
                 
-                const filteredTools = this.tools.filter(tool => 
-                    tool.name.toLowerCase().includes(filter.toLowerCase())
-                );
+                let filteredTools = this.tools.filter(tool => {
+                    // Filtro de búsqueda por nombre
+                    if (this.realTimeFilters.search && 
+                        !tool.name.toLowerCase().includes(this.realTimeFilters.search.toLowerCase())) {
+                        return false;
+                    }
+                    
+                    // Filtro por ubicación
+                    if (this.realTimeFilters.location && 
+                        tool.location !== this.realTimeFilters.location) {
+                        return false;
+                    }
+                    
+                    // Filtro por estado
+                    if (this.realTimeFilters.status && 
+                        tool.status !== this.realTimeFilters.status) {
+                        return false;
+                    }
+                    
+                    return true;
+                });
                 
                 if (filteredTools.length === 0) {
-                    toolList.innerHTML = '<div class="tool-item" style="justify-content: center; color: var(--gray-color);">No se encontraron herramientas</div>';
+                    toolList.innerHTML = '<div class="tool-item" style="justify-content: center; color: var(--gray-color);">No se encontraron herramientas con los filtros aplicados</div>';
                     return;
                 }
                 
@@ -1099,18 +1301,28 @@
                     const toolName = document.createElement('div');
                     toolName.className = 'tool-name';
                     
-                    // Agregar badge para herramientas dinamométricas
                     let toolNameHTML = `<i class="${tool.icon} tool-icon"></i> ${tool.name}`;
                     if (tool.isTorque) {
                         toolNameHTML += `<span class="torque-badge">DINAM.</span>`;
                     }
-                    
                     toolName.innerHTML = toolNameHTML;
+                    
+                    // Mostrar ubicación
+                    const toolLocation = document.createElement('div');
+                    toolLocation.className = 'tool-location';
+                    if (tool.status === 'available' && tool.location) {
+                        const location = this.getLocationName(tool.location);
+                        toolLocation.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${location}`;
+                    } else if (tool.status === 'in-use') {
+                        toolLocation.innerHTML = `<i class="fas fa-user"></i> En uso por ${tool.operator}`;
+                    } else {
+                        toolLocation.innerHTML = `<i class="fas fa-tools"></i> En mantenimiento`;
+                    }
                     
                     const toolStatus = document.createElement('div');
                     toolStatus.className = `tool-status status-${tool.status}`;
                     toolStatus.onclick = (e) => {
-                        e.stopPropagation(); // Evitar que se active el click del item
+                        e.stopPropagation();
                         if (tool.status === 'available') {
                             this.showQuickTakeSection(tool);
                         }
@@ -1120,17 +1332,35 @@
                         toolStatus.textContent = 'Disponible (Click para tomar)';
                         toolStatus.style.cursor = 'pointer';
                     } else if (tool.status === 'in-use') {
-                        toolStatus.textContent = `En uso por ${tool.operator} (${this.getStationName(tool.station)})`;
+                        toolStatus.textContent = `En uso en ${this.getStationName(tool.station)}`;
                     } else {
                         toolStatus.textContent = 'En mantenimiento';
                     }
                     
                     toolInfo.appendChild(toolName);
+                    toolInfo.appendChild(toolLocation);
                     toolInfo.appendChild(toolStatus);
                     toolItem.appendChild(toolInfo);
                     
                     toolList.appendChild(toolItem);
                 });
+            }
+            
+            getLocationName(locationId) {
+                const location = this.locations.find(l => l.id === locationId);
+                return location ? location.name : 'Ubicación no definida';
+            }
+            
+            getLocationTypeIcon(type) {
+                const icons = {
+                    'estante': 'fas fa-shelves',
+                    'cajon': 'fas fa-drawer',
+                    'panel': 'fas fa-th-large',
+                    'carro': 'fas fa-dolly',
+                    'especial': 'fas fa-star',
+                    'almacen': 'fas fa-warehouse'
+                };
+                return icons[type] || 'fas fa-map-marker-alt';
             }
             
             showQuickTakeSection(tool) {
@@ -1146,6 +1376,10 @@
                     toolNameHTML += ' <span class="torque-badge">DINAMOMÉTRICA</span>';
                 }
                 document.getElementById('selected-tool-name').innerHTML = toolNameHTML;
+                
+                // Mostrar ubicación actual
+                const locationName = this.getLocationName(tool.location);
+                document.getElementById('selected-tool-location').innerHTML = `<i class="fas fa-map-marker-alt"></i> Ubicación actual: ${locationName}`;
                 
                 // Mostrar campo de número de serie solo si es una herramienta dinamométrica
                 const serialNumberGroup = document.getElementById('serial-number-group');
@@ -1254,6 +1488,20 @@
                 });
             }
             
+            populateLocationFilter() {
+                const filterLocation = document.getElementById('filter-location');
+                if (!filterLocation) return;
+                
+                filterLocation.innerHTML = '<option value="">Todas las ubicaciones</option>';
+                
+                this.locations.forEach(location => {
+                    const option = document.createElement('option');
+                    option.value = location.id;
+                    option.textContent = location.name;
+                    filterLocation.appendChild(option);
+                });
+            }
+            
             renderStations() {
                 const stationsContainer = document.getElementById('stations');
                 if (!stationsContainer) return;
@@ -1292,6 +1540,77 @@
                     stationElement.appendChild(stationTools);
                     stationsContainer.appendChild(stationElement);
                 });
+            }
+            
+            renderLocations() {
+                const locationsList = document.getElementById('locations-list');
+                if (!locationsList) return;
+                
+                locationsList.innerHTML = '';
+                
+                this.locations.forEach(location => {
+                    const locationCard = document.createElement('div');
+                    locationCard.className = 'location-card';
+                    
+                    const locationName = document.createElement('h4');
+                    locationName.innerHTML = `<i class="${this.getLocationTypeIcon(location.type)}"></i> ${location.name}`;
+                    
+                    const locationType = document.createElement('div');
+                    locationType.className = 'location-type';
+                    locationType.textContent = `Tipo: ${location.type}`;
+                    
+                    const locationTools = document.createElement('div');
+                    locationTools.className = 'location-tools';
+                    
+                    const toolsInLocation = this.tools.filter(tool => 
+                        tool.location === location.id && tool.status === 'available'
+                    );
+                    
+                    if (toolsInLocation.length === 0) {
+                        locationTools.textContent = 'Sin herramientas disponibles';
+                    } else {
+                        locationTools.textContent = `${toolsInLocation.length} herramienta(s) disponible(s)`;
+                    }
+                    
+                    locationCard.appendChild(locationName);
+                    locationCard.appendChild(locationType);
+                    locationCard.appendChild(locationTools);
+                    locationsList.appendChild(locationCard);
+                });
+            }
+            
+            async addLocation() {
+                const name = document.getElementById('location-name').value;
+                const type = document.getElementById('location-type').value;
+                
+                if (!name) {
+                    this.showNotification('Ingresa un nombre para la ubicación', 'warning');
+                    return;
+                }
+                
+                // Crear ID único
+                const id = name.toLowerCase().replace(/\s+/g, '-');
+                
+                // Verificar si ya existe
+                if (this.locations.find(l => l.id === id)) {
+                    this.showNotification('Ya existe una ubicación con ese nombre', 'warning');
+                    return;
+                }
+                
+                // Agregar nueva ubicación
+                this.locations.push({
+                    id: id,
+                    name: name,
+                    type: type
+                });
+                
+                // Guardar en Firebase
+                await this.saveData();
+                
+                // Limpiar formulario
+                document.getElementById('location-name').value = '';
+                
+                this.showNotification(`Ubicación "${name}" agregada correctamente`, 'success');
             }
             
             renderHistoryTable() {
