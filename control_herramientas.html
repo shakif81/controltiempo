@@ -891,16 +891,30 @@
                     status: ''
                 };
                 this.filterTimeout = null;
+                this.tools = [];
+                this.stations = [];
                 this.locations = [];
+                this.history = [];
+                this.users = {};
                 this.init();
             }
             
             async init() {
                 try {
-                    firebase.initializeApp(firebaseConfig);
+                    // Verificar si Firebase ya está inicializado
+                    if (!firebase.apps.length) {
+                        firebase.initializeApp(firebaseConfig);
+                    }
                     this.db = firebase.firestore();
-                    await this.db.enablePersistence();
                     
+                    // Configurar persistencia
+                    try {
+                        await this.db.enablePersistence();
+                    } catch (err) {
+                        console.warn('Persistencia no disponible:', err);
+                    }
+                    
+                    // Cargar datos del usuario
                     if (this.userName) {
                         document.getElementById('operator-name').value = this.userName;
                     }
@@ -919,14 +933,17 @@
             }
             
             setupEventListeners() {
+                // Tomar herramienta
                 document.getElementById('quick-confirm-take').addEventListener('click', () => {
                     this.quickTakeTool();
                 });
                 
+                // Devolver herramienta
                 document.getElementById('return-tool').addEventListener('click', () => {
                     this.returnTool();
                 });
                 
+                // Mantenimiento
                 document.getElementById('send-maintenance').addEventListener('click', () => {
                     this.sendToMaintenance();
                 });
@@ -935,6 +952,7 @@
                     this.returnFromMaintenance();
                 });
                 
+                // Filtros en tiempo real
                 document.getElementById('search-tool').addEventListener('input', (e) => {
                     this.realTimeFilters.search = e.target.value;
                     this.applyRealTimeFilters();
@@ -945,6 +963,7 @@
                     this.applyRealTimeFilters();
                 });
                 
+                // Datos del usuario
                 document.getElementById('operator-name').addEventListener('input', (e) => {
                     this.userName = e.target.value;
                     localStorage.setItem('taller_user_name', this.userName);
@@ -956,6 +975,7 @@
                     localStorage.setItem('taller_operation_number', this.operationNumber);
                 });
                 
+                // Filtros del historial
                 document.getElementById('filter-date').addEventListener('change', () => {
                     this.applyFilters();
                 });
@@ -1038,28 +1058,33 @@
             }
             
             async createInitialData() {
-                const doc = await this.db.collection('tallerData').doc('herramientas').get();
-                
-                if (doc.exists) {
-                    return;
+                try {
+                    const doc = await this.db.collection('tallerData').doc('herramientas').get();
+                    
+                    if (doc.exists) {
+                        return;
+                    }
+                    
+                    const defaultData = {
+                        tools: this.getDefaultTools(),
+                        stations: this.getDefaultStations(),
+                        locations: this.getDefaultLocations(),
+                        history: [],
+                        users: {
+                            [this.userId]: {
+                                name: this.userName || 'Sistema',
+                                lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+                            }
+                        },
+                        lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+                    
+                    await this.db.collection('tallerData').doc('herramientas').set(defaultData);
+                    this.showNotification('Datos iniciales creados correctamente', 'success');
+                } catch (error) {
+                    console.error('Error creando datos iniciales:', error);
+                    this.showNotification('Error creando datos iniciales', 'error');
                 }
-                
-                const defaultData = {
-                    tools: this.getDefaultTools(),
-                    stations: this.getDefaultStations(),
-                    locations: this.getDefaultLocations(),
-                    history: [],
-                    users: {
-                        [this.userId]: {
-                            name: this.userName || 'Sistema',
-                            lastSeen: firebase.firestore.FieldValue.serverTimestamp()
-                        }
-                    },
-                    lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
-                };
-                
-                await this.db.collection('tallerData').doc('herramientas').set(defaultData);
-                this.showNotification('Datos iniciales creados correctamente', 'success');
             }
             
             async saveData() {
@@ -1106,11 +1131,13 @@
                 toolList.innerHTML = '';
                 
                 let filteredTools = this.tools.filter(tool => {
+                    // Filtro de búsqueda
                     if (this.realTimeFilters.search && 
                         !tool.name.toLowerCase().includes(this.realTimeFilters.search.toLowerCase())) {
                         return false;
                     }
                     
+                    // Filtro de estado
                     if (this.realTimeFilters.status && 
                         tool.status !== this.realTimeFilters.status) {
                         return false;
@@ -1227,9 +1254,18 @@
                 this.tools.forEach(tool => {
                     const option = document.createElement('option');
                     option.value = tool.id;
-                    option.textContent = `${tool.name} (${tool.status})`;
+                    option.textContent = `${tool.name} (${this.getStatusText(tool.status)})`;
                     maintenanceSelect.appendChild(option);
                 });
+            }
+            
+            getStatusText(status) {
+                const statusMap = {
+                    'disponible': 'Disponible',
+                    'en-uso': 'En Uso',
+                    'mantenimiento': 'Mantenimiento'
+                };
+                return statusMap[status] || status;
             }
             
             updateReturnToolSelect() {
@@ -1332,6 +1368,7 @@
                 
                 let filteredHistory = [...this.history];
                 
+                // Aplicar filtros
                 if (this.currentFilters.date) {
                     filteredHistory = filteredHistory.filter(item => {
                         const itemDate = new Date(item.time).toISOString().split('T')[0];
@@ -1524,10 +1561,12 @@
                     return;
                 }
                 
+                // Actualizar herramienta
                 this.tools[toolIndex].status = 'en-uso';
                 this.tools[toolIndex].operator = operator;
                 this.tools[toolIndex].station = station;
                 
+                // Agregar al historial
                 const now = new Date();
                 this.history.unshift({
                     tool: this.tools[toolIndex].name,
@@ -1543,9 +1582,9 @@
                 
                 this.showNotification(`Herramienta "${this.tools[toolIndex].name}" tomada por ${operator}`, 'success');
                 
+                // Limpiar y ocultar sección
                 document.getElementById('quick-take-section').style.display = 'none';
                 this.selectedTool = null;
-                
                 document.getElementById('quick-take-station').value = '';
                 document.getElementById('serial-number').value = '';
             }
@@ -1590,10 +1629,12 @@
                 
                 const toolName = this.tools[toolIndex].name;
                 
+                // Actualizar herramienta
                 this.tools[toolIndex].status = 'disponible';
                 this.tools[toolIndex].operator = '';
                 this.tools[toolIndex].station = '';
                 
+                // Agregar al historial
                 const now = new Date();
                 this.history.unshift({
                     tool: toolName,
@@ -1641,10 +1682,12 @@
                 
                 const toolName = this.tools[toolIndex].name;
                 
+                // Actualizar herramienta
                 this.tools[toolIndex].status = 'mantenimiento';
                 this.tools[toolIndex].operator = '';
                 this.tools[toolIndex].station = '';
                 
+                // Agregar al historial
                 const now = new Date();
                 this.history.unshift({
                     tool: toolName,
@@ -1697,8 +1740,10 @@
                 
                 const toolName = this.tools[toolIndex].name;
                 
+                // Actualizar herramienta
                 this.tools[toolIndex].status = 'disponible';
                 
+                // Agregar al historial
                 const now = new Date();
                 this.history.unshift({
                     tool: toolName,
