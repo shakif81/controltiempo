@@ -207,17 +207,17 @@
             transform: scale(1.05);
         }
         
-        .status-disponible {
+        .status-available {
             background-color: var(--success-color);
             color: white;
         }
         
-        .status-en-uso {
+        .status-in-use {
             background-color: var(--warning-color);
             color: white;
         }
         
-        .status-mantenimiento {
+        .status-maintenance {
             background-color: var(--danger-color);
             color: white;
         }
@@ -442,15 +442,15 @@
             margin-bottom: 10px;
         }
         
-        .stat-card.disponible i {
+        .stat-card.available i {
             color: var(--success-color);
         }
         
-        .stat-card.en-uso i {
+        .stat-card.in-use i {
             color: var(--warning-color);
         }
         
-        .stat-card.mantenimiento i {
+        .stat-card.maintenance i {
             color: var(--danger-color);
         }
         
@@ -667,11 +667,6 @@
             background-color: #fffacd;
             border-left: 4px solid var(--warning-color);
         }
-        
-        .required-field::after {
-            content: " *";
-            color: var(--danger-color);
-        }
     </style>
 </head>
 <body>
@@ -686,19 +681,19 @@
         </header>
         
         <div class="stats">
-            <div class="stat-card disponible">
+            <div class="stat-card available">
                 <i class="fas fa-check-circle"></i>
-                <div class="stat-value" id="disponible-count">0</div>
+                <div class="stat-value" id="available-count">0</div>
                 <div class="stat-label">Disponibles</div>
             </div>
-            <div class="stat-card en-uso">
+            <div class="stat-card in-use">
                 <i class="fas fa-user-check"></i>
-                <div class="stat-value" id="en-uso-count">0</div>
+                <div class="stat-value" id="in-use-count">0</div>
                 <div class="stat-label">En Uso</div>
             </div>
-            <div class="stat-card mantenimiento">
+            <div class="stat-card maintenance">
                 <i class="fas fa-toolbox"></i>
-                <div class="stat-value" id="mantenimiento-count">0</div>
+                <div class="stat-value" id="maintenance-count">0</div>
                 <div class="stat-label">En Mantenimiento</div>
             </div>
         </div>
@@ -731,6 +726,11 @@
                     <input type="text" id="operator-name" placeholder="Ingrese su nombre/ID">
                 </div>
                 
+                <div class="form-group operation-number-field">
+                    <label for="operation-number"><i class="fas fa-hashtag"></i> Número de Operación *</label>
+                    <input type="text" id="operation-number" placeholder="Ingrese el número de operación" required>
+                </div>
+                
                 <!-- Sección para TOMAR herramienta rápida -->
                 <div class="quick-take-section" id="quick-take-section">
                     <h3><i class="fas fa-hand-paper"></i> Tomar Herramienta</h3>
@@ -743,11 +743,6 @@
                     <div class="form-group" id="serial-number-group" style="display: none;">
                         <label for="serial-number"><i class="fas fa-barcode"></i> Número de Serie</label>
                         <input type="text" id="serial-number" placeholder="Ingrese el número de serie">
-                    </div>
-                    
-                    <div class="form-group operation-number-field">
-                        <label for="operation-number" class="required-field"><i class="fas fa-hashtag"></i> Número de Operación</label>
-                        <input type="text" id="operation-number" placeholder="Ingrese el número de operación" required>
                     </div>
                     
                     <div class="form-group">
@@ -887,6 +882,7 @@
                 this.unsubscribe = null;
                 this.userId = 'user_' + Math.random().toString(36).substr(2, 9);
                 this.userName = localStorage.getItem('taller_user_name') || '';
+                this.operationNumber = localStorage.getItem('taller_operation_number') || '';
                 this.selectedTool = null;
                 this.currentFilters = {
                     date: '',
@@ -906,9 +902,12 @@
                     // Configurar persistencia para trabajo offline
                     await this.db.enablePersistence();
                     
-                    // Cargar nombre de usuario guardado
+                    // Cargar nombre de usuario y número de operación guardados
                     if (this.userName) {
                         document.getElementById('operator-name').value = this.userName;
+                    }
+                    if (this.operationNumber) {
+                        document.getElementById('operation-number').value = this.operationNumber;
                     }
                     
                     this.setupEventListeners();
@@ -954,6 +953,12 @@
                     this.updateReturnToolSelect();
                 });
                 
+                // Guardar número de operación cuando cambie
+                document.getElementById('operation-number').addEventListener('input', (e) => {
+                    this.operationNumber = e.target.value;
+                    localStorage.setItem('taller_operation_number', this.operationNumber);
+                });
+                
                 // Filtros del historial
                 document.getElementById('apply-filters').addEventListener('click', () => {
                     this.applyFilters();
@@ -992,16 +997,16 @@
             
             getDefaultTools() {
                 return [
-                    { id: 1, name: "Llave Inglesa 10mm", status: "disponible", operator: "", station: "", icon: "fas fa-wrench", isTorque: false },
-                    { id: 2, name: "Destornillador Plano", status: "disponible", operator: "", station: "", icon: "fas fa-screwdriver", isTorque: false },
-                    { id: 3, name: "Alicate de Corte", status: "disponible", operator: "", station: "", icon: "fas fa-cut", isTorque: false },
-                    { id: 4, name: "Martillo de Goma", status: "disponible", operator: "", station: "", icon: "fas fa-hammer", isTorque: false },
-                    { id: 5, name: "Llave Allen Set", status: "disponible", operator: "", station: "", icon: "fas fa-toolbox", isTorque: false },
-                    { id: 6, name: "Taladro Eléctrico", status: "disponible", operator: "", station: "", icon: "fas fa-bolt", isTorque: false },
-                    { id: 7, name: "Llave Dinamométrica 50-200Nm", status: "disponible", operator: "", station: "", icon: "fas fa-wrench", isTorque: true },
-                    { id: 8, name: "Nivel Láser", status: "disponible", operator: "", station: "", icon: "fas fa-ruler-combined", isTorque: false },
-                    { id: 9, name: "Calibrador Pie de Rey", status: "disponible", operator: "", station: "", icon: "fas fa-ruler", isTorque: false },
-                    { id: 10, name: "Llave Dinamométrica 10-50Nm", status: "disponible", operator: "", station: "", icon: "fas fa-wrench", isTorque: true }
+                    { id: 1, name: "Llave Inglesa 10mm", status: "available", operator: "", station: "", icon: "fas fa-wrench", isTorque: false },
+                    { id: 2, name: "Destornillador Plano", status: "available", operator: "", station: "", icon: "fas fa-screwdriver", isTorque: false },
+                    { id: 3, name: "Alicate de Corte", status: "available", operator: "", station: "", icon: "fas fa-cut", isTorque: false },
+                    { id: 4, name: "Martillo de Goma", status: "available", operator: "", station: "", icon: "fas fa-hammer", isTorque: false },
+                    { id: 5, name: "Llave Allen Set", status: "available", operator: "", station: "", icon: "fas fa-toolbox", isTorque: false },
+                    { id: 6, name: "Taladro Eléctrico", status: "available", operator: "", station: "", icon: "fas fa-bolt", isTorque: false },
+                    { id: 7, name: "Llave Dinamométrica 50-200Nm", status: "available", operator: "", station: "", icon: "fas fa-wrench", isTorque: true },
+                    { id: 8, name: "Nivel Láser", status: "available", operator: "", station: "", icon: "fas fa-ruler-combined", isTorque: false },
+                    { id: 9, name: "Calibrador Pie de Rey", status: "available", operator: "", station: "", icon: "fas fa-ruler", isTorque: false },
+                    { id: 10, name: "Llave Dinamométrica 10-50Nm", status: "available", operator: "", station: "", icon: "fas fa-wrench", isTorque: true }
                 ];
             }
             
@@ -1083,7 +1088,7 @@
                     const toolItem = document.createElement('div');
                     toolItem.className = 'tool-item';
                     toolItem.onclick = () => {
-                        if (tool.status === 'disponible') {
+                        if (tool.status === 'available') {
                             this.showQuickTakeSection(tool);
                         }
                     };
@@ -1106,15 +1111,15 @@
                     toolStatus.className = `tool-status status-${tool.status}`;
                     toolStatus.onclick = (e) => {
                         e.stopPropagation(); // Evitar que se active el click del item
-                        if (tool.status === 'disponible') {
+                        if (tool.status === 'available') {
                             this.showQuickTakeSection(tool);
                         }
                     };
                     
-                    if (tool.status === 'disponible') {
+                    if (tool.status === 'available') {
                         toolStatus.textContent = 'Disponible (Click para tomar)';
                         toolStatus.style.cursor = 'pointer';
-                    } else if (tool.status === 'en-uso') {
+                    } else if (tool.status === 'in-use') {
                         toolStatus.textContent = `En uso por ${tool.operator} (${this.getStationName(tool.station)})`;
                     } else {
                         toolStatus.textContent = 'En mantenimiento';
@@ -1150,9 +1155,6 @@
                 } else {
                     serialNumberGroup.style.display = 'none';
                 }
-                
-                // Limpiar campo de número de operación
-                document.getElementById('operation-number').value = '';
                 
                 // Desplazar la vista a la sección
                 quickTakeSection.scrollIntoView({ behavior: 'smooth' });
@@ -1192,7 +1194,7 @@
                 }
                 
                 const operatorTools = this.tools.filter(tool => 
-                    tool.status === 'en-uso' && tool.operator === operator
+                    tool.status === 'in-use' && tool.operator === operator
                 );
                 
                 if (operatorTools.length === 0) {
@@ -1269,7 +1271,7 @@
                     stationTools.className = 'station-tools';
                     
                     const toolsInStation = this.tools.filter(tool => 
-                        tool.station === station.id && tool.status === 'en-uso'
+                        tool.station === station.id && tool.status === 'in-use'
                     );
                     
                     if (toolsInStation.length === 0) {
@@ -1422,17 +1424,17 @@
             }
             
             updateStats() {
-                const disponible = this.tools.filter(tool => tool.status === 'disponible').length;
-                const enUso = this.tools.filter(tool => tool.status === 'en-uso').length;
-                const mantenimiento = this.tools.filter(tool => tool.status === 'mantenimiento').length;
+                const available = this.tools.filter(tool => tool.status === 'available').length;
+                const inUse = this.tools.filter(tool => tool.status === 'in-use').length;
+                const maintenance = this.tools.filter(tool => tool.status === 'maintenance').length;
                 
-                const disponibleCount = document.getElementById('disponible-count');
-                const enUsoCount = document.getElementById('en-uso-count');
-                const mantenimientoCount = document.getElementById('mantenimiento-count');
+                const availableCount = document.getElementById('available-count');
+                const inUseCount = document.getElementById('in-use-count');
+                const maintenanceCount = document.getElementById('maintenance-count');
                 
-                if (disponibleCount) disponibleCount.textContent = disponible;
-                if (enUsoCount) enUsoCount.textContent = enUso;
-                if (mantenimientoCount) mantenimientoCount.textContent = mantenimiento;
+                if (availableCount) availableCount.textContent = available;
+                if (inUseCount) inUseCount.textContent = inUse;
+                if (maintenanceCount) maintenanceCount.textContent = maintenance;
             }
             
             updateLastSyncTime() {
@@ -1504,13 +1506,13 @@
                     return;
                 }
                 
-                if (this.tools[toolIndex].status !== 'disponible') {
+                if (this.tools[toolIndex].status !== 'available') {
                     this.showNotification('Esta herramienta no está disponible', 'warning');
                     return;
                 }
                 
                 // Actualizar el estado de la herramienta
-                this.tools[toolIndex].status = 'en-uso';
+                this.tools[toolIndex].status = 'in-use';
                 this.tools[toolIndex].operator = operator;
                 this.tools[toolIndex].station = station;
                 
@@ -1538,15 +1540,21 @@
                 // Limpiar formulario
                 document.getElementById('quick-take-station').value = '';
                 document.getElementById('serial-number').value = '';
-                document.getElementById('operation-number').value = '';
             }
             
             async returnTool() {
                 const operator = this.userName;
+                const operationNumber = document.getElementById('operation-number').value;
                 const toolId = parseInt(document.getElementById('return-tool-select').value);
                 
                 if (!operator) {
                     this.showNotification('Primero ingresa tu nombre', 'warning');
+                    return;
+                }
+                
+                if (!operationNumber) {
+                    this.showNotification('Ingresa el número de operación', 'warning');
+                    document.getElementById('operation-number').focus();
                     return;
                 }
                 
@@ -1562,7 +1570,7 @@
                     return;
                 }
                 
-                if (this.tools[toolIndex].status !== 'en-uso') {
+                if (this.tools[toolIndex].status !== 'in-use') {
                     this.showNotification('Esta herramienta no está en uso', 'warning');
                     return;
                 }
@@ -1575,7 +1583,7 @@
                 const toolName = this.tools[toolIndex].name;
                 
                 // Actualizar el estado de la herramienta
-                this.tools[toolIndex].status = 'disponible';
+                this.tools[toolIndex].status = 'available';
                 this.tools[toolIndex].operator = '';
                 this.tools[toolIndex].station = '';
                 
@@ -1585,6 +1593,7 @@
                     tool: toolName,
                     action: 'devuelta',
                     operator: operator,
+                    operationNumber: operationNumber,
                     station: 'Almacén',
                     time: now.toISOString()
                 });
@@ -1600,10 +1609,17 @@
             
             async sendToMaintenance() {
                 const operator = this.userName;
+                const operationNumber = document.getElementById('operation-number').value;
                 const toolId = parseInt(document.getElementById('maintenance-tool-select').value);
                 
                 if (!operator) {
                     this.showNotification('Primero ingresa tu nombre', 'warning');
+                    return;
+                }
+                
+                if (!operationNumber) {
+                    this.showNotification('Ingresa el número de operación', 'warning');
+                    document.getElementById('operation-number').focus();
                     return;
                 }
                 
@@ -1623,7 +1639,7 @@
                 const previousStatus = this.tools[toolIndex].status;
                 
                 // Actualizar el estado de la herramienta
-                this.tools[toolIndex].status = 'mantenimiento';
+                this.tools[toolIndex].status = 'maintenance';
                 this.tools[toolIndex].operator = '';
                 this.tools[toolIndex].station = '';
                 
@@ -1633,6 +1649,7 @@
                     tool: toolName,
                     action: 'mantenimiento',
                     operator: operator,
+                    operationNumber: operationNumber,
                     station: 'Taller de Mantenimiento',
                     time: now.toISOString()
                 });
@@ -1648,10 +1665,17 @@
             
             async returnFromMaintenance() {
                 const operator = this.userName;
+                const operationNumber = document.getElementById('operation-number').value;
                 const toolId = parseInt(document.getElementById('maintenance-tool-select').value);
                 
                 if (!operator) {
                     this.showNotification('Primero ingresa tu nombre', 'warning');
+                    return;
+                }
+                
+                if (!operationNumber) {
+                    this.showNotification('Ingresa el número de operación', 'warning');
+                    document.getElementById('operation-number').focus();
                     return;
                 }
                 
@@ -1667,7 +1691,7 @@
                     return;
                 }
                 
-                if (this.tools[toolIndex].status !== 'mantenimiento') {
+                if (this.tools[toolIndex].status !== 'maintenance') {
                     this.showNotification('Esta herramienta no está en mantenimiento', 'warning');
                     return;
                 }
@@ -1675,7 +1699,7 @@
                 const toolName = this.tools[toolIndex].name;
                 
                 // Actualizar el estado de la herramienta
-                this.tools[toolIndex].status = 'disponible';
+                this.tools[toolIndex].status = 'available';
                 
                 // Agregar al historial
                 const now = new Date();
@@ -1683,6 +1707,7 @@
                     tool: toolName,
                     action: 'disponible',
                     operator: operator,
+                    operationNumber: operationNumber,
                     station: 'Almacén',
                     time: now.toISOString()
                 });
