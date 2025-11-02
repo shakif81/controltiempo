@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Herramientas</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #34495e;
+            --gray-color: #95a5a6;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--success-color), var(--warning-color), var(--danger-color));
+        }
+        
+        header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .panel {
+            background-color: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+        }
+        
+        .panel h2 {
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--light-color);
+            padding-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background-color: var(--gray-color);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #219653;
+            transform: translateY(-2px);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--dark-color);
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border 0.3s;
+        }
+        
+        input:focus, select:focus {
+            border-color: var(--secondary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        
+        .tool-management-form {
+            background-color: var(--light-color);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .tool-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--secondary-color);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .tool-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .tool-card h4 {
+            margin: 0;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .tool-card-info {
+            font-size: 0.9em;
+            color: var(--dark-color);
+        }
+        
+        .tool-card-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.8em;
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        .torque-badge {
+            background-color: #9b59b6;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            margin-left: 8px;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            padding: 18px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            opacity: 0;
+            transform: translateX(100px);
+            transition: opacity 0.5s, transform 0.5s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            max-width: 400px;
+        }
+        
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .notification-success {
+            background-color: var(--success-color);
+            border-left: 5px solid #1e8449;
+        }
+        
+        .notification-warning {
+            background-color: var(--warning-color);
+            border-left: 5px solid #b7950b;
+        }
+        
+        .notification-error {
+            background-color: var(--danger-color);
+            border-left: 5px solid #a93226;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-tools"></i> Gestión de Herramientas</h1>
+            <p>Administración completa del inventario de herramientas</p>
+        </header>
+        
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" onclick="window.location.href='control_herramientas.html'">
+                <i class="fas fa-arrow-left"></i> Volver al Control
+            </button>
+        </div>
+        
+        <div class="panel">
+            <h2><i class="fas fa-plus-circle"></i> Agregar Nueva Herramienta</h2>
+            
+            <div class="tool-management-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="new-tool-name">Nombre de la Herramienta</label>
+                        <input type="text" id="new-tool-name" placeholder="Ej: Llave Inglesa 10mm">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-tool-icon">Icono</label>
+                        <select id="new-tool-icon">
+                            <option value="fas fa-wrench">Llave</option>
+                            <option value="fas fa-screwdriver">Destornillador</option>
+                            <option value="fas fa-cut">Alicate</option>
+                            <option value="fas fa-hammer">Martillo</option>
+                            <option value="fas fa-toolbox">Set de herramientas</option>
+                            <option value="fas fa-bolt">Eléctrica</option>
+                            <option value="fas fa-ruler-combined">Medición</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="new-tool-location">Ubicación</label>
+                        <select id="new-tool-location">
+                            <option value="">Seleccione una ubicación</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-tool-torque">Tipo de Herramienta</label>
+                        <select id="new-tool-torque">
+                            <option value="false">Herramienta Normal</option>
+                            <option value="true">Herramienta Dinamométrica</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="add-tool">
+                    <i class="fas fa-plus"></i> Agregar Herramienta
+                </button>
+            </div>
+            
+            <h3><i class="fas fa-list"></i> Herramientas del Sistema</h3>
+            <div class="tools-grid" id="tools-list">
+                <!-- Lista de herramientas se cargará aquí -->
+            </div>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // Configuración de Firebase (la misma que en control_herramientas.html)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBZvSfAi2AO_FF1rqDqKDH6-VDFrbeCdhg",
+            authDomain: "taller-herramientas-79e58.firebaseapp.com",
+            projectId: "taller-herramientas-79e58",
+            storageBucket: "taller-herramientas-79e58.firebasestorage.app",
+            messagingSenderId: "1010208693381",
+            appId: "1:1010208693381:web:cd5736b779a41d2c4eddec"
+        };
+
+        class GestionHerramientas {
+            constructor() {
+                this.db = null;
+                this.unsubscribe = null;
+                this.tools = [];
+                this.locations = [];
+                this.init();
+            }
+            
+            async init() {
+                try {
+                    firebase.initializeApp(firebaseConfig);
+                    this.db = firebase.firestore();
+                    
+                    this.setupEventListeners();
+                    this.setupRealtimeListener();
+                    this.showNotification('Sistema de gestión conectado', 'success');
+                    
+                } catch (error) {
+                    console.error('Error inicializando Firebase:', error);
+                    this.showNotification('Error de conexión: ' + error.message, 'error');
+                }
+            }
+            
+            setupEventListeners() {
+                document.getElementById('add-tool').addEventListener('click', () => {
+                    this.addTool();
+                });
+            }
+            
+            setupRealtimeListener() {
+                this.unsubscribe = this.db.collection('tallerData').doc('herramientas')
+                    .onSnapshot((doc) => {
+                        if (doc.exists) {
+                            const data = doc.data();
+                            this.tools = data.tools || [];
+                            this.locations = data.locations || this.getDefaultLocations();
+                            
+                            this.renderToolsManagement();
+                            this.populateLocationSelect();
+                        }
+                    }, (error) => {
+                        console.error('Error en listener:', error);
+                    });
+            }
+            
+            getDefaultLocations() {
+                return [
+                    { id: "estante-1", name: "Estante 1 - Dinamométricas", type: "estante" },
+                    { id: "estante-2", name: "Estante 2 - Alicates", type: "estante" },
+                    { id: "estante-a1", name: "Estante A-1 - Herramientas Básicas", type: "estante" },
+                    { id: "estante-a2", name: "Estante A-2 - Herramientas Básicas", type: "estante" },
+                    { id: "estante-b1", name: "Estante B-1 - Instrumentos", type: "estante" },
+                    { id: "cajon-herramientas", name: "Cajón de Herramientas", type: "cajon" },
+                    { id: "panel-pared", name: "Panel de Pared", type: "panel" },
+                    { id: "carro-herramientas", name: "Carro de Herramientas", type: "carro" },
+                    { id: "area-calibracion", name: "Área de Calibración", type: "especial" },
+                    { id: "almacen-principal", name: "Almacén Principal", type: "almacen" }
+                ];
+            }
+            
+            async saveData() {
+                try {
+                    await this.db.collection('tallerData').doc('herramientas').update({
+                        tools: this.tools,
+                        locations: this.locations,
+                        lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } catch (error) {
+                    console.error('Error guardando datos:', error);
+                    this.showNotification('Error guardando datos', 'error');
+                }
+            }
+            
+            renderToolsManagement() {
+                const toolsList = document.getElementById('tools-list');
+                if (!toolsList) return;
+                
+                toolsList.innerHTML = '';
+                
+                this.tools.forEach(tool => {
+                    const toolCard = document.createElement('div');
+                    toolCard.className = 'tool-card';
+                    
+                    const toolHeader = document.createElement('div');
+                    toolHeader.className = 'tool-card-header';
+                    
+                    const toolName = document.createElement('h4');
+                    let toolNameHTML = `<i class="${tool.icon}"></i> ${tool.name}`;
+                    if (tool.isTorque) {
+                        toolNameHTML += `<span class="torque-badge">DINAM.</span>`;
+                    }
+                    toolName.innerHTML = toolNameHTML;
+                    
+                    const toolInfo = document.createElement('div');
+                    toolInfo.className = 'tool-card-info';
+                    
+                    const toolStatus = document.createElement('div');
+                    toolStatus.innerHTML = `<strong>Estado:</strong> ${this.getStatusText(tool.status)}`;
+                    
+                    const toolLocation = document.createElement('div');
+                    const locationName = this.getLocationName(tool.location);
+                    toolLocation.innerHTML = `<strong>Ubicación:</strong> ${locationName}`;
+                    
+                    const toolType = document.createElement('div');
+                    toolType.innerHTML = `<strong>Tipo:</strong> ${tool.isTorque ? 'Dinamométrica' : 'Normal'}`;
+                    
+                    const toolActions = document.createElement('div');
+                    toolActions.className = 'tool-card-actions';
+                    
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'btn btn-primary btn-sm';
+                    editBtn.innerHTML = '<i class="fas fa-edit"></i> Editar';
+                    editBtn.onclick = () => this.editTool(tool.id);
+                    
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'btn btn-danger btn-sm';
+                    deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Eliminar';
+                    deleteBtn.onclick = () => this.deleteTool(tool.id);
+                    
+                    toolActions.appendChild(editBtn);
+                    toolActions.appendChild(deleteBtn);
+                    
+                    toolHeader.appendChild(toolName);
+                    toolCard.appendChild(toolHeader);
+                    toolCard.appendChild(toolStatus);
+                    toolCard.appendChild(toolLocation);
+                    toolCard.appendChild(toolType);
+                    toolCard.appendChild(toolActions);
+                    
+                    toolsList.appendChild(toolCard);
+                });
+            }
+            
+            async editTool(toolId) {
+                const tool = this.tools.find(t => t.id === toolId);
+                if (!tool) return;
+
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <h3 style="margin-bottom: 20px; color: var(--primary-color);">
+                            <i class="fas fa-edit"></i> Editar Herramienta
+                        </h3>
+                        
+                        <div class="form-group">
+                            <label for="edit-tool-name">Nombre de la Herramienta</label>
+                            <input type="text" id="edit-tool-name" value="${tool.name}">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="edit-tool-icon">Icono</label>
+                            <select id="edit-tool-icon">
+                                <option value="fas fa-wrench" ${tool.icon === 'fas fa-wrench' ? 'selected' : ''}>Llave</option>
+                                <option value="fas fa-screwdriver" ${tool.icon === 'fas fa-screwdriver' ? 'selected' : ''}>Destornillador</option>
+                                <option value="fas fa-cut" ${tool.icon === 'fas fa-cut' ? 'selected' : ''}>Alicate</option>
+                                <option value="fas fa-hammer" ${tool.icon === 'fas fa-hammer' ? 'selected' : ''}>Martillo</option>
+                                <option value="fas fa-toolbox" ${tool.icon === 'fas fa-toolbox' ? 'selected' : ''}>Set de herramientas</option>
+                                <option value="fas fa-bolt" ${tool.icon === 'fas fa-bolt' ? 'selected' : ''}>Eléctrica</option>
+                                <option value="fas fa-ruler-combined" ${tool.icon === 'fas fa-ruler-combined' ? 'selected' : ''}>Medición</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="edit-tool-location">Ubicación</label>
+                            <select id="edit-tool-location">
+                                <option value="">Seleccione una ubicación</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="edit-tool-torque">Tipo de Herramienta</label>
+                            <select id="edit-tool-torque">
+                                <option value="false" ${!tool.isTorque ? 'selected' : ''}>Herramienta Normal</option>
+                                <option value="true" ${tool.isTorque ? 'selected' : ''}>Herramienta Dinamométrica</option>
+                            </select>
+                        </div>
+                        
+                        <div class="modal-actions">
+                            <button class="btn btn-secondary" id="cancel-edit">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                            <button class="btn btn-primary" id="save-edit">
+                                <i class="fas fa-save"></i> Guardar Cambios
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(modal);
+
+                // Poblar el select de ubicaciones
+                const locationSelect = document.getElementById('edit-tool-location');
+                this.locations.forEach(location => {
+                    const option = document.createElement('option');
+                    option.value = location.id;
+                    option.textContent = location.name;
+                    option.selected = location.id === tool.location;
+                    locationSelect.appendChild(option);
+                });
+
+                // Event listeners para los botones del modal
+                document.getElementById('cancel-edit').addEventListener('click', () => {
+                    document.body.removeChild(modal);
+                });
+
+                document.getElementById('save-edit').addEventListener('click', async () => {
+                    const name = document.getElementById('edit-tool-name').value;
+                    const icon = document.getElementById('edit-tool-icon').value;
+                    const location = document.getElementById('edit-tool-location').value;
+                    const isTorque = document.getElementById('edit-tool-torque').value === 'true';
+
+                    if (!name) {
+                        this.showNotification('El nombre de la herramienta es requerido', 'warning');
+                        return;
+                    }
+
+                    if (!location) {
+                        this.showNotification('Selecciona una ubicación', 'warning');
+                        return;
+                    }
+
+                    // Actualizar la herramienta
+                    const toolIndex = this.tools.findIndex(t => t.id === toolId);
+                    if (toolIndex !== -1) {
+                        this.tools[toolIndex] = {
+                            ...this.tools[toolIndex],
+                            name: name,
+                            icon: icon,
+                            location: location,
+                            isTorque: isTorque
+                        };
+
+                        await this.saveData();
+                        this.showNotification(`Herramienta "${name}" actualizada correctamente`, 'success');
+                    }
+
+                    document.body.removeChild(modal);
+                });
+
+                // Cerrar modal al hacer click fuera
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        document.body.removeChild(modal);
+                    }
+                });
+            }
+            
+            async deleteTool(toolId) {
+                if (confirm('¿Estás seguro de que quieres eliminar esta herramienta?')) {
+                    this.tools = this.tools.filter(tool => tool.id !== toolId);
+                    await this.saveData();
+                    this.showNotification('Herramienta eliminada correctamente', 'success');
+                }
+            }
+            
+            getStatusText(status) {
+                const statusMap = {
+                    'disponible': 'Disponible',
+                    'en-uso': 'En Uso',
+                    'mantenimiento': 'Mantenimiento'
+                };
+                return statusMap[status] || status;
+            }
+            
+            async addTool() {
+                const name = document.getElementById('new-tool-name').value;
+                const icon = document.getElementById('new-tool-icon').value;
+                const location = document.getElementById('new-tool-location').value;
+                const isTorque = document.getElementById('new-tool-torque').value === 'true';
+                
+                if (!name) {
+                    this.showNotification('Ingresa un nombre para la herramienta', 'warning');
+                    return;
+                }
+                
+                if (!location) {
+                    this.showNotification('Selecciona una ubicación para la herramienta', 'warning');
+                    return;
+                }
+                
+                const newTool = {
+                    id: this.tools.length > 0 ? Math.max(...this.tools.map(t => t.id)) + 1 : 1,
+                    name: name,
+                    icon: icon,
+                    status: 'disponible',
+                    operator: '',
+                    station: '',
+                    isTorque: isTorque,
+                    location: location
+                };
+                
+                this.tools.push(newTool);
+                await this.saveData();
+                document.getElementById('new-tool-name').value = '';
+                this.showNotification(`Herramienta "${name}" agregada correctamente`, 'success');
+            }
+            
+            getLocationName(locationId) {
+                const location = this.locations.find(l => l.id === locationId);
+                return location ? location.name : 'Ubicación no definida';
+            }
+            
+            populateLocationSelect() {
+                const locationSelect = document.getElementById('new-tool-location');
+                if (!locationSelect) return;
+                
+                locationSelect.innerHTML = '<option value="">Seleccione una ubicación</option>';
+                
+                this.locations.forEach(location => {
+                    const option = document.createElement('option');
+                    option.value = location.id;
+                    option.textContent = location.name;
+                    locationSelect.appendChild(option);
+                });
+            }
+            
+            showNotification(message, type = 'success') {
+                const notification = document.getElementById('notification');
+                if (!notification) return;
+                
+                const icon = type === 'success' ? 'fas fa-check-circle' : 
+                             type === 'warning' ? 'fas fa-exclamation-triangle' : 
+                             'fas fa-exclamation-circle';
+                
+                notification.innerHTML = `<i class="${icon}"></i> ${message}`;
+                notification.className = `notification notification-${type} show`;
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 4000);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            window.gestionHerramientas = new GestionHerramientas();
+        });
+    </script>
+</body>
+</html>
