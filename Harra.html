@@ -556,16 +556,71 @@
         .quick-actions .btn {
             flex: 1;
         }
+        
+        /* Nuevos estilos para las modificaciones */
+        .quick-take-section {
+            background-color: var(--light-color);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .quick-take-section h3 {
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .selected-tool-info {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--secondary-color);
+        }
+        
+        .selected-tool-info h4 {
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+        
+        .quick-confirm-btn {
+            margin-top: 15px;
+        }
+        
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .history-table th, .history-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .history-table th {
+            background-color: var(--light-color);
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        
+        .history-table tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .history-table-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Banner Firebase 
-        <div class="firebase-banner">
-            <h3><i class="fas fa-bolt"></i> Conectado a Firebase - Sincronización Activa</h3>
-            <p>Todos los dispositivos están sincronizados en tiempo real</p>
-        </div> -->
-        
         <header>
             <h1><i class="fas fa-tools"></i> Sistema de Control de Herramientas</h1>
             <p>
@@ -621,27 +676,32 @@
                     <input type="text" id="operator-name" placeholder="Ingrese su nombre/ID">
                 </div>
                 
-                <div class="form-group">
-                    <label for="station"><i class="fas fa-industry"></i> Estación de Trabajo</label>
-                    <select id="station">
-                        <option value="">Seleccione una estación</option>
-                    </select>
-                </div>
-                
-                <!-- Sección para TOMAR herramienta -->
-                <div class="form-group">
-                    <label for="tool-select"><i class="fas fa-wrench"></i> Seleccionar Herramienta para Tomar</label>
-                    <select id="tool-select">
-                        <option value="">Seleccione una herramienta disponible</option>
-                    </select>
-                </div>
-                
-                <div class="action-buttons">
-                    <button class="btn btn-primary" id="take-tool">
-                        <i class="fas fa-hand-paper"></i> Tomar Herramienta
+                <!-- Sección para TOMAR herramienta rápida -->
+                <div class="quick-take-section" id="quick-take-section">
+                    <h3><i class="fas fa-hand-paper"></i> Tomar Herramienta</h3>
+                    
+                    <div class="selected-tool-info" id="selected-tool-info">
+                        <h4>Herramienta seleccionada:</h4>
+                        <p id="selected-tool-name"></p>
+                    </div>
+                    
+                    <div class="form-group" id="serial-number-group" style="display: none;">
+                        <label for="serial-number"><i class="fas fa-barcode"></i> Número de Serie</label>
+                        <input type="text" id="serial-number" placeholder="Ingrese el número de serie">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="quick-take-station"><i class="fas fa-industry"></i> Estación de Trabajo</label>
+                        <select id="quick-take-station">
+                            <option value="">Seleccione una estación</option>
+                        </select>
+                    </div>
+                    
+                    <button class="btn btn-primary quick-confirm-btn" id="quick-confirm-take">
+                        <i class="fas fa-check"></i> Confirmar Toma de Herramienta
                     </button>
                 </div>
-
+                
                 <!-- Sección para DEVOLVER herramienta -->
                 <div class="operator-tools" id="operator-tools-section" style="display: none;">
                     <h3><i class="fas fa-toolbox"></i> Mis Herramientas en Uso</h3>
@@ -685,11 +745,25 @@
         </div>
         
         <div class="panel">
-            <h2><i class="fas fa-history"></i> Historial Reciente</h2>
-            <div class="tool-history" id="tool-history">
-                <div class="loading">
-                    <i class="fas fa-spinner fa-spin"></i> Cargando historial...
-                </div>
+            <h2><i class="fas fa-history"></i> Historial Detallado</h2>
+            <div class="history-table-container">
+                <table class="history-table" id="history-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha y Hora</th>
+                            <th>Herramienta</th>
+                            <th>Número de Serie</th>
+                            <th>Operario</th>
+                            <th>Acción</th>
+                            <th>Estación</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table-body">
+                        <tr>
+                            <td colspan="6" style="text-align: center;">Cargando historial...</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
         
@@ -702,7 +776,6 @@
 
     <script>
         // Configuración de Firebase
-
         const firebaseConfig = {
             apiKey: "AIzaSyBZvSfAi2AO_FF1rqDqKDH6-VDFrbeCdhg",
             authDomain: "taller-herramientas-79e58.firebaseapp.com",
@@ -719,6 +792,7 @@
                 this.unsubscribe = null;
                 this.userId = 'user_' + Math.random().toString(36).substr(2, 9);
                 this.userName = localStorage.getItem('taller_user_name') || '';
+                this.selectedTool = null;
                 this.init();
             }
             
@@ -747,9 +821,9 @@
             }
             
             setupEventListeners() {
-                // Tomar herramienta
-                document.getElementById('take-tool').addEventListener('click', () => {
-                    this.takeTool();
+                // Tomar herramienta rápida
+                document.getElementById('quick-confirm-take').addEventListener('click', () => {
+                    this.quickTakeTool();
                 });
                 
                 // Devolver herramienta
@@ -808,16 +882,16 @@
             
             getDefaultTools() {
                 return [
-                    { id: 1, name: "Llave Inglesa 10mm", status: "available", operator: "", station: "", icon: "fas fa-wrench" },
-                    { id: 2, name: "Destornillador Plano", status: "available", operator: "", station: "", icon: "fas fa-screwdriver" },
-                    { id: 3, name: "Alicate de Corte", status: "available", operator: "", station: "", icon: "fas fa-cut" },
-                    { id: 4, name: "Martillo de Goma", status: "available", operator: "", station: "", icon: "fas fa-hammer" },
-                    { id: 5, name: "Llave Allen Set", status: "available", operator: "", station: "", icon: "fas fa-toolbox" },
-                    { id: 6, name: "Taladro Eléctrico", status: "available", operator: "", station: "", icon: "fas fa-bolt" },
-                    { id: 7, name: "Sierra Circular", status: "available", operator: "", station: "", icon: "fas fa-cut" },
-                    { id: 8, name: "Nivel Láser", status: "available", operator: "", station: "", icon: "fas fa-ruler-combined" },
-                    { id: 9, name: "Calibrador Pie de Rey", status: "available", operator: "", station: "", icon: "fas fa-ruler" },
-                    { id: 10, name: "Multímetro Digital", status: "available", operator: "", station: "", icon: "fas fa-tachometer-alt" }
+                    { id: 1, name: "Llave Inglesa 10mm", status: "available", operator: "", station: "", icon: "fas fa-wrench", isTorque: false },
+                    { id: 2, name: "Destornillador Plano", status: "available", operator: "", station: "", icon: "fas fa-screwdriver", isTorque: false },
+                    { id: 3, name: "Alicate de Corte", status: "available", operator: "", station: "", icon: "fas fa-cut", isTorque: false },
+                    { id: 4, name: "Martillo de Goma", status: "available", operator: "", station: "", icon: "fas fa-hammer", isTorque: false },
+                    { id: 5, name: "Llave Allen Set", status: "available", operator: "", station: "", icon: "fas fa-toolbox", isTorque: false },
+                    { id: 6, name: "Taladro Eléctrico", status: "available", operator: "", station: "", icon: "fas fa-bolt", isTorque: false },
+                    { id: 7, name: "Llave Dinamométrica 50-200Nm", status: "available", operator: "", station: "", icon: "fas fa-wrench", isTorque: true },
+                    { id: 8, name: "Nivel Láser", status: "available", operator: "", station: "", icon: "fas fa-ruler-combined", isTorque: false },
+                    { id: 9, name: "Calibrador Pie de Rey", status: "available", operator: "", station: "", icon: "fas fa-ruler", isTorque: false },
+                    { id: 10, name: "Llave Dinamométrica 10-50Nm", status: "available", operator: "", station: "", icon: "fas fa-wrench", isTorque: true }
                 ];
             }
             
@@ -870,13 +944,13 @@
             
             renderAll() {
                 this.renderTools();
-                this.updateToolSelect();
                 this.updateReturnToolSelect();
                 this.updateMaintenanceSelect();
                 this.renderStations();
-                this.renderHistory();
+                this.renderHistoryTable();
                 this.updateStats();
                 this.populateStationSelect();
+                this.populateQuickTakeStationSelect();
             }
             
             renderTools(filter = '') {
@@ -899,7 +973,7 @@
                     toolItem.className = 'tool-item';
                     toolItem.onclick = () => {
                         if (tool.status === 'available') {
-                            this.quickTakeTool(tool.id);
+                            this.showQuickTakeSection(tool);
                         }
                     };
                     
@@ -915,7 +989,7 @@
                     toolStatus.onclick = (e) => {
                         e.stopPropagation(); // Evitar que se active el click del item
                         if (tool.status === 'available') {
-                            this.quickTakeTool(tool.id);
+                            this.showQuickTakeSection(tool);
                         }
                     };
                     
@@ -936,25 +1010,32 @@
                 });
             }
             
+            showQuickTakeSection(tool) {
+                this.selectedTool = tool;
+                
+                // Mostrar la sección de toma rápida
+                const quickTakeSection = document.getElementById('quick-take-section');
+                quickTakeSection.style.display = 'block';
+                
+                // Mostrar información de la herramienta seleccionada
+                document.getElementById('selected-tool-name').textContent = tool.name;
+                
+                // Mostrar campo de número de serie solo si es una herramienta dinamométrica
+                const serialNumberGroup = document.getElementById('serial-number-group');
+                if (tool.isTorque) {
+                    serialNumberGroup.style.display = 'block';
+                    document.getElementById('serial-number').value = '';
+                } else {
+                    serialNumberGroup.style.display = 'none';
+                }
+                
+                // Desplazar la vista a la sección
+                quickTakeSection.scrollIntoView({ behavior: 'smooth' });
+            }
+            
             getStationName(stationId) {
                 const station = this.stations.find(s => s.id === stationId);
                 return station ? station.name : 'Desconocida';
-            }
-            
-            updateToolSelect() {
-                const toolSelect = document.getElementById('tool-select');
-                if (!toolSelect) return;
-                
-                toolSelect.innerHTML = '<option value="">Seleccione una herramienta disponible</option>';
-                
-                this.tools.forEach(tool => {
-                    if (tool.status === 'available') {
-                        const option = document.createElement('option');
-                        option.value = tool.id;
-                        option.textContent = tool.name;
-                        toolSelect.appendChild(option);
-                    }
-                });
             }
             
             updateMaintenanceSelect() {
@@ -1018,6 +1099,20 @@
                 });
             }
             
+            populateQuickTakeStationSelect() {
+                const quickTakeStationSelect = document.getElementById('quick-take-station');
+                if (!quickTakeStationSelect) return;
+                
+                quickTakeStationSelect.innerHTML = '<option value="">Seleccione una estación</option>';
+                
+                this.stations.forEach(station => {
+                    const option = document.createElement('option');
+                    option.value = station.id;
+                    option.textContent = station.name;
+                    quickTakeStationSelect.appendChild(option);
+                });
+            }
+            
             renderStations() {
                 const stationsContainer = document.getElementById('stations');
                 if (!stationsContainer) return;
@@ -1058,38 +1153,62 @@
                 });
             }
             
-            renderHistory() {
-                const toolHistory = document.getElementById('tool-history');
-                if (!toolHistory) return;
+            renderHistoryTable() {
+                const historyTableBody = document.getElementById('history-table-body');
+                if (!historyTableBody) return;
                 
-                toolHistory.innerHTML = '';
+                historyTableBody.innerHTML = '';
                 
                 if (this.history.length === 0) {
-                    toolHistory.innerHTML = '<div class="history-item">No hay historial registrado</div>';
+                    historyTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No hay historial registrado</td></tr>';
                     return;
                 }
                 
                 const sortedHistory = [...this.history].sort((a, b) => 
                     new Date(b.time) - new Date(a.time)
-                ).slice(0, 10);
+                );
                 
                 sortedHistory.forEach(item => {
-                    const historyItem = document.createElement('div');
-                    historyItem.className = 'history-item';
+                    const historyRow = document.createElement('tr');
                     
-                    const actionText = item.action === 'tomada' ? 'tomada por' : 
-                                     item.action === 'devuelta' ? 'devuelta por' : 
-                                     item.action === 'mantenimiento' ? 'enviada a mantenimiento por' :
-                                     item.action === 'disponible' ? 'puesta disponible por' : 
-                                     item.action;
+                    const dateCell = document.createElement('td');
+                    dateCell.textContent = this.formatTime(item.time);
                     
-                    historyItem.innerHTML = `
-                        <strong>${item.tool}</strong> ${actionText} <strong>${item.operator}</strong> en ${item.station}
-                        <div class="history-time">${this.formatTime(item.time)}</div>
-                    `;
+                    const toolCell = document.createElement('td');
+                    toolCell.textContent = item.tool;
                     
-                    toolHistory.appendChild(historyItem);
+                    const serialCell = document.createElement('td');
+                    serialCell.textContent = item.serialNumber || '-';
+                    
+                    const operatorCell = document.createElement('td');
+                    operatorCell.textContent = item.operator;
+                    
+                    const actionCell = document.createElement('td');
+                    actionCell.textContent = this.getActionText(item.action);
+                    
+                    const stationCell = document.createElement('td');
+                    stationCell.textContent = item.station;
+                    
+                    historyRow.appendChild(dateCell);
+                    historyRow.appendChild(toolCell);
+                    historyRow.appendChild(serialCell);
+                    historyRow.appendChild(operatorCell);
+                    historyRow.appendChild(actionCell);
+                    historyRow.appendChild(stationCell);
+                    
+                    historyTableBody.appendChild(historyRow);
                 });
+            }
+            
+            getActionText(action) {
+                const actions = {
+                    'tomada': 'Tomada',
+                    'devuelta': 'Devuelta',
+                    'mantenimiento': 'Enviada a Mantenimiento',
+                    'disponible': 'Puesta Disponible'
+                };
+                
+                return actions[action] || action;
             }
             
             formatTime(dateTimeString) {
@@ -1143,9 +1262,10 @@
                 }
             }
             
-            async quickTakeTool(toolId) {
+            async quickTakeTool() {
                 const operator = this.userName;
-                const station = document.getElementById('station').value;
+                const station = document.getElementById('quick-take-station').value;
+                const serialNumber = document.getElementById('serial-number').value;
                 
                 if (!operator) {
                     this.showNotification('Primero ingresa tu nombre', 'warning');
@@ -1155,11 +1275,17 @@
                 
                 if (!station) {
                     this.showNotification('Selecciona una estación de trabajo', 'warning');
-                    document.getElementById('station').focus();
+                    document.getElementById('quick-take-station').focus();
                     return;
                 }
                 
-                const toolIndex = this.tools.findIndex(t => t.id === toolId);
+                if (this.selectedTool.isTorque && !serialNumber) {
+                    this.showNotification('Ingresa el número de serie para la herramienta dinamométrica', 'warning');
+                    document.getElementById('serial-number').focus();
+                    return;
+                }
+                
+                const toolIndex = this.tools.findIndex(t => t.id === this.selectedTool.id);
                 
                 if (toolIndex === -1) {
                     this.showNotification('Herramienta no encontrada', 'warning');
@@ -1183,59 +1309,22 @@
                     action: 'tomada',
                     operator: operator,
                     station: this.getStationName(station),
-                    time: now.toISOString()
+                    time: now.toISOString(),
+                    serialNumber: this.selectedTool.isTorque ? serialNumber : null
                 });
                 
                 // Guardar en Firebase
                 await this.saveData();
                 
                 this.showNotification(`Herramienta "${this.tools[toolIndex].name}" tomada por ${operator}`, 'success');
-            }
-            
-            async takeTool() {
-                const operator = this.userName;
-                const station = document.getElementById('station').value;
-                const toolId = parseInt(document.getElementById('tool-select').value);
                 
-                if (!operator || !station || !toolId) {
-                    this.showNotification('Por favor, complete todos los campos', 'warning');
-                    return;
-                }
-                
-                const toolIndex = this.tools.findIndex(t => t.id === toolId);
-                
-                if (toolIndex === -1) {
-                    this.showNotification('Herramienta no encontrada', 'warning');
-                    return;
-                }
-                
-                if (this.tools[toolIndex].status !== 'available') {
-                    this.showNotification('Esta herramienta no está disponible', 'warning');
-                    return;
-                }
-                
-                // Actualizar el estado de la herramienta
-                this.tools[toolIndex].status = 'in-use';
-                this.tools[toolIndex].operator = operator;
-                this.tools[toolIndex].station = station;
-                
-                // Agregar al historial
-                const now = new Date();
-                this.history.unshift({
-                    tool: this.tools[toolIndex].name,
-                    action: 'tomada',
-                    operator: operator,
-                    station: this.getStationName(station),
-                    time: now.toISOString()
-                });
-                
-                // Guardar en Firebase
-                await this.saveData();
-                
-                this.showNotification(`Herramienta "${this.tools[toolIndex].name}" tomada por ${operator}`, 'success');
+                // Ocultar la sección de toma rápida
+                document.getElementById('quick-take-section').style.display = 'none';
+                this.selectedTool = null;
                 
                 // Limpiar formulario
-                document.getElementById('tool-select').value = '';
+                document.getElementById('quick-take-station').value = '';
+                document.getElementById('serial-number').value = '';
             }
             
             async returnTool() {
