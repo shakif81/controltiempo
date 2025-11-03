@@ -1,0 +1,2951 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>⏱ Control de Tiempo — Sistema Mejorado</title>
+  <style>
+    :root {
+      --primary: #2c3e50;
+      --secondary: #3498db;
+      --accent: #e74c3c;
+      --light: #ecf0f1;
+      --dark: #2c3e50;
+      --success: #2ecc71;
+      --warning: #f39c12;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s ease;
+      --bg: #f5f6fa;
+      --muted: #e9ecef;
+      --card: #fff;
+      --danger: #e74c3c;
+      --info: #3498db;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      color: var(--dark);
+      line-height: 1.6;
+      padding: 16px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+    }
+    
+    .wrap {
+      width: 100%;
+      max-width: 1200px;
+    }
+    
+    h1 {
+      text-align: center;
+      color: var(--primary);
+      margin: 0 0 20px;
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      font-weight: 700;
+    }
+    
+    label {
+      display: block;
+      margin-top: 8px;
+      color: var(--primary);
+      font-weight: 600;
+      font-size: clamp(0.9rem, 2vw, 1rem);
+    }
+    
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+      box-sizing: border-box;
+      font-size: 1rem;
+      transition: var(--transition);
+    }
+    
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--secondary);
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    }
+    
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      align-items: end;
+      margin-top: 10px;
+    }
+    
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      min-height: 85px;
+    }
+    
+    .tiempo-group {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .tiempo-input-group {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+    }
+    
+    .tiempo-input-group input {
+      flex: 1;
+      margin: 0;
+      min-width: 0;
+      height: 46px;
+      box-sizing: border-box;
+      font-size: clamp(0.9rem, 2vw, 1rem);
+    }
+    
+    .tiempo-convertido {
+      background: var(--muted);
+      padding: 12px;
+      border-radius: 10px;
+      text-align: center;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #ddd;
+      flex: 1;
+      min-width: 0;
+      height: 46px;
+      box-sizing: border-box;
+      font-size: clamp(0.8rem, 2vw, 0.9rem);
+    }
+    
+    .instrucciones-group {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .btn-instrucciones {
+      background: #9b59b6;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      width: 100%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: var(--transition);
+      height: 46px;
+      box-sizing: border-box;
+      font-size: clamp(0.9rem, 2vw, 1rem);
+      white-space: nowrap;
+      font-weight: 600;
+    }
+    
+    .btn-instrucciones:hover {
+      background: #8e44ad;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(155, 89, 182, 0.3);
+    }
+    
+    .btn-instrucciones:disabled {
+      background: #bdc3c7;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-top: 15px;
+    }
+    
+    .row button {
+      font-size: clamp(0.8rem, 2vw, 0.9rem);
+      padding: 12px 10px;
+      white-space: nowrap;
+      min-height: 50px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: var(--transition);
+      font-weight: 600;
+    }
+    
+    .row button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    #btnStart { background: #0984e3; color: white; } 
+    #btnTerminar { background: var(--danger); color: white; } 
+    #btnReset { background: var(--success); color: white; }
+    #btnSilenciar { background: #95a5a6; color: white; }
+    #btnEstadisticas { background: #16a085; color: white; }
+    #btnExportExcel { background: #27ae60; color: white; }
+    #btnResetTabla { background: #e74c3c; color: white; }
+    #btnAdmin { background: #34495e; color: white; }
+    
+    #cronometro {
+      background: var(--muted);
+      padding: 15px;
+      border-radius: 12px;
+      text-align: center;
+      margin-top: 15px;
+      font-size: clamp(1.1rem, 3vw, 1.4rem);
+      font-weight: bold;
+      box-shadow: var(--shadow);
+    }
+    
+    .table-wrap {
+      margin-top: 15px;
+      background: var(--card);
+      border-radius: 12px;
+      padding: 12px;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      box-shadow: var(--shadow);
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 980px;
+      font-size: clamp(0.8rem, 2vw, 0.93rem);
+    }
+    
+    th, td {
+      padding: 12px 10px;
+      border: 1px solid #e6e6e6;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    th {
+      background: #f1f2f6;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+    }
+    
+    #inpTiempo::-webkit-outer-spin-button,
+    #inpTiempo::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    #inpTiempo {
+      -moz-appearance: textfield;
+    }
+    
+    .progreso-container {
+      margin-top: 15px;
+      background: var(--muted);
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+    }
+    
+    .progreso-bar {
+      width: 100%;
+      height: 28px;
+      background: #f1f2f6;
+      border-radius: 14px;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .progreso-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--success), #27ae60);
+      border-radius: 14px;
+      transition: width 0.3s ease, background 0.3s ease;
+      width: 0%;
+    }
+    
+    .progreso-fill.excedido {
+      background: linear-gradient(90deg, var(--danger), #c0392b);
+    }
+    
+    .progreso-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: 600;
+      font-size: clamp(0.8rem, 2vw, 0.9rem);
+      color: var(--primary);
+      pointer-events: none;
+    }
+    
+    .diff-plus { color: var(--success); font-weight: 700; }
+    .diff-minus { color: var(--danger); font-weight: 700; }
+    
+    #floatingTotal {
+      position: sticky;
+      left: 0;
+      bottom: 0;
+      background: var(--card);
+      border-radius: 12px;
+      padding: 16px 24px;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.12);
+      z-index: 1001;
+      font-weight: 700;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      justify-content: center;
+      margin-top: 20px;
+      border: 2px solid var(--success);
+      font-size: clamp(1rem, 2.5vw, 1.1rem);
+    }
+    
+    #toast {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--success);
+      color: #fff;
+      padding: 15px 24px;
+      border-radius: 10px;
+      display: none;
+      z-index: 1002;
+      font-size: clamp(0.9rem, 2vw, 1rem);
+      text-align: center;
+      max-width: 90%;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      font-weight: 600;
+    }
+
+    /* NUEVOS ESTILOS PARA MEJORAS */
+    .modal-estadisticas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+    
+    .modal-estadisticas .modal-content {
+      background: white;
+      border-radius: 16px;
+      max-width: 95%;
+      width: 100%;
+      max-height: 95vh;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+    
+    .estadisticas-container {
+      padding: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    
+    .estadistica-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-left: 4px solid var(--secondary);
+    }
+    
+    .estadistica-card h3 {
+      margin-bottom: 15px;
+      color: var(--primary);
+      font-size: 1.1rem;
+    }
+    
+    .estadistica-valor {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--secondary);
+      margin-bottom: 10px;
+    }
+    
+    .estadistica-desc {
+      color: #666;
+      font-size: 0.9rem;
+    }
+    
+    .grafico-container {
+      grid-column: 1 / -1;
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .barra-grafico {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .barra-etiqueta {
+      width: 150px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+    
+    .barra-contenedor {
+      flex: 1;
+      height: 30px;
+      background: #f1f2f6;
+      border-radius: 15px;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .barra-relleno {
+      height: 100%;
+      background: linear-gradient(90deg, var(--secondary), var(--accent));
+      border-radius: 15px;
+      transition: width 0.5s ease;
+    }
+    
+    .barra-porcentaje {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: 600;
+      color: var(--primary);
+      font-size: 0.9rem;
+    }
+    
+    .asistente-virtual {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      background: var(--secondary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+      z-index: 1000;
+      transition: var(--transition);
+    }
+    
+    .asistente-virtual:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+    }
+    
+    .asistente-icono {
+      font-size: 1.5rem;
+      color: white;
+    }
+    
+    .chat-asistente {
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      width: 300px;
+      height: 400px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      display: none;
+      flex-direction: column;
+      z-index: 1001;
+      overflow: hidden;
+    }
+    
+    .chat-header {
+      background: var(--secondary);
+      color: white;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .chat-body {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .mensaje {
+      padding: 10px 15px;
+      border-radius: 18px;
+      max-width: 80%;
+      font-size: 0.9rem;
+    }
+    
+    .mensaje-asistente {
+      background: #f1f2f6;
+      align-self: flex-start;
+      border-bottom-left-radius: 5px;
+    }
+    
+    .mensaje-usuario {
+      background: var(--secondary);
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 5px;
+    }
+    
+    .chat-input {
+      padding: 15px;
+      border-top: 1px solid #eee;
+      display: flex;
+      gap: 10px;
+    }
+    
+    .chat-input input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      outline: none;
+    }
+    
+    .chat-input button {
+      background: var(--secondary);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      max-width: 95%;
+      width: 100%;
+      max-height: 95vh;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      display: flex;
+      flex-direction: column;
+      margin: auto;
+    }
+
+/* CORRECCIÓN PARA EL HEADER DE INSTRUCCIONES */
+.modal-header {
+  padding: 25px 20px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  color: var(--primary);
+  border-radius: 16px 16px 0 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.modal-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, var(--secondary), var(--accent));
+}
+
+.modal-header h2 {
+  margin: 0;
+  flex: 1;
+  font-size: clamp(1.3rem, 3vw, 1.6rem);
+  text-align: center;
+  padding-right: 40px;
+  font-weight: 700;
+  color: var(--primary);
+  position: relative;
+  display: inline-block;
+}
+
+.modal-header h2::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 10%;
+  width: 80%;
+  height: 3px;
+  background: var(--secondary);
+  border-radius: 3px;
+}
+
+.close-modal {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 28px;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: var(--transition);
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 11;
+}
+
+.close-modal:hover {
+  background: rgba(52, 152, 219, 0.1);
+  color: var(--secondary);
+  transform: translateY(-50%) scale(1.1);
+}
+    .modal-body {
+      padding: 20px;
+      min-height: 200px;
+      font-size: clamp(0.9rem, 2vw, 1rem);
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .navegacion-instrucciones {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      border-top: 1px solid #e9ecef;
+      background: white;
+      border-radius: 0 0 16px 16px;
+    }
+
+    .btn-navegacion {
+      background: var(--secondary);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: clamp(0.9rem, 2vw, 1rem);
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .btn-navegacion:hover:not(:disabled) {
+      background: #2980b9;
+    }
+    
+    .btn-navegacion:disabled {
+      background: #bdc3c7;
+      cursor: not-allowed;
+    }
+    
+    .contador-paginas {
+      font-weight: 600;
+      color: var(--primary);
+      font-size: clamp(0.9rem, 2vw, 1rem);
+    }
+
+    .filtros-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      align-items: end;
+      margin-top: 20px;
+    }
+    
+    .filtro-item {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .filtro-item.limpiar {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+    
+    .filtro-item.limpiar button {
+      white-space: nowrap;
+      background: var(--muted);
+      color: #666;
+      border: 1px solid #ddd;
+      transition: all 0.3s ease;
+      font-size: clamp(0.9rem, 2vw, 1rem);
+      font-weight: 600;
+    }
+    
+    .filtro-item.limpiar button:hover {
+      background: #e0e0e0;
+    }
+    
+    #excedido {
+      display: none;
+      color: var(--danger);
+      font-weight: 700;
+      margin-top: 10px;
+      text-align: center;
+      padding: 10px;
+      font-size: clamp(0.9rem, 2vw, 1rem);
+      background: #ffeaea;
+      border-radius: 8px;
+      border-left: 4px solid var(--danger);
+    }
+
+    /* ESTILOS PARA INSTRUCCIONES */
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+    }
+    
+    .card-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--secondary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 15px;
+      color: white;
+      font-size: 1.2rem;
+    }
+    
+    .card-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--primary);
+    }
+    
+    .critical-item {
+      background: #fff8e1;
+      border-left: 4px solid var(--warning);
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+    
+    .critical-title {
+      font-weight: 700;
+      color: var(--warning);
+      margin-bottom: 8px;
+      font-size: 1.1rem;
+    }
+    
+    .critical-desc {
+      color: #666;
+      font-size: 0.95rem;
+    }
+    
+    .material-item, .tool-item {
+      padding: 12px 15px;
+      margin-bottom: 10px;
+      background: #f8f9fa;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      transition: var(--transition);
+      border-left: 3px solid var(--success);
+    }
+    
+    .tool-item {
+      border-left-color: var(--secondary);
+    }
+    
+    .material-name, .tool-name {
+      font-weight: 600;
+      color: var(--primary);
+    }
+    
+    .material-desc, .tool-desc {
+      color: #666;
+      font-size: 0.9rem;
+      margin-top: 3px;
+    }
+
+    .pagina-instrucciones {
+      display: none;
+    }
+    
+    .pagina-instrucciones.activa {
+      display: block;
+    }
+
+    /* ESTILOS PARA PASOS CRÍTICOS - NUEVOS */
+    .paso-critico {
+      border: 3px solid #e74c3c !important;
+      background: #ffeaea !important;
+      position: relative;
+      animation: pulse-critico 2s infinite;
+    }
+
+    @keyframes pulse-critico {
+      0% { border-color: #e74c3c; }
+      50% { border-color: #ff6b6b; box-shadow: 0 0 15px rgba(231, 76, 60, 0.5); }
+      100% { border-color: #e74c3c; }
+    }
+
+    .alerta-critica {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      background: #e74c3c;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      z-index: 10;
+      animation: bounce 1s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    .btn-verificar-critico {
+      background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
+      color: white !important;
+      border: none !important;
+      padding: 12px 20px !important;
+      border-radius: 8px !important;
+      font-weight: bold !important;
+      cursor: pointer !important;
+      margin-top: 15px !important;
+      width: 100% !important;
+      font-size: 1rem !important;
+      transition: all 0.3s ease !important;
+      box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4) !important;
+    }
+
+    .btn-verificar-critico:hover {
+      transform: translateY(-2px) !important;
+      box-shadow: 0 6px 20px rgba(231, 76, 60, 0.6) !important;
+    }
+
+    .btn-verificar-critico:active {
+      transform: translateY(0) !important;
+    }
+
+    .modal-verificacion {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 3000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-verificacion-content {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      text-align: center;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      border: 4px solid #e74c3c;
+      animation: modalAppear 0.3s ease;
+    }
+
+    @keyframes modalAppear {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-verificacion h3 {
+      color: #e74c3c;
+      margin-bottom: 15px;
+      font-size: 1.4rem;
+    }
+
+    .modal-verificacion p {
+      margin-bottom: 20px;
+      color: #333;
+      line-height: 1.5;
+    }
+
+    .btn-confirmar-critico {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      margin: 5px;
+    }
+
+    .btn-confirmar-critico:hover {
+      background: #c0392b;
+      transform: translateY(-2px);
+    }
+
+    .btn-cancelar-critico {
+      background: #95a5a6;
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      margin: 5px;
+    }
+
+    .btn-cancelar-critico:hover {
+      background: #7f8c8d;
+      transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+      .estadisticas-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .chat-asistente {
+        width: calc(100% - 40px);
+        right: 20px;
+        left: 20px;
+      }
+      
+      .asistente-virtual {
+        bottom: 80px;
+      }
+    }
+
+/* ESTILOS PARA CAJONES DE MATERIALES */
+.materiales-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.cajon-material {
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+.cajon-material:hover {
+  border-color: var(--secondary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.cajon-header {
+  background: var(--secondary);
+  color: white;
+  padding: 12px 15px;
+}
+
+.cajon-titulo {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.cajon-contenido {
+  padding: 15px;
+}
+
+.material-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.material-item:last-child {
+  border-bottom: none;
+}
+
+.material-info {
+  flex: 1;
+}
+
+.material-nombre {
+  font-weight: 600;
+  color: var(--primary);
+  font-size: 0.95rem;
+}
+
+.material-unidades {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid #ddd;
+}
+
+.material-cantidad {
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 1.1rem;
+}
+
+.material-unidad {
+  font-weight: 600;
+  color: var(--primary);
+  font-size: 0.85rem;
+  text-transform: lowercase;
+}
+
+/* ESTILOS PARA IMÁGENES DE HERRAMIENTAS */
+.herramienta-imagen {
+  text-align: center;
+  margin: 10px 0;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.herramienta-imagen img {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.paso-imagen {
+  text-align: center;
+  margin: 15px 0;
+}
+
+.paso-imagen img {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* ESTILOS MEJORADOS PARA EL BOTÓN DE VER IMAGEN */
+.btn-ver-imagen {
+  background: linear-gradient(135deg, var(--secondary), #2980b9) !important;
+  color: white !important;
+  border: none !important;
+  padding: 12px 18px !important;
+  border-radius: 10px !important;
+  cursor: pointer !important;
+  font-size: 1rem !important;
+  transition: all 0.3s ease !important;
+  font-weight: 700 !important;
+  margin-top: 10px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3) !important;
+}
+
+.btn-ver-imagen:hover {
+  background: linear-gradient(135deg, #2980b9, #1f618d) !important;
+  transform: translateY(-3px) !important;
+  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.5) !important;
+}
+
+.btn-ver-imagen:active {
+  transform: translateY(-1px) !important;
+}
+
+/* ESTILOS MODERNOS PARA NAVEGACIÓN CON SCROLL Y GESTOS */
+.navegacion-instrucciones {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-top: 1px solid #e9ecef;
+  background: white;
+  border-radius: 0 0 16px 16px;
+  position: relative;
+}
+
+/* Botones modernos */
+.btn-navegacion {
+  background: linear-gradient(135deg, var(--secondary), #2980b9);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: clamp(0.9rem, 2vw, 1rem);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-navegacion::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transition: left 0.5s;
+}
+
+.btn-navegacion:hover::before {
+  left: 100%;
+}
+
+.btn-navegacion:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2980b9, #1f618d);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+}
+
+.btn-navegacion:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-navegacion:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Contador moderno */
+.contador-paginas {
+  font-weight: 700;
+  color: var(--primary);
+  font-size: clamp(0.9rem, 2vw, 1rem);
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  padding: 8px 16px;
+  border-radius: 20px;
+  background-color: #f8f9fa;
+  border: 2px solid #e9ecef;
+}
+
+/* Indicadores de progreso con puntos */
+.indicadores-paginas {
+  display: flex;
+  gap: 8px;
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.indicador-pagina {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ddd;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.indicador-pagina.activa {
+  background: var(--secondary);
+  transform: scale(1.2);
+}
+
+.indicador-pagina:hover {
+  background: #aaa;
+}
+
+/* Área de gestos táctiles */
+.area-gestos {
+  position: absolute;
+  top: 0;
+  width: 30%;
+  height: 100%;
+  z-index: 5;
+}
+
+.area-gestos.izquierda {
+  left: 0;
+  cursor: w-resize;
+}
+
+.area-gestos.derecha {
+  right: 0;
+  cursor: e-resize;
+}
+
+/* Efectos de deslizamiento */
+.pagina-instrucciones {
+  display: none;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.pagina-instrucciones.activa {
+  display: block;
+}
+
+.pagina-instrucciones.saliendo-izquierda {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+.pagina-instrucciones.saliendo-derecha {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+.pagina-instrucciones.entrando-izquierda {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+.pagina-instrucciones.entrando-derecha {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+/* Flechas de navegación flotantes para móviles */
+.flechas-flotantes {
+  position: fixed;
+  bottom: 100px;
+  left: 0;
+  right: 0;
+  display: none;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.flecha-flotante {
+  width: 50px;
+  height: 50px;
+  background: rgba(52, 152, 219, 0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  pointer-events: all;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.flecha-flotante:active {
+  transform: scale(0.95);
+  background: rgba(41, 128, 185, 0.9);
+}
+
+/* Responsive: Mostrar flechas flotantes en móviles */
+@media (max-width: 768px) {
+  .flechas-flotantes {
+    display: flex;
+  }
+  
+  .navegacion-instrucciones {
+    padding-bottom: 40px; /* Espacio para los indicadores */
+  }
+  
+  .btn-navegacion {
+    padding: 10px 20px;
+    font-size: 0.85rem;
+  }
+}
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>⏱ Control de Tiempo — Sistema Mejorado</h1>
+
+    <label for="inpOperacion">N° de Operación</label>
+    <input id="inpOperacion" placeholder="Ej: 234 o Lote 12">
+
+    <div class="controls-grid">
+      <div class="control-group">
+        <label for="selTipo" style="margin-bottom: 5px;">Tipo</label>
+        <select id="selTipo">
+          <option value="">— Selecciona tipo —</option>
+          <option value="DC3">DC3</option>
+          <option value="MS3">MS3</option>
+          <option value="Personalizada">Personalizada</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="selTarea" style="margin-bottom: 5px;">Tarea</label>
+        <select id="selTarea">
+          <option value="">— Elige tipo primero —</option>
+        </select>
+        <div id="divPersonalizada" style="display:none;margin-top:8px">
+          <input id="inpNombrePersonalizado" placeholder="Nombre de tarea...">
+        </div>
+      </div>
+
+      <div class="control-group tiempo-group">
+        <label for="inpTiempo" style="margin-bottom: 5px;">Tiempo estimado (horas)</label>
+        <div class="tiempo-input-group">
+          <input id="inpTiempo" type="number" step="0.01" min="0" placeholder="Ej: 1.50">
+          <div id="minutosConvertidos" class="tiempo-convertido">00:00:00</div>
+        </div>
+      </div>
+
+      <div class="control-group instrucciones-group">
+        <label for="btnInstrucciones" style="margin-bottom: 5px;">&nbsp;</label>
+        <button id="btnInstrucciones" class="btn-instrucciones">
+          📚 Instrucciones
+        </button>
+      </div>
+    </div>
+
+    <div id="cronometro">Restante: 00:00:00</div>
+    
+    <div class="progreso-container">
+      <div class="progreso-bar">
+        <div class="progreso-fill" id="progresoFill"></div>
+        <div class="progreso-text" id="progresoText">0%</div>
+      </div>
+    </div>
+    
+    <div id="excedido">-00:00:00 excedido</div>
+
+    <div class="row">
+      <button id="btnStart">▶️ Iniciar</button>
+      <button id="btnTerminar" disabled>⏹️ Terminar</button>
+      <button id="btnReset">🔄 Reiniciar</button>
+      <button id="btnSilenciar">🔊 Silenciar</button>
+      <button id="btnEstadisticas">📊 Estadísticas</button>
+      <button id="btnExportExcel">📊 Descargar Excel</button>
+      <button id="btnResetTabla">🗑️ Resetear</button>
+      <button id="btnAdmin">⚙️ Admin</button>
+    </div>
+
+    <div class="filtros-container">
+      <div class="filtro-item">
+        <label for="filtroFecha">Filtrar por fecha</label>
+        <input id="filtroFecha" type="date">
+      </div>
+      <div class="filtro-item">
+        <label for="filtroOperacion">Filtrar por Nº de Operación</label>
+        <input id="filtroOperacion" placeholder="Ej: 234">
+      </div>
+      <div class="filtro-item limpiar">
+        <label for="filtroLimpiar">&nbsp;</label>
+        <button id="filtroLimpiar">🧹 Limpiar filtros</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table id="tabla">
+        <thead>
+          <tr>
+            <th>Nº Operación</th>
+            <th>Tipo</th>
+            <th>Tarea</th>
+            <th>Estimado</th>
+            <th>Tiempo Real</th>
+            <th>Diferencia</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div id="floatingTotal">
+      <div>Total día:</div>
+      <div id="floatingTotalValue" style="min-width:120px;text-align:center;color:var(--success)">+00:00:00</div>
+    </div>
+  </div>
+
+  <!-- MODAL DE ESTADÍSTICAS VISUALES -->
+  <div id="modalEstadisticas" class="modal-estadisticas">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>📊 Estadísticas Visuales</h2>
+        <button class="close-modal" aria-label="Cerrar modal">&times;</button>
+      </div>
+      <div class="estadisticas-container" id="estadisticasBody">
+        <!-- Las estadísticas se cargarán aquí dinámicamente -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ASISTENTE VIRTUAL -->
+  <div class="asistente-virtual" id="asistenteBtn">
+    <div class="asistente-icono">🤖</div>
+  </div>
+  
+  <div class="chat-asistente" id="chatAsistente">
+    <div class="chat-header">
+      <div>Asistente Virtual</div>
+      <button id="cerrarChat" style="background:none;border:none;color:white;font-size:1.2rem;cursor:pointer">×</button>
+    </div>
+    <div class="chat-body" id="chatBody">
+      <div class="mensaje mensaje-asistente">
+        ¡Hola! Soy tu asistente virtual. ¿En qué puedo ayudarte?
+      </div>
+    </div>
+    <div class="chat-input">
+      <input type="text" id="inputChat" placeholder="Escribe tu pregunta...">
+      <button id="enviarChat">➤</button>
+    </div>
+  </div>
+
+  <!-- MODAL DE INSTRUCCIONES -->
+  <div id="modalInstrucciones" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitulo">Instrucciones de Tarea</h2>
+        <button class="close-modal" aria-label="Cerrar modal">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- Las páginas de instrucciones se cargarán aquí dinámicamente -->
+      </div>
+      <!-- REEMPLAZAR LA SECCIÓN DE NAVEGACIÓN EXISTENTE -->
+<div class="navegacion-instrucciones">
+  <!-- Áreas de gestos táctiles -->
+  <div class="area-gestos izquierda" id="areaGestosIzquierda"></div>
+  <div class="area-gestos derecha" id="areaGestosDerecha"></div>
+  
+  <button id="btnAnterior" class="btn-navegacion" disabled>
+    ◀️ Anterior
+  </button>
+  
+  <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+    <div class="contador-paginas" id="contadorPaginas">Página 1 de 1</div>
+    <div class="indicadores-paginas" id="indicadoresPaginas">
+      <!-- Los indicadores se generarán dinámicamente -->
+    </div>
+  </div>
+  
+  <button id="btnSiguiente" class="btn-navegacion">
+    Siguiente ▶️
+  </button>
+</div>
+
+<!-- Flechas flotantes para móviles -->
+<div class="flechas-flotantes" id="flechasFlotantes">
+  <button class="flecha-flotante" id="flechaAnterior">◀</button>
+  <button class="flecha-flotante" id="flechaSiguiente">▶</button>
+</div>
+    </div>
+  </div>
+
+  <!-- MODAL DE VERIFICACIÓN PARA PASOS CRÍTICOS -->
+  <div id="modalVerificacionCritico" class="modal-verificacion">
+    <div class="modal-verificacion-content">
+      <h3>⚠️ PASO CRÍTICO - VERIFICACIÓN REQUERIDA</h3>
+      <p id="textoVerificacionCritico">Antes de continuar, debe verificar que ha completado correctamente este paso crítico.</p>
+      <div style="margin-top: 25px;">
+        <button class="btn-confirmar-critico" onclick="confirmarPasoCritico()">✅ CONFIRMAR COMPLETADO</button>
+        <button class="btn-cancelar-critico" onclick="cancelarPasoCritico()">↩️ VOLVER AL PASO</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+  <audio id="beep" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" preload="auto"></audio>
+  <audio id="warningBeep" src="https://actions.google.com/sounds/v1/cartoon/cartoon_whistle.ogg" preload="auto"></audio>
+
+<script>
+// =============================================
+// VARIABLES GLOBALES
+// =============================================
+let inicioMs = 0;
+let rafId = null;
+let tiempoEstandar = 0;
+let silenciado = false;
+let alerta10minMostrada = false;
+let alerta5minMostrada = false;
+let alertaExcedidoMostrada = false;
+let modoPrueba = false;
+
+// Variables para navegación de instrucciones
+let paginaActual = 0;
+let totalPaginas = 0;
+
+// Variables para pasos críticos
+let pasoCriticoActual = null;
+let indicePasoCritico = -1;
+
+// TAREAS PREDEFINIDAS
+const tareasBase = {
+  "Bandeja AT Derecha":1.27,
+  "Bandeja AT Izquierda":1.27,
+  "Contactor QA1200, QA2200":1.66,
+  "Contactor QA1240, QA2240":2.46,
+  "DCU":1.80,
+  "Contactor QB1242, QB2242, Transductores tensiones, condensador":2.11,
+  "Desmontar Caldereria y Placa Conectores":2.31,
+  "Psus, Switch, Bombas":1.62,
+  "Premecanico Transdutores Corriente Izquierdo":1.83,
+  "Premecanico Transductores Corriente Derecho":1.83,
+  "PreElectrico Transductores Corriente y BusBars":2.07,
+  "DC-LINK Superior y Inferior":2.19,
+  "Conexion SZ/KK y I/O":1.50
+};
+
+// =============================================
+// SISTEMA DE PASOS CRÍTICOS - FUNCIONES CORREGIDAS
+// =============================================
+
+function verificarPasoCritico(pasoIndex, pasoData) {
+    pasoCriticoActual = pasoData;
+    indicePasoCritico = pasoIndex;
+    
+    const modal = document.getElementById('modalVerificacionCritico');
+    const texto = document.getElementById('textoVerificacionCritico');
+    
+    texto.textContent = `PASO CRÍTICO: ${pasoData.titulo}\n\n${pasoData.descripcion}\n\nAntes de continuar, verifique que ha completado correctamente este paso.`;
+    
+    modal.style.display = 'flex';
+    
+    // Bloquear navegación
+    document.getElementById('btnSiguiente').disabled = true;
+    document.getElementById('btnAnterior').disabled = true;
+}
+
+function confirmarPasoCritico() {
+    const modal = document.getElementById('modalVerificacionCritico');
+    modal.style.display = 'none';
+    
+    // Desbloquear navegación
+    document.getElementById('btnSiguiente').disabled = false;
+    document.getElementById('btnAnterior').disabled = false;
+    
+    // Marcar el botón como verificado en la página actual
+    const paginaActualElement = document.getElementById(`pagina-${paginaActual}`);
+    const botonCritico = paginaActualElement?.querySelector('.btn-verificar-critico');
+    
+    if (botonCritico) {
+        botonCritico.classList.add('verificado');
+        botonCritico.textContent = '✅ PASO CRÍTICO VERIFICADO';
+        botonCritico.style.background = '#27ae60';
+        botonCritico.style.cursor = 'default';
+    }
+    
+    // EJECUTAR LA NAVEGACIÓN AL SIGUIENTE PASO INMEDIATAMENTE
+    const nuevaPagina = paginaActual + 1;
+    const esUltimaPagina = paginaActual === totalPaginas - 1;
+    
+    if (esUltimaPagina) {
+        // Si es el último paso crítico, cerrar el modal
+        document.getElementById('modalInstrucciones').style.display = 'none';
+        toast('✅ Instrucciones completadas - Todos los pasos críticos verificados', '#2ecc71');
+    } else if (nuevaPagina < totalPaginas) {
+        // Ocultar página actual
+        if (paginaActualElement) {
+            paginaActualElement.classList.remove('activa');
+        }
+        
+        // Mostrar nueva página
+        paginaActual = nuevaPagina;
+        const nuevaPaginaElement = document.getElementById(`pagina-${paginaActual}`);
+        if (nuevaPaginaElement) {
+            nuevaPaginaElement.classList.add('activa');
+        }
+        
+        actualizarNavegacion();
+        
+        // Scroll al top
+        const modalBody = document.getElementById('modalBody');
+        modalBody.scrollTop = 0;
+    }
+    
+    pasoCriticoActual = null;
+    indicePasoCritico = -1;
+    
+    if (!esUltimaPagina) {
+        toast('✅ Paso crítico verificado correctamente', '#2ecc71');
+    }
+}
+
+function cancelarPasoCritico() {
+    const modal = document.getElementById('modalVerificacionCritico');
+    modal.style.display = 'none';
+    
+    // Desbloquear navegación pero mantener en la página actual
+    document.getElementById('btnSiguiente').disabled = false;
+    document.getElementById('btnAnterior').disabled = false;
+    
+    pasoCriticoActual = null;
+    indicePasoCritico = -1;
+    
+    toast('↩️ Verifique el paso crítico antes de continuar', '#f39c12');
+}
+
+// =============================================
+// FUNCIONES DE INSTRUCCIONES (CORREGIDAS - IMÁGENES FIJADAS)
+// =============================================
+
+function obtenerInstruccionesTareas() {
+  const tareasAdmin = JSON.parse(localStorage.getItem('tareasInstrucciones') || '{}');
+  
+  if (Object.keys(tareasAdmin).length > 0) {
+    return tareasAdmin;
+  }
+  
+  // Instrucciones predeterminadas
+  return {
+    "Bandeja AT Derecha": {
+      titulo: "Instalación Bandeja AT Derecha",
+      tipo: "DC3",
+      tiempo: 1.27,
+      elementosCriticos: [
+        {
+          titulo: "TORNILLOS DE ANCLAJE",
+          descripcion: "Verificar que los tornillos de anclaje sean de grado 8.8 o superior",
+          critico: true
+        }
+      ],
+      materiales: [
+        {
+          nombre: "Tornillos M8x40",
+          descripcion: "Tornillos de fijación grado 8.8",
+          cantidad: 6,
+          unidad: "unidades"
+        }
+      ],
+      herramientas: [
+        {
+          nombre: "Llave torque 25Nm",
+          descripcion: "Para apriete controlado de tornillos",
+          imagen: ""
+        }
+      ],
+      pasos: [
+        {
+          titulo: "Preparación del área",
+          descripcion: "Limpiar y marcar la posición donde irá la bandeja",
+          imagen: "",
+          critico: true
+        },
+        {
+          titulo: "Instalación de soportes",
+          descripcion: "Colocar y fijar los soportes de la bandeja",
+          imagen: "",
+          critico: false
+        }
+      ]
+    }
+  };
+}
+
+function mostrarInstrucciones() {
+  const tareaSeleccionada = document.getElementById('selTarea').value;
+  if (!tareaSeleccionada) {
+    toast('📝 Primero selecciona una tarea', '#f39c12');
+    return;
+  }
+
+  const instruccionesTareas = obtenerInstruccionesTareas();
+  const instruccion = instruccionesTareas[tareaSeleccionada];
+  
+  if (!instruccion) {
+    toast('📝 No hay instrucciones disponibles para esta tarea', '#f39c12');
+    return;
+  }
+  
+  const modal = document.getElementById('modalInstrucciones');
+  const titulo = document.getElementById('modalTitulo');
+  const body = document.getElementById('modalBody');
+  
+  titulo.textContent = instruccion.titulo || tareaSeleccionada;
+  
+  // Crear páginas de instrucciones
+  const paginas = [];
+  
+  // PÁGINA 1: Información + Elementos Críticos
+  let pagina1 = `
+    <div class="pagina-instrucciones activa" id="pagina-0">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">📋</div>
+          <h2 class="card-title">Información de la Tarea</h2>
+        </div>
+        <div style="padding: 15px;">
+          <p><strong>Tipo:</strong> ${instruccion.tipo || 'No especificado'}</p>
+          <p><strong>Tiempo estimado:</strong> ${instruccion.tiempo || document.getElementById('inpTiempo').value} horas</p>
+          <p><strong>Dificultad:</strong> Media</p>
+        </div>
+      </div>
+  `;
+  
+  // ELEMENTOS CRÍTICOS EN PÁGINA 1
+  if (instruccion.elementosCriticos && instruccion.elementosCriticos.length > 0) {
+    pagina1 += `
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">⚠️</div>
+          <h2 class="card-title">Elementos Críticos</h2>
+        </div>
+    `;
+    instruccion.elementosCriticos.forEach(critico => {
+      pagina1 += `
+        <div class="critical-item">
+          <h3 class="critical-title">${critico.titulo}</h3>
+          <p class="critical-desc">${critico.descripcion}</p>
+        </div>
+      `;
+    });
+    pagina1 += `</div>`;
+  }
+  pagina1 += `</div>`;
+  paginas.push(pagina1);
+  
+  // PÁGINA 2: Materiales + Herramientas
+  if ((instruccion.materiales && instruccion.materiales.length > 0) || 
+      (instruccion.herramientas && instruccion.herramientas.length > 0)) {
+    
+    let pagina2 = `<div class="pagina-instrucciones" id="pagina-1">`;
+    
+    // MATERIALES EN PÁGINA 2 - CON CAJONES
+if (instruccion.materiales && instruccion.materiales.length > 0) {
+  pagina2 += `
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📦</div>
+        <h2 class="card-title">Materiales Necesarios</h2>
+      </div>
+      <div style="padding: 15px;">
+        <div class="materiales-grid">
+  `;
+  
+  // Agrupar materiales por tipo o categoría
+  const materialesAgrupados = {};
+  instruccion.materiales.forEach(material => {
+    const categoria = material.descripcion || 'General';
+    if (!materialesAgrupados[categoria]) {
+      materialesAgrupados[categoria] = [];
+    }
+    materialesAgrupados[categoria].push(material);
+  });
+  
+  // Crear cajones para cada categoría
+  Object.entries(materialesAgrupados).forEach(([categoria, materiales]) => {
+    pagina2 += `
+      <div class="cajon-material">
+        <div class="cajon-header">
+          <h3 class="cajon-titulo">${categoria}</h3>
+        </div>
+        <div class="cajon-contenido">
+    `;
+    
+    materiales.forEach(material => {
+      pagina2 += `
+        <div class="material-item">
+          <div class="material-info">
+            <div class="material-nombre">${material.nombre}</div>
+          </div>
+          <div class="material-unidades">
+            <span class="material-cantidad">${material.cantidad}</span>
+            <span class="material-unidad">${material.unidad}</span>
+          </div>
+        </div>
+      `;
+    });
+    
+    pagina2 += `
+        </div>
+      </div>
+    `;
+  });
+  
+  pagina2 += `
+        </div>
+      </div>
+    </div>
+  `;
+}
+    
+    // HERRAMIENTAS EN PÁGINA 2 - CORREGIDO PARA MOSTRAR IMÁGENES
+   if (instruccion.herramientas && instruccion.herramientas.length > 0) {
+  pagina2 += `
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🛠️</div>
+        <h2 class="card-title">Herramientas Necesarias</h2>
+      </div>
+  `;
+  instruccion.herramientas.forEach((herramienta, index) => {
+    let imagenHTML = '';
+    // BOTÓN PARA VER IMAGEN SI EXISTE
+    if (herramienta.imagen && herramienta.imagen.trim() !== '') {
+      imagenHTML = `
+        <div class="herramienta-imagen" style="margin-top: 10px;">
+          <button class="btn-ver-imagen" 
+                  onclick="mostrarImagenHerramienta('${herramienta.imagen.replace(/'/g, "\\'")}', '${herramienta.nombre.replace(/'/g, "\\'")}')"
+                  style="background: var(--secondary); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+            👁️ Pulsa para ver la imagen de la herramienta
+          </button>
+        </div>
+      `;
+    }
+    
+    pagina2 += `
+      <div class="tool-item">
+        <div style="flex: 1;">
+          <div class="tool-name">${herramienta.nombre}</div>
+          <div class="tool-desc">${herramienta.descripcion}</div>
+          ${imagenHTML}
+        </div>
+      </div>
+    `;
+  });
+  pagina2 += `</div>`;
+}
+    
+    pagina2 += `</div>`;
+    paginas.push(pagina2);
+  }
+  
+  // PÁGINAS SIGUIENTES: Cada paso individual
+  if (instruccion.pasos && instruccion.pasos.length > 0) {
+    instruccion.pasos.forEach((paso, index) => {
+      // AGREGAR CLASE CRÍTICA SI EL PASO ES CRÍTICO
+      const claseCritica = paso.critico ? 'paso-critico' : '';
+      
+      let paginaPasos = `<div class="pagina-instrucciones" id="pagina-${paginas.length}">`;
+      paginaPasos += `
+        <div class="card ${claseCritica}">
+          <div class="card-header">
+            <div class="card-icon">${index + 1}</div>
+            <h2 class="card-title">${paso.titulo}</h2>
+            ${paso.critico ? '<div class="alerta-critica">⚠️ CRÍTICO</div>' : ''}
+          </div>
+          <div style="padding: 15px;">
+            <p style="margin-bottom: 15px; line-height: 1.6;">${paso.descripcion}</p>
+      `;
+      
+      // MOSTRAR IMAGEN DEL PASO SI EXISTE - CORREGIDO
+      if (paso.imagen && paso.imagen.trim() !== '') {
+        paginaPasos += `
+          <div class="paso-imagen">
+            <img src="${paso.imagen}" alt="Paso ${index + 1}" 
+                 onerror="this.style.display='none'">
+          </div>
+        `;
+      }
+      
+      // AGREGAR BOTÓN DE VERIFICACIÓN SI ES PASO CRÍTICO
+      if (paso.critico) {
+        paginaPasos += `
+          <button class="btn-verificar-critico" data-paso='${JSON.stringify(paso).replace(/'/g, "&#39;")}'>
+            ✅ VERIFICAR PASO CRÍTICO PARA CONTINUAR
+          </button>
+        `;
+      }
+      
+      paginaPasos += `</div></div></div>`;
+      paginas.push(paginaPasos);
+    });
+  }
+  
+  body.innerHTML = paginas.join('');
+  totalPaginas = paginas.length;
+  paginaActual = 0;
+  
+  // Mostrar navegación (ahora hay múltiples páginas)
+  actualizarNavegacion();
+  document.querySelector('.navegacion-instrucciones').style.display = 'flex';
+  
+  modal.style.display = 'flex';
+  
+  // Agregar event listeners para botones críticos
+  setTimeout(() => {
+    document.addEventListener('click', function(e) {
+      if (e.target.classList.contains('btn-verificar-critico')) {
+        const pasoData = JSON.parse(e.target.getAttribute('data-paso'));
+        const paginaIndex = Array.from(document.querySelectorAll('.pagina-instrucciones')).findIndex(pag => pag.classList.contains('activa'));
+        verificarPasoCritico(paginaIndex, pasoData);
+        // NO marcar como verificado aquí, se hará en confirmarPasoCritico
+      }
+    });
+  }, 500);
+}
+
+function cambiarPagina(direccion) {
+  const nuevaPagina = paginaActual + direccion;
+  
+  // Verificar si estamos en la última página y se pulsa "Finalizar"
+  const esUltimaPagina = paginaActual === totalPaginas - 1;
+  const estaFinalizando = esUltimaPagina && direccion > 0;
+  
+  if (estaFinalizando) {
+    // Cerrar el modal de instrucciones
+    document.getElementById('modalInstrucciones').style.display = 'none';
+    toast('✅ Instrucciones completadas', '#2ecc71');
+    return;
+  }
+  
+  if (nuevaPagina >= 0 && nuevaPagina < totalPaginas) {
+    // Verificar si la página actual tiene paso crítico antes de salir (solo al avanzar)
+    if (direccion > 0) {
+      const paginaActualElement = document.getElementById(`pagina-${paginaActual}`);
+      const botonCritico = paginaActualElement?.querySelector('.btn-verificar-critico');
+      
+      if (botonCritico && !botonCritico.classList.contains('verificado')) {
+        // Hay paso crítico sin verificar, mostrar alerta
+        const pasoData = JSON.parse(botonCritico.getAttribute('data-paso'));
+        verificarPasoCritico(paginaActual, pasoData);
+        return; // Detener la navegación
+      }
+    }
+    
+    // Ocultar página actual
+    const paginaActualElement = document.getElementById(`pagina-${paginaActual}`);
+    if (paginaActualElement) {
+      paginaActualElement.classList.remove('activa');
+    }
+    
+    // Mostrar nueva página
+    paginaActual = nuevaPagina;
+    const nuevaPaginaElement = document.getElementById(`pagina-${paginaActual}`);
+    if (nuevaPaginaElement) {
+      nuevaPaginaElement.classList.add('activa');
+    }
+    
+    actualizarNavegacion();
+    
+    // Scroll al top
+    const modalBody = document.getElementById('modalBody');
+    modalBody.scrollTop = 0;
+  }
+}
+
+function actualizarNavegacion() {
+  const btnAnterior = document.getElementById('btnAnterior');
+  const btnSiguiente = document.getElementById('btnSiguiente');
+  const contadorPaginas = document.getElementById('contadorPaginas');
+  
+  btnAnterior.disabled = paginaActual === 0;
+  
+  // Verificar si es la última página
+  const esUltimaPagina = paginaActual === totalPaginas - 1;
+  
+  if (esUltimaPagina) {
+    btnSiguiente.textContent = '✅ Finalizar';
+    btnSiguiente.style.background = 'var(--success)';
+  } else {
+    btnSiguiente.textContent = 'Siguiente ▶️';
+    btnSiguiente.style.background = 'var(--secondary)';
+  }
+  
+  contadorPaginas.textContent = `Página ${paginaActual + 1} de ${totalPaginas}`;
+}
+
+// =============================================
+// FUNCIONES PRINCIPALES
+// =============================================
+
+// 1. ESTADÍSTICAS VISUALES
+function mostrarEstadisticasVisuales() {
+  const hist = JSON.parse(localStorage.getItem('historial')||'[]');
+  
+  if (hist.length === 0) {
+    toast('📊 No hay datos para mostrar estadísticas', '#f39c12');
+    return;
+  }
+  
+  const totalTareas = hist.length;
+  let tiempoTotalEstimado = 0;
+  let tiempoTotalReal = 0;
+  let tareasCompletadasATiempo = 0;
+  let tareasExcedidas = 0;
+  let tiempoAhorradoTotal = 0;
+  let tiempoExcedidoTotal = 0;
+  
+  const statsPorTipo = {};
+  
+  hist.forEach(tarea => {
+    tiempoTotalEstimado += tarea.estimado || 0;
+    const tiempoRealHoras = msFromHHMMSS(tarea.real) / 3600000;
+    tiempoTotalReal += tiempoRealHoras;
+    
+    if (tarea.signo === '+') {
+      tareasCompletadasATiempo++;
+      tiempoAhorradoTotal += msFromHHMMSS(tarea.diferencia) / 3600000;
+    } else {
+      tareasExcedidas++;
+      tiempoExcedidoTotal += msFromHHMMSS(tarea.diferencia) / 3600000;
+    }
+    
+    if (!statsPorTipo[tarea.tipo]) {
+      statsPorTipo[tarea.tipo] = { count: 0, tiempoTotal: 0 };
+    }
+    statsPorTipo[tarea.tipo].count++;
+    statsPorTipo[tarea.tipo].tiempoTotal += tiempoRealHoras;
+  });
+  
+  const eficiencia = ((tiempoTotalEstimado / tiempoTotalReal) * 100).toFixed(1);
+  const porcentajeExitos = ((tareasCompletadasATiempo / totalTareas) * 100).toFixed(1);
+  
+  const estadisticasBody = document.getElementById('estadisticasBody');
+  estadisticasBody.innerHTML = `
+    <div class="estadistica-card">
+      <h3>📈 Resumen General</h3>
+      <div class="estadistica-valor">${totalTareas}</div>
+      <div class="estadistica-desc">Total de tareas registradas</div>
+    </div>
+    
+    <div class="estadistica-card">
+      <h3>✅ Tareas Completadas</h3>
+      <div class="estadistica-valor" style="color:var(--success)">${tareasCompletadasATiempo}</div>
+      <div class="estadistica-desc">${porcentajeExitos}% de efectividad</div>
+    </div>
+    
+    <div class="estadistica-card">
+      <h3>⏰ Tiempo Total</h3>
+      <div class="estadistica-valor" style="color:var(--info)">${tiempoTotalReal.toFixed(1)}h</div>
+      <div class="estadistica-desc">De ${tiempoTotalEstimado.toFixed(1)}h estimadas</div>
+    </div>
+    
+    <div class="estadistica-card">
+      <h3>⚡ Eficiencia</h3>
+      <div class="estadistica-valor" style="color:${eficiencia >= 100 ? 'var(--success)' : 'var(--warning)'}">${eficiencia}%</div>
+      <div class="estadistica-desc">Rendimiento vs estimado</div>
+    </div>
+    
+    <div class="grafico-container">
+      <h3>📊 Distribución de Tareas por Tipo</h3>
+      ${Object.entries(statsPorTipo).map(([tipo, data]) => {
+        const porcentaje = ((data.count / totalTareas) * 100).toFixed(1);
+        return `
+          <div class="barra-grafico">
+            <div class="barra-etiqueta">${tipo}</div>
+            <div class="barra-contenedor">
+              <div class="barra-relleno" style="width: ${porcentaje}%"></div>
+              <div class="barra-porcentaje">${data.count} tareas (${porcentaje}%)</div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+  
+  document.getElementById('modalEstadisticas').style.display = 'flex';
+}
+
+// 2. ASISTENTE VIRTUAL
+function inicializarAsistente() {
+  const asistenteBtn = document.getElementById('asistenteBtn');
+  const chatAsistente = document.getElementById('chatAsistente');
+  const cerrarChat = document.getElementById('cerrarChat');
+  const enviarChat = document.getElementById('enviarChat');
+  const inputChat = document.getElementById('inputChat');
+  
+  asistenteBtn.addEventListener('click', function() {
+    chatAsistente.style.display = chatAsistente.style.display === 'flex' ? 'none' : 'flex';
+  });
+  
+  cerrarChat.addEventListener('click', function() {
+    chatAsistente.style.display = 'none';
+  });
+  
+  function enviarMensaje() {
+    const mensaje = inputChat.value.trim();
+    if (!mensaje) return;
+    
+    añadirMensaje(mensaje, 'usuario');
+    inputChat.value = '';
+    
+    setTimeout(() => {
+      const respuesta = procesarConsulta(mensaje);
+      añadirMensaje(respuesta, 'asistente');
+    }, 1000);
+  }
+  
+  enviarChat.addEventListener('click', enviarMensaje);
+  inputChat.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') enviarMensaje();
+  });
+}
+
+function añadirMensaje(texto, tipo) {
+  const chatBody = document.getElementById('chatBody');
+  const mensajeDiv = document.createElement('div');
+  mensajeDiv.className = `mensaje mensaje-${tipo}`;
+  mensajeDiv.textContent = texto;
+  chatBody.appendChild(mensajeDiv);
+  chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+function procesarConsulta(consulta) {
+  const consultaLower = consulta.toLowerCase();
+  const hist = JSON.parse(localStorage.getItem('historial')||'[]');
+  
+  if (consultaLower.includes('hola') || consultaLower.includes('hi')) {
+    return '¡Hola! Soy tu asistente virtual. ¿En qué puedo ayudarte?';
+  }
+  
+  if (consultaLower.includes('estadística') || consultaLower.includes('estadisticas')) {
+    const totalTareas = hist.length;
+    if (totalTareas === 0) return 'Aún no hay tareas registradas.';
+    
+    const tareasCompletadas = hist.filter(t => t.signo === '+').length;
+    const porcentaje = ((tareasCompletadas / totalTareas) * 100).toFixed(1);
+    return `Tienes ${totalTareas} tareas registradas. ${tareasCompletadas} completadas a tiempo (${porcentaje}% de efectividad).`;
+  }
+  
+  if (consultaLower.includes('ayuda')) {
+    return 'Puedo ayudarte con:\n• Información sobre tus tareas\n• Estadísticas de rendimiento\n• Cómo usar el sistema';
+  }
+  
+  if (consultaLower.includes('tarea actual')) {
+    const tareaActiva = JSON.parse(localStorage.getItem('tareaActiva')||'null');
+    if (!tareaActiva) return 'No hay tarea en curso.';
+    
+    const transcurrido = Date.now() - tareaActiva.inicio;
+    const restante = (tareaActiva.tiempoEstandar * 3600000) - transcurrido;
+    return `Tarea: ${tareaActiva.tarea}\nTiempo transcurrido: ${formatear(transcurrido)}\nRestante: ${formatear(Math.max(0, restante))}`;
+  }
+  
+  return 'Puedo ayudarte con información sobre tus tareas y estadísticas. ¿En qué necesitas ayuda?';
+}
+
+// 3. CONFIRMACIÓN AL REINICIAR
+function reiniciarConConfirmacion(){
+  if(!inicioMs) {
+    toast('🔄 No hay tarea activa para reiniciar', '#f39c12');
+    return;
+  }
+  
+  if(confirm('¿Estás seguro de que quieres reiniciar la tarea actual? Se perderá el progreso no guardado.')) {
+    reiniciar();
+  }
+}
+
+// =============================================
+// FUNCIONES EXISTENTES (COMPLETAS)
+// =============================================
+
+function fillTareasForTipo(tipo){
+  const selTarea = document.getElementById('selTarea');
+  selTarea.innerHTML = '';
+  document.getElementById('inpNombrePersonalizado').value = '';
+
+  if(!tipo){
+    selTarea.innerHTML = '<option value="">— Elige tipo primero —</option>';
+    document.getElementById('divPersonalizada').style.display = 'none';
+    selTarea.style.display = 'block';
+    return;
+  }
+
+  if(tipo === 'Personalizada'){
+    selTarea.style.display = 'none';
+    document.getElementById('divPersonalizada').style.display = 'block';
+    return;
+  }
+
+  document.getElementById('divPersonalizada').style.display = 'none';
+  selTarea.style.display = 'block';
+
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = '— Selecciona tarea —';
+  selTarea.appendChild(placeholder);
+
+  const tareasCombinadas = {};
+  const tareasBaseStorage = JSON.parse(localStorage.getItem('tareasBase') || '{}');
+  Object.assign(tareasCombinadas, tareasBaseStorage);
+  
+  const tareasInstrucciones = JSON.parse(localStorage.getItem('tareasInstrucciones') || '{}');
+  Object.keys(tareasInstrucciones).forEach(nombre => {
+    tareasCombinadas[nombre] = tareasInstrucciones[nombre].tiempo;
+  });
+
+  if (Object.keys(tareasCombinadas).length === 0) {
+    Object.assign(tareasCombinadas, tareasBase);
+  }
+
+  Object.entries(tareasCombinadas).forEach(([nombre, horas])=>{
+    const o = document.createElement('option');
+    o.value = nombre;
+    o.textContent = nombre;
+    o.setAttribute('data-tiempo', horas);
+    selTarea.appendChild(o);
+  });
+}
+
+function iniciar(){
+  const inpOperacion = document.getElementById('inpOperacion');
+  const selTipo = document.getElementById('selTipo');
+  const selTarea = document.getElementById('selTarea');
+  const inpTiempo = document.getElementById('inpTiempo');
+  
+  if(!inpOperacion.value.trim()){ toast('Introduce Nº de Operación', '#e74c3c'); return; }
+  if(!selTipo.value){ toast('Selecciona tipo', '#e74c3c'); return; }
+  if(selTipo.value !== 'Personalizada' && !selTarea.value){ toast('Selecciona una tarea', '#e74c3c'); return; }
+  const v = parseFloat(inpTiempo.value);
+  if(isNaN(v) || v <= 0){ toast('Introduce un tiempo válido', '#e74c3c'); return; }
+  if(rafId) return;
+
+  tiempoEstandar = v;
+  inicioMs = Date.now();
+  alerta10minMostrada = false;
+  alerta5minMostrada = false;
+  alertaExcedidoMostrada = false;
+  modoPrueba = false;
+
+  document.getElementById('excedido').style.display = 'none';
+  document.getElementById('progresoFill').style.width = '0%';
+  document.getElementById('progresoText').textContent = '0%';
+  document.getElementById('progresoFill').classList.remove('excedido');
+  document.getElementById('btnStart').disabled = true;
+  document.getElementById('btnTerminar').disabled = false;
+
+  guardarTareaActiva();
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = requestAnimationFrame(loop);
+  
+  if(selTipo.value !== 'Personalizada' && selTarea.value) {
+    setTimeout(() => {
+      mostrarInstrucciones();
+    }, 300);
+  }
+  
+  toast('⏱ Tarea iniciada', '#2ecc71');
+}
+
+function terminar(){
+  if(!inicioMs) return;
+  if(rafId){ cancelAnimationFrame(rafId); rafId = null; }
+
+  const trans = Date.now() - inicioMs;
+  const estimMs = modoPrueba ? (tiempoEstandar * 1000) : (tiempoEstandar * 3600000);
+  const restante = estimMs - trans;
+  const signo = restante >= 0 ? '+' : '-';
+  const diferencia = formatear(Math.abs(restante));
+  
+  const oper = document.getElementById('inpOperacion').value.trim();
+  const tipo = document.getElementById('selTipo').value;
+  const tareaNombre = tipo === 'Personalizada' ? 
+    (document.getElementById('inpNombrePersonalizado').value||'Sin nombre') : 
+    document.getElementById('selTarea').value;
+
+  const tareaObj = {
+    operacion: oper,
+    tipo: tipo,
+    nombre: tareaNombre,
+    estimado: tiempoEstandar,
+    real: formatear(trans),
+    diferencia: diferencia,
+    signo: signo,
+    fecha: new Date().toISOString()
+  };
+
+  const h = JSON.parse(localStorage.getItem('historial')||'[]'); 
+  h.push(tareaObj); 
+  localStorage.setItem('historial', JSON.stringify(h));
+  
+  borrarTareaActiva();
+  toast('✅ Tarea guardada', '#2ecc71');
+  renderTabla();
+  
+  document.getElementById('selTarea').value = '';
+  document.getElementById('inpNombrePersonalizado').value = '';
+  document.getElementById('inpTiempo').value = '';
+  document.getElementById('minutosConvertidos').textContent = '00:00:00';
+  
+  document.getElementById('btnStart').disabled = false;
+  document.getElementById('btnTerminar').disabled = true;
+  
+  inicioMs = 0;
+  tiempoEstandar = 0;
+  alerta10minMostrada = false;
+  alerta5minMostrada = false;
+  alertaExcedidoMostrada = false;
+  
+  document.getElementById('cronometro').textContent = 'Restante: 00:00:00';
+  document.getElementById('cronometro').style.color = '';
+  document.getElementById('excedido').style.display = 'none';
+  document.getElementById('progresoFill').style.width = '0%';
+  document.getElementById('progresoText').textContent = '0%';
+  document.getElementById('progresoFill').classList.remove('excedido');
+}
+
+function reiniciar(){
+  if(rafId){ cancelAnimationFrame(rafId); rafId = null; }
+  inicioMs = 0; 
+  tiempoEstandar = 0; 
+  alerta10minMostrada = false;
+  alerta5minMostrada = false;
+  alertaExcedidoMostrada = false;
+  modoPrueba = false;
+  
+  document.getElementById('cronometro').textContent = 'Restante: 00:00:00';
+  document.getElementById('cronometro').style.color = '';
+  document.getElementById('excedido').style.display = 'none';
+  document.getElementById('progresoFill').style.width = '0%';
+  document.getElementById('progresoText').textContent = '0%';
+  document.getElementById('progresoFill').classList.remove('excedido');
+  document.getElementById('btnStart').disabled = false;
+  document.getElementById('btnTerminar').disabled = true;
+  
+  toast('🔄 Tarea reiniciada', '#f39c12');
+}
+
+function actualizarTiempo(){
+  if(!inicioMs) return;
+  
+  const elapsed = Date.now() - inicioMs;
+  const estimMs = modoPrueba ? (tiempoEstandar * 1000) : (tiempoEstandar * 3600000);
+  const restante = estimMs - elapsed;
+
+  if (restante >= 0) {
+    document.getElementById('cronometro').textContent = `Restante: ${formatear(restante)}`;
+    document.getElementById('cronometro').style.color = '';
+  } else {
+    document.getElementById('cronometro').textContent = `Excedido: -${formatear(Math.abs(restante))}`;
+    document.getElementById('cronometro').style.color = 'var(--danger)';
+  }
+
+  const progreso = Math.min(100, (elapsed / estimMs) * 100);
+  document.getElementById('progresoFill').style.width = `${progreso}%`;
+  document.getElementById('progresoText').textContent = `${Math.round(progreso)}%`;
+
+  const restanteMs = restante;
+  const MINUTO_MS = 60 * 1000;
+  const factorEscala = modoPrueba ? 60 : 1;
+  const umbral10minAjustado = (10 * MINUTO_MS) / factorEscala;
+  const umbral5minAjustado = (5 * MINUTO_MS) / factorEscala;
+  
+  if(restanteMs <= umbral10minAjustado && restanteMs > umbral5minAjustado && !alerta10minMostrada){
+    mostrarAlerta('⚠️ Quedan menos de 10 minutos', 'warning');
+    alerta10minMostrada = true;
+    guardarTareaActiva();
+  }
+  
+  if(restanteMs <= umbral5minAjustado && restanteMs > 0 && !alerta5minMostrada){
+    mostrarAlerta('🚨 Quedan menos de 5 minutos', 'danger');
+    alerta5minMostrada = true;
+    guardarTareaActiva();
+  }
+
+  if(restanteMs <= 0 && !alertaExcedidoMostrada){
+    document.getElementById('progresoFill').classList.add('excedido');
+    document.getElementById('excedido').style.display = 'block';
+    document.getElementById('excedido').textContent = `-${formatear(Math.abs(restanteMs))} excedido`;
+    mostrarAlerta('⏰ Tiempo excedido', 'danger');
+    alertaExcedidoMostrada = true;
+    guardarTareaActiva();
+  }
+}
+
+function loop(){
+  actualizarTiempo();
+  if (Date.now() % 5000 < 16) guardarTareaActiva();
+  rafId = requestAnimationFrame(loop);
+}
+
+function formatear(ms){
+  const t = Math.floor(Math.abs(ms)/1000);
+  const h = String(Math.floor(t/3600)).padStart(2,'0');
+  const m = String(Math.floor((t%3600)/60)).padStart(2,'0');
+  const s = String(t%60).padStart(2,'0');
+  return `${h}:${m}:${s}`;
+}
+
+function convertDec(h){
+  const t = Math.round(h*3600);
+  const hh = Math.floor(t/3600), mm = Math.floor((t%3600)/60), ss = t%60;
+  return `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+}
+
+function msFromHHMMSS(hhmmss){
+  const parts = (hhmmss||'00:00:00').split(':').map(x=>parseInt(x,10)||0);
+  return ((parts[0]*3600)+(parts[1]*60)+parts[2]) * 1000;
+}
+
+function toast(msg, color='#2ecc71'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.style.background=color;
+  t.style.display='block';
+  setTimeout(()=>t.style.display='none',2400);
+}
+
+function mostrarAlerta(mensaje, tipo){
+  if(silenciado) return;
+  
+  const alerta = document.createElement('div');
+  alerta.textContent = mensaje;
+  alerta.style.position = 'fixed';
+  alerta.style.top = '20px';
+  alerta.style.left = '50%';
+  alerta.style.transform = 'translateX(-50%)';
+  alerta.style.padding = '15px 20px';
+  alerta.style.borderRadius = '10px';
+  alerta.style.zIndex = '10000';
+  alerta.style.fontWeight = 'bold';
+  alerta.style.color = '#fff';
+  alerta.style.boxShadow = '0 5px 15px rgba(0,0,0,0.2)';
+  
+  if(tipo === 'warning'){
+    alerta.style.background = 'var(--warning)';
+  } else if(tipo === 'danger'){
+    alerta.style.background = 'var(--danger)';
+  }
+  
+  document.body.appendChild(alerta);
+  
+  setTimeout(() => {
+    document.body.removeChild(alerta);
+  }, 3000);
+}
+
+function guardarTareaActiva(){
+  if(!inicioMs) return;
+  
+  const tareaActiva = {
+    inicio: inicioMs,
+    tiempoEstandar: tiempoEstandar,
+    operacion: document.getElementById('inpOperacion').value.trim(),
+    tipo: document.getElementById('selTipo').value,
+    tarea: document.getElementById('selTipo').value === 'Personalizada' ? 
+      (document.getElementById('inpNombrePersonalizado').value||'Sin nombre') : 
+      document.getElementById('selTarea').value,
+    personalizada: document.getElementById('inpNombrePersonalizado').value||'',
+    alerta10minMostrada: alerta10minMostrada,
+    alerta5minMostrada: alerta5minMostrada,
+    alertaExcedidoMostrada: alertaExcedidoMostrada,
+    modoPrueba: modoPrueba
+  };
+  
+  localStorage.setItem('tareaActiva', JSON.stringify(tareaActiva));
+}
+
+function leerTareaActiva(){
+  try{ return JSON.parse(localStorage.getItem('tareaActiva')||'null'); }catch(e){ return null; }
+}
+
+function borrarTareaActiva(){ localStorage.removeItem('tareaActiva'); }
+
+function restaurarTareaActiva(){
+  const tareaActiva = leerTareaActiva();
+  if(!tareaActiva) return false;
+  
+  document.getElementById('inpOperacion').value = tareaActiva.operacion || '';
+  document.getElementById('selTipo').value = tareaActiva.tipo || '';
+  fillTareasForTipo(tareaActiva.tipo);
+  
+  if(tareaActiva.tipo === 'Personalizada'){
+    document.getElementById('inpNombrePersonalizado').value = tareaActiva.personalizada || '';
+  } else {
+    setTimeout(() => {
+      document.getElementById('selTarea').value = tareaActiva.tarea || '';
+    }, 100);
+  }
+  
+  document.getElementById('inpTiempo').value = tareaActiva.tiempoEstandar || '';
+  document.getElementById('minutosConvertidos').textContent = convertDec(tareaActiva.tiempoEstandar || 0);
+  
+  inicioMs = tareaActiva.inicio;
+  tiempoEstandar = tareaActiva.tiempoEstandar;
+  alerta10minMostrada = tareaActiva.alerta10minMostrada || false;
+  alerta5minMostrada = tareaActiva.alerta5minMostrada || false;
+  alertaExcedidoMostrada = tareaActiva.alertaExcedidoMostrada || false;
+  modoPrueba = tareaActiva.modoPrueba || false;
+  
+  document.getElementById('btnStart').disabled = true;
+  document.getElementById('btnTerminar').disabled = false;
+  
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = requestAnimationFrame(loop);
+  
+  toast('⏱ Tarea activa restaurada', '#f39c12');
+  return true;
+}
+
+function renderTabla(){
+  const tbody = document.querySelector('#tabla tbody');
+  tbody.innerHTML = '';
+  const hist = JSON.parse(localStorage.getItem('historial')||'[]');
+  
+  const fechaFiltro = document.getElementById('filtroFecha').value;
+  const operacionFiltro = document.getElementById('filtroOperacion').value.trim().toLowerCase();
+  let totalMs = 0;
+  
+  const registrosFiltrados = hist.filter(r => {
+    const fechaRegistro = r.fecha.slice(0,10);
+    const operacionRegistro = (r.operacion || '').toLowerCase();
+    
+    if (fechaFiltro && fechaRegistro !== fechaFiltro) return false;
+    if (operacionFiltro && !operacionRegistro.includes(operacionFiltro)) return false;
+    return true;
+  });
+  
+  registrosFiltrados.forEach(r => {
+    const diferenciaMs = msFromHHMMSS(r.diferencia);
+    totalMs += (r.signo === '+') ? diferenciaMs : -diferenciaMs;
+    
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.operacion || ''}</td>
+      <td>${r.tipo || ''}</td>
+      <td>${r.nombre || ''}</td>
+      <td>${r.estimado || ''}</td>
+      <td>${r.real || '00:00:00'}</td>
+      <td class="${r.signo === '+' ? 'diff-plus' : 'diff-minus'}">${r.signo}${r.diferencia}</td>
+      <td>${new Date(r.fecha).toLocaleString('es-ES')}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const signoTotal = totalMs >= 0 ? '+' : '-';
+  const totalFormateado = formatear(Math.abs(totalMs));
+  document.getElementById('floatingTotalValue').textContent = `${signoTotal}${totalFormateado}`;
+  document.getElementById('floatingTotalValue').style.color = totalMs >= 0 ? 'var(--success)' : 'var(--danger)';
+}
+
+function mostrarEstadisticas() {
+  mostrarEstadisticasVisuales();
+}
+
+function descargarExcel() {
+  const tabla = document.getElementById('tabla');
+  let csv = [];
+  
+  const headers = [];
+  for (let i = 0; i < tabla.rows[0].cells.length; i++) {
+    headers.push(`"${tabla.rows[0].cells[i].textContent}"`);
+  }
+  csv.push(headers.join(','));
+  
+  for (let i = 1; i < tabla.rows.length; i++) {
+    const row = [];
+    for (let j = 0; j < tabla.rows[i].cells.length; j++) {
+      row.push(`"${tabla.rows[i].cells[j].textContent}"`);
+    }
+    csv.push(row.join(','));
+  }
+  
+  const csvContent = csv.join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `control_tiempo_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  window.URL.revokeObjectURL(url);
+  
+  toast('📊 Datos descargados', '#27ae60');
+}
+
+function resetearTabla() {
+  if(confirm('¿Estás seguro de que quieres borrar todo el historial?')){ 
+    localStorage.removeItem('historial'); 
+    localStorage.removeItem('tareaActiva');
+    renderTabla(); 
+    reiniciar();
+    toast('🗑️ Histórico borrado','#e74c3c'); 
+  }
+}
+
+function abrirAdministrador() {
+  toast('⚙️ Abriendo administrador...', '#3498db');
+  window.open('admin-tareas.html', '_blank');
+}
+
+// FUNCIÓN PARA MOSTRAR IMAGEN DE HERRAMIENTA EN MODAL
+// FUNCIÓN PARA MOSTRAR IMAGEN DE HERRAMIENTA EN MODAL (VERSIÓN AGRANDADA)
+function mostrarImagenHerramienta(urlImagen, nombreHerramienta) {
+  // Crear modal temporal para mostrar la imagen
+  const modal = document.createElement('div');
+  modal.style.position = 'fixed';
+  modal.style.top = '0';
+  modal.style.left = '0';
+  modal.style.width = '100%';
+  modal.style.height = '100%';
+  modal.style.backgroundColor = 'rgba(0,0,0,0.95)';
+  modal.style.display = 'flex';
+  modal.style.justifyContent = 'center';
+  modal.style.alignItems = 'center';
+  modal.style.zIndex = '3000';
+  modal.style.cursor = 'pointer';
+  modal.style.padding = '20px';
+  
+  modal.innerHTML = `
+    <div style="position: relative; max-width: 95%; max-height: 95%; display: flex; flex-direction: column; align-items: center;">
+      <img src="${urlImagen}" 
+           alt="${nombreHerramienta}" 
+           style="max-width: 100%; max-height: 85vh; border-radius: 12px; border: 4px solid white; box-shadow: 0 10px 30px rgba(0,0,0,0.5); object-fit: contain;">
+      <div style="color: white; text-align: center; margin-top: 15px; font-weight: bold; font-size: 1.2rem; background: rgba(0,0,0,0.7); padding: 10px 20px; border-radius: 8px;">
+        ${nombreHerramienta}
+      </div>
+      <div style="color: #ccc; text-align: center; margin-top: 10px; font-size: 1rem;">
+        Haz clic en cualquier lugar para cerrar
+      </div>
+    </div>
+  `;
+  
+  // Cerrar modal al hacer clic
+  modal.addEventListener('click', function() {
+    document.body.removeChild(modal);
+  });
+  
+  document.body.appendChild(modal);
+  
+  // También cerrar con tecla Escape
+  const cerrarConEscape = function(e) {
+    if (e.key === 'Escape') {
+      document.body.removeChild(modal);
+      document.removeEventListener('keydown', cerrarConEscape);
+    }
+  };
+  document.addEventListener('keydown', cerrarConEscape);
+}
+
+// FUNCIÓN MEJORADA PARA CAMBIAR PÁGINA CON ANIMACIONES
+function cambiarPagina(direccion) {
+  const nuevaPagina = paginaActual + direccion;
+  
+  // Verificar si estamos en la última página y se pulsa "Finalizar"
+  const esUltimaPagina = paginaActual === totalPaginas - 1;
+  const estaFinalizando = esUltimaPagina && direccion > 0;
+  
+  if (estaFinalizando) {
+    document.getElementById('modalInstrucciones').style.display = 'none';
+    toast('✅ Instrucciones completadas', '#2ecc71');
+    return;
+  }
+  
+  if (nuevaPagina >= 0 && nuevaPagina < totalPaginas) {
+    // Verificar paso crítico antes de avanzar
+    if (direccion > 0) {
+      const paginaActualElement = document.getElementById(`pagina-${paginaActual}`);
+      const botonCritico = paginaActualElement?.querySelector('.btn-verificar-critico');
+      
+      if (botonCritico && !botonCritico.classList.contains('verificado')) {
+        const pasoData = JSON.parse(botonCritico.getAttribute('data-paso'));
+        verificarPasoCritico(paginaActual, pasoData);
+        return;
+      }
+    }
+    
+    // Aplicar animación de salida
+    const paginaActualElement = document.getElementById(`pagina-${paginaActual}`);
+    if (paginaActualElement) {
+      paginaActualElement.classList.add(direccion > 0 ? 'saliendo-izquierda' : 'saliendo-derecha');
+    }
+    
+    // Aplicar animación de entrada a la nueva página
+    const nuevaPaginaElement = document.getElementById(`pagina-${nuevaPagina}`);
+    if (nuevaPaginaElement) {
+      nuevaPaginaElement.classList.add(direccion > 0 ? 'entrando-derecha' : 'entrando-izquierda');
+    }
+    
+    setTimeout(() => {
+      // Ocultar página actual
+      if (paginaActualElement) {
+        paginaActualElement.classList.remove('activa', 'saliendo-izquierda', 'saliendo-derecha');
+      }
+      
+      // Mostrar nueva página
+      paginaActual = nuevaPagina;
+      if (nuevaPaginaElement) {
+        nuevaPaginaElement.classList.remove('entrando-izquierda', 'entrando-derecha');
+        nuevaPaginaElement.classList.add('activa');
+      }
+      
+      actualizarNavegacion();
+      
+      // Scroll al top
+      const modalBody = document.getElementById('modalBody');
+      modalBody.scrollTop = 0;
+    }, 300);
+  }
+}
+
+// FUNCIÓN MEJORADA PARA ACTUALIZAR NAVEGACIÓN
+function actualizarNavegacion() {
+  const btnAnterior = document.getElementById('btnAnterior');
+  const btnSiguiente = document.getElementById('btnSiguiente');
+  const contadorPaginas = document.getElementById('contadorPaginas');
+  const indicadoresContainer = document.getElementById('indicadoresPaginas');
+  
+  btnAnterior.disabled = paginaActual === 0;
+  
+  // Actualizar contador
+  const esUltimaPagina = paginaActual === totalPaginas - 1;
+  
+  if (esUltimaPagina) {
+    btnSiguiente.textContent = '✅ Finalizar';
+    btnSiguiente.style.background = 'linear-gradient(135deg, #2ecc71, #27ae60)';
+  } else {
+    btnSiguiente.textContent = 'Siguiente ▶️';
+    btnSiguiente.style.background = 'linear-gradient(135deg, var(--secondary), #2980b9)';
+  }
+  
+  contadorPaginas.textContent = `Página ${paginaActual + 1} de ${totalPaginas}`;
+  
+  // Actualizar indicadores de puntos
+  if (indicadoresContainer) {
+    indicadoresContainer.innerHTML = '';
+    for (let i = 0; i < totalPaginas; i++) {
+      const indicador = document.createElement('div');
+      indicador.className = `indicador-pagina ${i === paginaActual ? 'activa' : ''}`;
+      indicador.addEventListener('click', () => irAPagina(i));
+      indicadoresContainer.appendChild(indicador);
+    }
+  }
+}
+
+// FUNCIÓN PARA IR DIRECTAMENTE A UNA PÁGINA
+function irAPagina(numeroPagina) {
+  if (numeroPagina >= 0 && numeroPagina < totalPaginas && numeroPagina !== paginaActual) {
+    const direccion = numeroPagina > paginaActual ? 1 : -1;
+    
+    // Verificar pasos críticos intermedios si vamos a saltar páginas
+    if (direccion > 0) {
+      for (let i = paginaActual; i < numeroPagina; i++) {
+        const paginaIntermedia = document.getElementById(`pagina-${i}`);
+        const botonCritico = paginaIntermedia?.querySelector('.btn-verificar-critico');
+        if (botonCritico && !botonCritico.classList.contains('verificado')) {
+          toast('❌ Debes completar los pasos críticos en orden', '#e74c3c');
+          return;
+        }
+      }
+    }
+    
+    cambiarPagina(numeroPagina - paginaActual);
+  }
+}
+
+// INICIALIZAR GESTOS TÁCTILES
+function inicializarGestos() {
+  const areaIzquierda = document.getElementById('areaGestosIzquierda');
+  const areaDerecha = document.getElementById('areaGestosDerecha');
+  const modalBody = document.getElementById('modalBody');
+  
+  let startX = 0;
+  let startY = 0;
+  
+  // Gestos en áreas específicas
+  [areaIzquierda, areaDerecha, modalBody].forEach(area => {
+    if (area) {
+      // Touch events para móviles
+      area.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+      });
+      
+      area.addEventListener('touchend', (e) => {
+        if (!startX) return;
+        
+        const endX = e.changedTouches[0].clientX;
+        const endY = e.changedTouches[0].clientY;
+        const diffX = startX - endX;
+        const diffY = startY - endY;
+        
+        // Solo procesar si el movimiento es principalmente horizontal
+        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+          if (diffX > 0) {
+            // Deslizamiento hacia izquierda = siguiente
+            cambiarPagina(1);
+          } else {
+            // Deslizamiento hacia derecha = anterior
+            cambiarPagina(-1);
+          }
+        }
+        
+        startX = 0;
+        startY = 0;
+      });
+      
+      // Click events para desktop
+      area.addEventListener('click', (e) => {
+        if (area === areaIzquierda) {
+          cambiarPagina(-1);
+        } else if (area === areaDerecha) {
+          cambiarPagina(1);
+        }
+      });
+    }
+  });
+}
+
+// INICIALIZAR FLECHAS FLOTANTES
+function inicializarFlechasFlotantes() {
+  document.getElementById('flechaAnterior').addEventListener('click', () => cambiarPagina(-1));
+  document.getElementById('flechaSiguiente').addEventListener('click', () => cambiarPagina(1));
+}
+
+// LLAMAR ESTAS FUNCIONES AL INICIALIZAR LAS INSTRUCCIONES
+// En la función mostrarInstrucciones(), agregar al final:
+setTimeout(() => {
+  inicializarGestos();
+  inicializarFlechasFlotantes();
+}, 100);
+
+// =============================================
+// INICIALIZACIÓN
+// =============================================
+window.addEventListener('load', ()=>{
+  fillTareasForTipo('');
+  
+  const hoy = new Date().toISOString().slice(0,10);
+  document.getElementById('filtroFecha').value = hoy;
+  renderTabla();
+  
+  inicializarAsistente();
+  
+  setTimeout(() => {
+    if (!restaurarTareaActiva()) {
+      console.log('🚀 Sistema iniciado');
+    }
+  }, 500);
+});
+
+// EVENT LISTENERS
+document.getElementById('selTipo').addEventListener('change', function(){
+  fillTareasForTipo(this.value);
+});
+
+document.getElementById('selTarea').addEventListener('change', function(){
+  const t = this.value;
+  const tiempo = this.options[this.selectedIndex]?.getAttribute('data-tiempo');
+  if(t && tiempo){
+    document.getElementById('inpTiempo').value = tiempo;
+    document.getElementById('minutosConvertidos').textContent = convertDec(parseFloat(tiempo));
+  }
+});
+
+document.getElementById('inpTiempo').addEventListener('input', function(){
+  const v = parseFloat(this.value);
+  document.getElementById('minutosConvertidos').textContent = (!isNaN(v) && v>0) ? convertDec(v) : '00:00:00';
+});
+
+document.getElementById('btnStart').addEventListener('click', iniciar);
+document.getElementById('btnTerminar').addEventListener('click', terminar);
+document.getElementById('btnReset').addEventListener('click', reiniciarConConfirmacion);
+document.getElementById('btnSilenciar').addEventListener('click', function(){ 
+  silenciado = !silenciado;
+  this.textContent = silenciado ? '🔇 Silenciado' : '🔊 Sonidos activados';
+  toast(silenciado ? '🔇 Silenciado' : '🔊 Sonidos activados', silenciado ? '#b2bec3' : '#27ae60'); 
+});
+document.getElementById('btnEstadisticas').addEventListener('click', mostrarEstadisticas);
+document.getElementById('btnExportExcel').addEventListener('click', descargarExcel);
+document.getElementById('btnResetTabla').addEventListener('click', resetearTabla);
+document.getElementById('btnAdmin').addEventListener('click', abrirAdministrador);
+document.getElementById('btnInstrucciones').addEventListener('click', mostrarInstrucciones);
+
+// NAVEGACIÓN INSTRUCCIONES
+document.getElementById('btnAnterior').addEventListener('click', () => cambiarPagina(-1));
+document.getElementById('btnSiguiente').addEventListener('click', () => cambiarPagina(1));
+
+// CERRAR MODALES
+document.querySelector('#modalEstadisticas .close-modal').addEventListener('click', function() {
+  document.getElementById('modalEstadisticas').style.display = 'none';
+});
+
+document.getElementById('modalEstadisticas').addEventListener('click', function(e) {
+  if (e.target === this) {
+    this.style.display = 'none';
+  }
+});
+
+document.querySelector('#modalInstrucciones .close-modal').addEventListener('click', function() {
+  document.getElementById('modalInstrucciones').style.display = 'none';
+});
+
+document.getElementById('modalInstrucciones').addEventListener('click', function(e) {
+  if (e.target === this) {
+    this.style.display = 'none';
+  }
+});
+
+document.getElementById('filtroFecha').addEventListener('change', renderTabla);
+document.getElementById('filtroOperacion').addEventListener('input', renderTabla);
+document.getElementById('filtroLimpiar').addEventListener('click', function() {
+  document.getElementById('filtroFecha').value = '';
+  document.getElementById('filtroOperacion').value = '';
+  renderTabla();
+  toast('🧹 Filtros limpiados', '#b2bec3');
+});
+
+window.addEventListener('beforeunload', function() {
+  if (inicioMs) guardarTareaActiva();
+});
+</script>
+</body>
+</html>
