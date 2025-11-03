@@ -1329,6 +1329,62 @@
     font-size: 0.85rem;
   }
 }
+    
+/* ELIMINAR CONTADOR DE PÁGINAS Y BOTONES DE NAVEGACIÓN */
+.contador-paginas, .indicadores-paginas, .btn-navegacion {
+  display: none !important;
+}
+
+.navegacion-instrucciones {
+  display: none !important;
+}
+
+/* ELIMINAR FLECHAS FLOTANTES */
+.flechas-flotantes {
+  display: none !important;
+}
+
+/* ELIMINAR ÁREAS DE GESTOS TÁCTILES */
+.area-gestos {
+  display: none !important;
+}
+
+/* HACER MÁS PEQUEÑO EL BOTÓN DE VER IMAGEN */
+.btn-ver-imagen {
+  padding: 8px 12px !important;
+  font-size: 0.8rem !important;
+  margin-top: 5px !important;
+}
+
+/* AJUSTAR EL MODAL BODY PARA OCUPAR TODO EL ESPACIO */
+.modal-body {
+  padding: 15px !important;
+  height: calc(100% - 80px) !important;
+  overflow-y: auto !important;
+}
+
+/* ASEGURAR QUE LAS PÁGINAS SE MUESTREN UNA TRAS OTRA */
+.pagina-instrucciones {
+  display: block !important;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.pagina-instrucciones:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+/* ELIMINAR ANIMACIONES DE PÁGINAS */
+.pagina-instrucciones.saliendo-izquierda,
+.pagina-instrucciones.saliendo-derecha,
+.pagina-instrucciones.entrando-izquierda,
+.pagina-instrucciones.entrando-derecha {
+  transform: none !important;
+  opacity: 1 !important;
+}
+
 
   </style>
 </head>
