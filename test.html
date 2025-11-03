@@ -659,78 +659,15 @@
       overflow-y: auto;
     }
 
+    /* ELIMINAR NAVEGACIÓN DE INSTRUCCIONES */
     .navegacion-instrucciones {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px;
-      border-top: 1px solid #e9ecef;
-      background: white;
-      border-radius: 0 0 16px 16px;
+      display: none !important;
     }
 
-    .btn-navegacion {
-      background: var(--secondary);
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: clamp(0.9rem, 2vw, 1rem);
-      transition: var(--transition);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .btn-navegacion:hover:not(:disabled) {
-      background: #2980b9;
-    }
-    
-    .btn-navegacion:disabled {
-      background: #bdc3c7;
-      cursor: not-allowed;
-    }
-    
-    .contador-paginas {
-      font-weight: 600;
-      color: var(--primary);
-      font-size: clamp(0.9rem, 2vw, 1rem);
+    .btn-navegacion, .contador-paginas, .indicadores-paginas {
+      display: none !important;
     }
 
-    .filtros-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
-      align-items: end;
-      margin-top: 20px;
-    }
-    
-    .filtro-item {
-      display: flex;
-      flex-direction: column;
-    }
-    
-    .filtro-item.limpiar {
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-    }
-    
-    .filtro-item.limpiar button {
-      white-space: nowrap;
-      background: var(--muted);
-      color: #666;
-      border: 1px solid #ddd;
-      transition: all 0.3s ease;
-      font-size: clamp(0.9rem, 2vw, 1rem);
-      font-weight: 600;
-    }
-    
-    .filtro-item.limpiar button:hover {
-      background: #e0e0e0;
-    }
-    
     #excedido {
       display: none;
       color: var(--danger);
@@ -825,11 +762,15 @@
     }
 
     .pagina-instrucciones {
-      display: none;
+      display: block;
+      margin-bottom: 25px;
+      padding-bottom: 25px;
+      border-bottom: 1px solid #e9ecef;
     }
     
-    .pagina-instrucciones.activa {
-      display: block;
+    .pagina-instrucciones:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
     }
 
     /* ESTILOS PARA PASOS CRÍTICOS - NUEVOS */
@@ -967,23 +908,7 @@
       transform: translateY(-2px);
     }
 
-    @media (max-width: 768px) {
-      .estadisticas-container {
-        grid-template-columns: 1fr;
-      }
-      
-      .chat-asistente {
-        width: calc(100% - 40px);
-        right: 20px;
-        left: 20px;
-      }
-      
-      .asistente-virtual {
-        bottom: 80px;
-      }
-    }
-
-/* ESTILOS PARA CAJONES DE MATERIALES */
+    /* ESTILOS PARA CAJONES DE MATERIALES */
 .materiales-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -1096,190 +1021,35 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-/* ESTILOS MEJORADOS PARA EL BOTÓN DE VER IMAGEN */
+/* BOTÓN DE VER IMAGEN MÁS PEQUEÑO */
 .btn-ver-imagen {
   background: linear-gradient(135deg, var(--secondary), #2980b9) !important;
   color: white !important;
   border: none !important;
-  padding: 12px 18px !important;
-  border-radius: 10px !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
   cursor: pointer !important;
-  font-size: 1rem !important;
+  font-size: 0.8rem !important;
   transition: all 0.3s ease !important;
-  font-weight: 700 !important;
-  margin-top: 10px !important;
+  font-weight: 600 !important;
+  margin-top: 8px !important;
   display: inline-flex !important;
   align-items: center !important;
-  gap: 8px !important;
-  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3) !important;
+  gap: 6px !important;
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3) !important;
 }
 
 .btn-ver-imagen:hover {
   background: linear-gradient(135deg, #2980b9, #1f618d) !important;
-  transform: translateY(-3px) !important;
-  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.5) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.5) !important;
 }
 
 .btn-ver-imagen:active {
   transform: translateY(-1px) !important;
 }
 
-/* ESTILOS MODERNOS PARA NAVEGACIÓN CON SCROLL Y GESTOS */
-.navegacion-instrucciones {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  border-top: 1px solid #e9ecef;
-  background: white;
-  border-radius: 0 0 16px 16px;
-  position: relative;
-}
-
-/* Botones modernos */
-.btn-navegacion {
-  background: linear-gradient(135deg, var(--secondary), #2980b9);
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 25px;
-  cursor: pointer;
-  font-size: clamp(0.9rem, 2vw, 1rem);
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
-  position: relative;
-  overflow: hidden;
-}
-
-.btn-navegacion::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-  transition: left 0.5s;
-}
-
-.btn-navegacion:hover::before {
-  left: 100%;
-}
-
-.btn-navegacion:hover:not(:disabled) {
-  background: linear-gradient(135deg, #2980b9, #1f618d);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
-}
-
-.btn-navegacion:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.btn-navegacion:disabled {
-  background: #bdc3c7;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-/* Contador moderno */
-.contador-paginas {
-  font-weight: 700;
-  color: var(--primary);
-  font-size: clamp(0.9rem, 2vw, 1rem);
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  padding: 8px 16px;
-  border-radius: 20px;
-  background-color: #f8f9fa;
-  border: 2px solid #e9ecef;
-}
-
-/* Indicadores de progreso con puntos */
-.indicadores-paginas {
-  display: flex;
-  gap: 8px;
-  position: absolute;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.indicador-pagina {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #ddd;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.indicador-pagina.activa {
-  background: var(--secondary);
-  transform: scale(1.2);
-}
-
-.indicador-pagina:hover {
-  background: #aaa;
-}
-
-/* Área de gestos táctiles */
-.area-gestos {
-  position: absolute;
-  top: 0;
-  width: 30%;
-  height: 100%;
-  z-index: 5;
-}
-
-.area-gestos.izquierda {
-  left: 0;
-  cursor: w-resize;
-}
-
-.area-gestos.derecha {
-  right: 0;
-  cursor: e-resize;
-}
-
-/* Efectos de deslizamiento */
-.pagina-instrucciones {
-  display: none;
-  transition: transform 0.3s ease, opacity 0.3s ease;
-}
-
-.pagina-instrucciones.activa {
-  display: block;
-}
-
-.pagina-instrucciones.saliendo-izquierda {
-  transform: translateX(-100%);
-  opacity: 0;
-}
-
-.pagina-instrucciones.saliendo-derecha {
-  transform: translateX(100%);
-  opacity: 0;
-}
-
-.pagina-instrucciones.entrando-izquierda {
-  transform: translateX(100%);
-  opacity: 0;
-}
-
-.pagina-instrucciones.entrando-derecha {
-  transform: translateX(-100%);
-  opacity: 0;
-}
-
-/* Flechas de navegación flotantes para móviles */
+/* FLECHAS FLOTANTES MANTENIDAS */
 .flechas-flotantes {
   position: fixed;
   bottom: 100px;
@@ -1320,71 +1090,20 @@
     display: flex;
   }
   
-  .navegacion-instrucciones {
-    padding-bottom: 40px; /* Espacio para los indicadores */
+  .estadisticas-container {
+    grid-template-columns: 1fr;
   }
   
-  .btn-navegacion {
-    padding: 10px 20px;
-    font-size: 0.85rem;
+  .chat-asistente {
+    width: calc(100% - 40px);
+    right: 20px;
+    left: 20px;
+  }
+  
+  .asistente-virtual {
+    bottom: 80px;
   }
 }
-    
-/* ELIMINAR CONTADOR DE PÁGINAS Y BOTONES DE NAVEGACIÓN */
-.contador-paginas, .indicadores-paginas, .btn-navegacion {
-  display: none !important;
-}
-
-.navegacion-instrucciones {
-  display: none !important;
-}
-
-/* ELIMINAR FLECHAS FLOTANTES */
-.flechas-flotantes {
-  display: none !important;
-}
-
-/* ELIMINAR ÁREAS DE GESTOS TÁCTILES */
-.area-gestos {
-  display: none !important;
-}
-
-/* HACER MÁS PEQUEÑO EL BOTÓN DE VER IMAGEN */
-.btn-ver-imagen {
-  padding: 8px 12px !important;
-  font-size: 0.8rem !important;
-  margin-top: 5px !important;
-}
-
-/* AJUSTAR EL MODAL BODY PARA OCUPAR TODO EL ESPACIO */
-.modal-body {
-  padding: 15px !important;
-  height: calc(100% - 80px) !important;
-  overflow-y: auto !important;
-}
-
-/* ASEGURAR QUE LAS PÁGINAS SE MUESTREN UNA TRAS OTRA */
-.pagina-instrucciones {
-  display: block !important;
-  margin-bottom: 20px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #eee;
-}
-
-.pagina-instrucciones:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-}
-
-/* ELIMINAR ANIMACIONES DE PÁGINAS */
-.pagina-instrucciones.saliendo-izquierda,
-.pagina-instrucciones.saliendo-derecha,
-.pagina-instrucciones.entrando-izquierda,
-.pagina-instrucciones.entrando-derecha {
-  transform: none !important;
-  opacity: 1 !important;
-}
-
 
   </style>
 </head>
@@ -1536,33 +1255,6 @@
       <div class="modal-body" id="modalBody">
         <!-- Las páginas de instrucciones se cargarán aquí dinámicamente -->
       </div>
-      <!-- REEMPLAZAR LA SECCIÓN DE NAVEGACIÓN EXISTENTE -->
-<div class="navegacion-instrucciones">
-  <!-- Áreas de gestos táctiles -->
-  <div class="area-gestos izquierda" id="areaGestosIzquierda"></div>
-  <div class="area-gestos derecha" id="areaGestosDerecha"></div>
-  
-  <button id="btnAnterior" class="btn-navegacion" disabled>
-    ◀️ Anterior
-  </button>
-  
-  <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-    <div class="contador-paginas" id="contadorPaginas">Página 1 de 1</div>
-    <div class="indicadores-paginas" id="indicadoresPaginas">
-      <!-- Los indicadores se generarán dinámicamente -->
-    </div>
-  </div>
-  
-  <button id="btnSiguiente" class="btn-navegacion">
-    Siguiente ▶️
-  </button>
-</div>
-
-<!-- Flechas flotantes para móviles -->
-<div class="flechas-flotantes" id="flechasFlotantes">
-  <button class="flecha-flotante" id="flechaAnterior">◀</button>
-  <button class="flecha-flotante" id="flechaSiguiente">▶</button>
-</div>
     </div>
   </div>
 
@@ -1576,6 +1268,12 @@
         <button class="btn-cancelar-critico" onclick="cancelarPasoCritico()">↩️ VOLVER AL PASO</button>
       </div>
     </div>
+  </div>
+
+  <!-- FLECHAS FLOTANTES MANTENIDAS -->
+  <div class="flechas-flotantes" id="flechasFlotantes">
+    <button class="flecha-flotante" id="flechaAnterior">◀</button>
+    <button class="flecha-flotante" id="flechaSiguiente">▶</button>
   </div>
 
   <div id="toast"></div>
@@ -1594,10 +1292,6 @@ let alerta10minMostrada = false;
 let alerta5minMostrada = false;
 let alertaExcedidoMostrada = false;
 let modoPrueba = false;
-
-// Variables para navegación de instrucciones
-let paginaActual = 0;
-let totalPaginas = 0;
 
 // Variables para pasos críticos
 let pasoCriticoActual = null;
@@ -1649,50 +1343,19 @@ function confirmarPasoCritico() {
     document.getElementById('btnAnterior').disabled = false;
     
     // Marcar el botón como verificado en la página actual
-    const paginaActualElement = document.getElementById(`pagina-${paginaActual}`);
-    const botonCritico = paginaActualElement?.querySelector('.btn-verificar-critico');
+    const paginaActualElement = document.querySelector('.pagina-instrucciones .btn-verificar-critico');
     
-    if (botonCritico) {
-        botonCritico.classList.add('verificado');
-        botonCritico.textContent = '✅ PASO CRÍTICO VERIFICADO';
-        botonCritico.style.background = '#27ae60';
-        botonCritico.style.cursor = 'default';
-    }
-    
-    // EJECUTAR LA NAVEGACIÓN AL SIGUIENTE PASO INMEDIATAMENTE
-    const nuevaPagina = paginaActual + 1;
-    const esUltimaPagina = paginaActual === totalPaginas - 1;
-    
-    if (esUltimaPagina) {
-        // Si es el último paso crítico, cerrar el modal
-        document.getElementById('modalInstrucciones').style.display = 'none';
-        toast('✅ Instrucciones completadas - Todos los pasos críticos verificados', '#2ecc71');
-    } else if (nuevaPagina < totalPaginas) {
-        // Ocultar página actual
-        if (paginaActualElement) {
-            paginaActualElement.classList.remove('activa');
-        }
-        
-        // Mostrar nueva página
-        paginaActual = nuevaPagina;
-        const nuevaPaginaElement = document.getElementById(`pagina-${paginaActual}`);
-        if (nuevaPaginaElement) {
-            nuevaPaginaElement.classList.add('activa');
-        }
-        
-        actualizarNavegacion();
-        
-        // Scroll al top
-        const modalBody = document.getElementById('modalBody');
-        modalBody.scrollTop = 0;
+    if (paginaActualElement) {
+        paginaActualElement.classList.add('verificado');
+        paginaActualElement.textContent = '✅ PASO CRÍTICO VERIFICADO';
+        paginaActualElement.style.background = '#27ae60';
+        paginaActualElement.style.cursor = 'default';
     }
     
     pasoCriticoActual = null;
     indicePasoCritico = -1;
     
-    if (!esUltimaPagina) {
-        toast('✅ Paso crítico verificado correctamente', '#2ecc71');
-    }
+    toast('✅ Paso crítico verificado correctamente', '#2ecc71');
 }
 
 function cancelarPasoCritico() {
@@ -1710,7 +1373,7 @@ function cancelarPasoCritico() {
 }
 
 // =============================================
-// FUNCIONES DE INSTRUCCIONES (CORREGIDAS - IMÁGENES FIJADAS)
+// FUNCIONES DE INSTRUCCIONES (MODIFICADAS)
 // =============================================
 
 function obtenerInstruccionesTareas() {
@@ -1787,12 +1450,12 @@ function mostrarInstrucciones() {
   
   titulo.textContent = instruccion.titulo || tareaSeleccionada;
   
-  // Crear páginas de instrucciones
-  const paginas = [];
-  
+  // Crear páginas de instrucciones (todas visibles en scroll)
+  let contenidoHTML = '';
+
   // PÁGINA 1: Información + Elementos Críticos
-  let pagina1 = `
-    <div class="pagina-instrucciones activa" id="pagina-0">
+  contenidoHTML += `
+    <div class="pagina-instrucciones">
       <div class="card">
         <div class="card-header">
           <div class="card-icon">📋</div>
@@ -1808,7 +1471,7 @@ function mostrarInstrucciones() {
   
   // ELEMENTOS CRÍTICOS EN PÁGINA 1
   if (instruccion.elementosCriticos && instruccion.elementosCriticos.length > 0) {
-    pagina1 += `
+    contenidoHTML += `
       <div class="card">
         <div class="card-header">
           <div class="card-icon">⚠️</div>
@@ -1816,27 +1479,26 @@ function mostrarInstrucciones() {
         </div>
     `;
     instruccion.elementosCriticos.forEach(critico => {
-      pagina1 += `
+      contenidoHTML += `
         <div class="critical-item">
           <h3 class="critical-title">${critico.titulo}</h3>
           <p class="critical-desc">${critico.descripcion}</p>
         </div>
       `;
     });
-    pagina1 += `</div>`;
+    contenidoHTML += `</div>`;
   }
-  pagina1 += `</div>`;
-  paginas.push(pagina1);
+  contenidoHTML += `</div>`;
   
   // PÁGINA 2: Materiales + Herramientas
   if ((instruccion.materiales && instruccion.materiales.length > 0) || 
       (instruccion.herramientas && instruccion.herramientas.length > 0)) {
     
-    let pagina2 = `<div class="pagina-instrucciones" id="pagina-1">`;
+    contenidoHTML += `<div class="pagina-instrucciones">`;
     
     // MATERIALES EN PÁGINA 2 - CON CAJONES
 if (instruccion.materiales && instruccion.materiales.length > 0) {
-  pagina2 += `
+  contenidoHTML += `
     <div class="card">
       <div class="card-header">
         <div class="card-icon">📦</div>
@@ -1858,7 +1520,7 @@ if (instruccion.materiales && instruccion.materiales.length > 0) {
   
   // Crear cajones para cada categoría
   Object.entries(materialesAgrupados).forEach(([categoria, materiales]) => {
-    pagina2 += `
+    contenidoHTML += `
       <div class="cajon-material">
         <div class="cajon-header">
           <h3 class="cajon-titulo">${categoria}</h3>
@@ -1867,7 +1529,7 @@ if (instruccion.materiales && instruccion.materiales.length > 0) {
     `;
     
     materiales.forEach(material => {
-      pagina2 += `
+      contenidoHTML += `
         <div class="material-item">
           <div class="material-info">
             <div class="material-nombre">${material.nombre}</div>
@@ -1880,22 +1542,22 @@ if (instruccion.materiales && instruccion.materiales.length > 0) {
       `;
     });
     
-    pagina2 += `
+    contenidoHTML += `
         </div>
       </div>
     `;
   });
   
-  pagina2 += `
+  contenidoHTML += `
         </div>
       </div>
     </div>
   `;
 }
     
-    // HERRAMIENTAS EN PÁGINA 2 - CORREGIDO PARA MOSTRAR IMÁGENES
+    // HERRAMIENTAS EN PÁGINA 2 - CON BOTÓN PEQUEÑO PARA IMÁGENES
    if (instruccion.herramientas && instruccion.herramientas.length > 0) {
-  pagina2 += `
+  contenidoHTML += `
     <div class="card">
       <div class="card-header">
         <div class="card-icon">🛠️</div>
@@ -1904,20 +1566,19 @@ if (instruccion.materiales && instruccion.materiales.length > 0) {
   `;
   instruccion.herramientas.forEach((herramienta, index) => {
     let imagenHTML = '';
-    // BOTÓN PARA VER IMAGEN SI EXISTE
+    // BOTÓN MÁS PEQUEÑO PARA VER IMAGEN SI EXISTE
     if (herramienta.imagen && herramienta.imagen.trim() !== '') {
       imagenHTML = `
         <div class="herramienta-imagen" style="margin-top: 10px;">
           <button class="btn-ver-imagen" 
-                  onclick="mostrarImagenHerramienta('${herramienta.imagen.replace(/'/g, "\\'")}', '${herramienta.nombre.replace(/'/g, "\\'")}')"
-                  style="background: var(--secondary); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
-            👁️ Pulsa para ver la imagen de la herramienta
+                  onclick="mostrarImagenHerramienta('${herramienta.imagen.replace(/'/g, "\\'")}', '${herramienta.nombre.replace(/'/g, "\\'")}')">
+            👁️ Ver imagen
           </button>
         </div>
       `;
     }
     
-    pagina2 += `
+    contenidoHTML += `
       <div class="tool-item">
         <div style="flex: 1;">
           <div class="tool-name">${herramienta.nombre}</div>
@@ -1927,11 +1588,10 @@ if (instruccion.materiales && instruccion.materiales.length > 0) {
       </div>
     `;
   });
-  pagina2 += `</div>`;
+  contenidoHTML += `</div>`;
 }
     
-    pagina2 += `</div>`;
-    paginas.push(pagina2);
+    contenidoHTML += `</div>`;
   }
   
   // PÁGINAS SIGUIENTES: Cada paso individual
@@ -1940,8 +1600,8 @@ if (instruccion.materiales && instruccion.materiales.length > 0) {
       // AGREGAR CLASE CRÍTICA SI EL PASO ES CRÍTICO
       const claseCritica = paso.critico ? 'paso-critico' : '';
       
-      let paginaPasos = `<div class="pagina-instrucciones" id="pagina-${paginas.length}">`;
-      paginaPasos += `
+      contenidoHTML += `<div class="pagina-instrucciones">`;
+      contenidoHTML += `
         <div class="card ${claseCritica}">
           <div class="card-header">
             <div class="card-icon">${index + 1}</div>
@@ -1952,9 +1612,9 @@ if (instruccion.materiales && instruccion.materiales.length > 0) {
             <p style="margin-bottom: 15px; line-height: 1.6;">${paso.descripcion}</p>
       `;
       
-      // MOSTRAR IMAGEN DEL PASO SI EXISTE - CORREGIDO
+      // MOSTRAR IMAGEN DEL PASO SI EXISTE
       if (paso.imagen && paso.imagen.trim() !== '') {
-        paginaPasos += `
+        contenidoHTML += `
           <div class="paso-imagen">
             <img src="${paso.imagen}" alt="Paso ${index + 1}" 
                  onerror="this.style.display='none'">
@@ -1964,25 +1624,18 @@ if (instruccion.materiales && instruccion.materiales.length > 0) {
       
       // AGREGAR BOTÓN DE VERIFICACIÓN SI ES PASO CRÍTICO
       if (paso.critico) {
-        paginaPasos += `
+        contenidoHTML += `
           <button class="btn-verificar-critico" data-paso='${JSON.stringify(paso).replace(/'/g, "&#39;")}'>
             ✅ VERIFICAR PASO CRÍTICO PARA CONTINUAR
           </button>
         `;
       }
       
-      paginaPasos += `</div></div></div>`;
-      paginas.push(paginaPasos);
+      contenidoHTML += `</div></div></div>`;
     });
   }
   
-  body.innerHTML = paginas.join('');
-  totalPaginas = paginas.length;
-  paginaActual = 0;
-  
-  // Mostrar navegación (ahora hay múltiples páginas)
-  actualizarNavegacion();
-  document.querySelector('.navegacion-instrucciones').style.display = 'flex';
+  body.innerHTML = contenidoHTML;
   
   modal.style.display = 'flex';
   
@@ -1991,82 +1644,10 @@ if (instruccion.materiales && instruccion.materiales.length > 0) {
     document.addEventListener('click', function(e) {
       if (e.target.classList.contains('btn-verificar-critico')) {
         const pasoData = JSON.parse(e.target.getAttribute('data-paso'));
-        const paginaIndex = Array.from(document.querySelectorAll('.pagina-instrucciones')).findIndex(pag => pag.classList.contains('activa'));
-        verificarPasoCritico(paginaIndex, pasoData);
-        // NO marcar como verificado aquí, se hará en confirmarPasoCritico
+        verificarPasoCritico(0, pasoData);
       }
     });
   }, 500);
-}
-
-function cambiarPagina(direccion) {
-  const nuevaPagina = paginaActual + direccion;
-  
-  // Verificar si estamos en la última página y se pulsa "Finalizar"
-  const esUltimaPagina = paginaActual === totalPaginas - 1;
-  const estaFinalizando = esUltimaPagina && direccion > 0;
-  
-  if (estaFinalizando) {
-    // Cerrar el modal de instrucciones
-    document.getElementById('modalInstrucciones').style.display = 'none';
-    toast('✅ Instrucciones completadas', '#2ecc71');
-    return;
-  }
-  
-  if (nuevaPagina >= 0 && nuevaPagina < totalPaginas) {
-    // Verificar si la página actual tiene paso crítico antes de salir (solo al avanzar)
-    if (direccion > 0) {
-      const paginaActualElement = document.getElementById(`pagina-${paginaActual}`);
-      const botonCritico = paginaActualElement?.querySelector('.btn-verificar-critico');
-      
-      if (botonCritico && !botonCritico.classList.contains('verificado')) {
-        // Hay paso crítico sin verificar, mostrar alerta
-        const pasoData = JSON.parse(botonCritico.getAttribute('data-paso'));
-        verificarPasoCritico(paginaActual, pasoData);
-        return; // Detener la navegación
-      }
-    }
-    
-    // Ocultar página actual
-    const paginaActualElement = document.getElementById(`pagina-${paginaActual}`);
-    if (paginaActualElement) {
-      paginaActualElement.classList.remove('activa');
-    }
-    
-    // Mostrar nueva página
-    paginaActual = nuevaPagina;
-    const nuevaPaginaElement = document.getElementById(`pagina-${paginaActual}`);
-    if (nuevaPaginaElement) {
-      nuevaPaginaElement.classList.add('activa');
-    }
-    
-    actualizarNavegacion();
-    
-    // Scroll al top
-    const modalBody = document.getElementById('modalBody');
-    modalBody.scrollTop = 0;
-  }
-}
-
-function actualizarNavegacion() {
-  const btnAnterior = document.getElementById('btnAnterior');
-  const btnSiguiente = document.getElementById('btnSiguiente');
-  const contadorPaginas = document.getElementById('contadorPaginas');
-  
-  btnAnterior.disabled = paginaActual === 0;
-  
-  // Verificar si es la última página
-  const esUltimaPagina = paginaActual === totalPaginas - 1;
-  
-  if (esUltimaPagina) {
-    btnSiguiente.textContent = '✅ Finalizar';
-    btnSiguiente.style.background = 'var(--success)';
-  } else {
-    btnSiguiente.textContent = 'Siguiente ▶️';
-    btnSiguiente.style.background = 'var(--secondary)';
-  }
-  
-  contadorPaginas.textContent = `Página ${paginaActual + 1} de ${totalPaginas}`;
 }
 
 // =============================================
@@ -2682,7 +2263,6 @@ function abrirAdministrador() {
   window.open('admin-tareas.html', '_blank');
 }
 
-// FUNCIÓN PARA MOSTRAR IMAGEN DE HERRAMIENTA EN MODAL
 // FUNCIÓN PARA MOSTRAR IMAGEN DE HERRAMIENTA EN MODAL (VERSIÓN AGRANDADA)
 function mostrarImagenHerramienta(urlImagen, nombreHerramienta) {
   // Crear modal temporal para mostrar la imagen
@@ -2730,188 +2310,6 @@ function mostrarImagenHerramienta(urlImagen, nombreHerramienta) {
   };
   document.addEventListener('keydown', cerrarConEscape);
 }
-
-// FUNCIÓN MEJORADA PARA CAMBIAR PÁGINA CON ANIMACIONES
-function cambiarPagina(direccion) {
-  const nuevaPagina = paginaActual + direccion;
-  
-  // Verificar si estamos en la última página y se pulsa "Finalizar"
-  const esUltimaPagina = paginaActual === totalPaginas - 1;
-  const estaFinalizando = esUltimaPagina && direccion > 0;
-  
-  if (estaFinalizando) {
-    document.getElementById('modalInstrucciones').style.display = 'none';
-    toast('✅ Instrucciones completadas', '#2ecc71');
-    return;
-  }
-  
-  if (nuevaPagina >= 0 && nuevaPagina < totalPaginas) {
-    // Verificar paso crítico antes de avanzar
-    if (direccion > 0) {
-      const paginaActualElement = document.getElementById(`pagina-${paginaActual}`);
-      const botonCritico = paginaActualElement?.querySelector('.btn-verificar-critico');
-      
-      if (botonCritico && !botonCritico.classList.contains('verificado')) {
-        const pasoData = JSON.parse(botonCritico.getAttribute('data-paso'));
-        verificarPasoCritico(paginaActual, pasoData);
-        return;
-      }
-    }
-    
-    // Aplicar animación de salida
-    const paginaActualElement = document.getElementById(`pagina-${paginaActual}`);
-    if (paginaActualElement) {
-      paginaActualElement.classList.add(direccion > 0 ? 'saliendo-izquierda' : 'saliendo-derecha');
-    }
-    
-    // Aplicar animación de entrada a la nueva página
-    const nuevaPaginaElement = document.getElementById(`pagina-${nuevaPagina}`);
-    if (nuevaPaginaElement) {
-      nuevaPaginaElement.classList.add(direccion > 0 ? 'entrando-derecha' : 'entrando-izquierda');
-    }
-    
-    setTimeout(() => {
-      // Ocultar página actual
-      if (paginaActualElement) {
-        paginaActualElement.classList.remove('activa', 'saliendo-izquierda', 'saliendo-derecha');
-      }
-      
-      // Mostrar nueva página
-      paginaActual = nuevaPagina;
-      if (nuevaPaginaElement) {
-        nuevaPaginaElement.classList.remove('entrando-izquierda', 'entrando-derecha');
-        nuevaPaginaElement.classList.add('activa');
-      }
-      
-      actualizarNavegacion();
-      
-      // Scroll al top
-      const modalBody = document.getElementById('modalBody');
-      modalBody.scrollTop = 0;
-    }, 300);
-  }
-}
-
-// FUNCIÓN MEJORADA PARA ACTUALIZAR NAVEGACIÓN
-function actualizarNavegacion() {
-  const btnAnterior = document.getElementById('btnAnterior');
-  const btnSiguiente = document.getElementById('btnSiguiente');
-  const contadorPaginas = document.getElementById('contadorPaginas');
-  const indicadoresContainer = document.getElementById('indicadoresPaginas');
-  
-  btnAnterior.disabled = paginaActual === 0;
-  
-  // Actualizar contador
-  const esUltimaPagina = paginaActual === totalPaginas - 1;
-  
-  if (esUltimaPagina) {
-    btnSiguiente.textContent = '✅ Finalizar';
-    btnSiguiente.style.background = 'linear-gradient(135deg, #2ecc71, #27ae60)';
-  } else {
-    btnSiguiente.textContent = 'Siguiente ▶️';
-    btnSiguiente.style.background = 'linear-gradient(135deg, var(--secondary), #2980b9)';
-  }
-  
-  contadorPaginas.textContent = `Página ${paginaActual + 1} de ${totalPaginas}`;
-  
-  // Actualizar indicadores de puntos
-  if (indicadoresContainer) {
-    indicadoresContainer.innerHTML = '';
-    for (let i = 0; i < totalPaginas; i++) {
-      const indicador = document.createElement('div');
-      indicador.className = `indicador-pagina ${i === paginaActual ? 'activa' : ''}`;
-      indicador.addEventListener('click', () => irAPagina(i));
-      indicadoresContainer.appendChild(indicador);
-    }
-  }
-}
-
-// FUNCIÓN PARA IR DIRECTAMENTE A UNA PÁGINA
-function irAPagina(numeroPagina) {
-  if (numeroPagina >= 0 && numeroPagina < totalPaginas && numeroPagina !== paginaActual) {
-    const direccion = numeroPagina > paginaActual ? 1 : -1;
-    
-    // Verificar pasos críticos intermedios si vamos a saltar páginas
-    if (direccion > 0) {
-      for (let i = paginaActual; i < numeroPagina; i++) {
-        const paginaIntermedia = document.getElementById(`pagina-${i}`);
-        const botonCritico = paginaIntermedia?.querySelector('.btn-verificar-critico');
-        if (botonCritico && !botonCritico.classList.contains('verificado')) {
-          toast('❌ Debes completar los pasos críticos en orden', '#e74c3c');
-          return;
-        }
-      }
-    }
-    
-    cambiarPagina(numeroPagina - paginaActual);
-  }
-}
-
-// INICIALIZAR GESTOS TÁCTILES
-function inicializarGestos() {
-  const areaIzquierda = document.getElementById('areaGestosIzquierda');
-  const areaDerecha = document.getElementById('areaGestosDerecha');
-  const modalBody = document.getElementById('modalBody');
-  
-  let startX = 0;
-  let startY = 0;
-  
-  // Gestos en áreas específicas
-  [areaIzquierda, areaDerecha, modalBody].forEach(area => {
-    if (area) {
-      // Touch events para móviles
-      area.addEventListener('touchstart', (e) => {
-        startX = e.touches[0].clientX;
-        startY = e.touches[0].clientY;
-      });
-      
-      area.addEventListener('touchend', (e) => {
-        if (!startX) return;
-        
-        const endX = e.changedTouches[0].clientX;
-        const endY = e.changedTouches[0].clientY;
-        const diffX = startX - endX;
-        const diffY = startY - endY;
-        
-        // Solo procesar si el movimiento es principalmente horizontal
-        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
-          if (diffX > 0) {
-            // Deslizamiento hacia izquierda = siguiente
-            cambiarPagina(1);
-          } else {
-            // Deslizamiento hacia derecha = anterior
-            cambiarPagina(-1);
-          }
-        }
-        
-        startX = 0;
-        startY = 0;
-      });
-      
-      // Click events para desktop
-      area.addEventListener('click', (e) => {
-        if (area === areaIzquierda) {
-          cambiarPagina(-1);
-        } else if (area === areaDerecha) {
-          cambiarPagina(1);
-        }
-      });
-    }
-  });
-}
-
-// INICIALIZAR FLECHAS FLOTANTES
-function inicializarFlechasFlotantes() {
-  document.getElementById('flechaAnterior').addEventListener('click', () => cambiarPagina(-1));
-  document.getElementById('flechaSiguiente').addEventListener('click', () => cambiarPagina(1));
-}
-
-// LLAMAR ESTAS FUNCIONES AL INICIALIZAR LAS INSTRUCCIONES
-// En la función mostrarInstrucciones(), agregar al final:
-setTimeout(() => {
-  inicializarGestos();
-  inicializarFlechasFlotantes();
-}, 100);
 
 // =============================================
 // INICIALIZACIÓN
@@ -2964,10 +2362,6 @@ document.getElementById('btnExportExcel').addEventListener('click', descargarExc
 document.getElementById('btnResetTabla').addEventListener('click', resetearTabla);
 document.getElementById('btnAdmin').addEventListener('click', abrirAdministrador);
 document.getElementById('btnInstrucciones').addEventListener('click', mostrarInstrucciones);
-
-// NAVEGACIÓN INSTRUCCIONES
-document.getElementById('btnAnterior').addEventListener('click', () => cambiarPagina(-1));
-document.getElementById('btnSiguiente').addEventListener('click', () => cambiarPagina(1));
 
 // CERRAR MODALES
 document.querySelector('#modalEstadisticas .close-modal').addEventListener('click', function() {
