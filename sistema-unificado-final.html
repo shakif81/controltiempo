@@ -1,0 +1,3706 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sistema Unificado - Control de Tiempo y Administrador de Tareas</title>
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  
+  <style>
+    /* ESTILOS UNIFICADOS */
+    :root {
+      /* Colores principales */
+      --primary: #2c3e50;
+      --secondary: #3498db;
+      --accent: #2ecc71;
+      --danger: #e74c3c;
+      --warning: #f39c12;
+      --info: #9b59b6;
+      --light: #ecf0f1;
+      --dark: #2c3e50;
+      --success: #2ecc71;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s ease;
+      --bg: #f5f6fa;
+      --muted: #e9ecef;
+      --card: #fff;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      color: var(--dark);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    
+    /* HEADER Y NAVEGACIÓN */
+    .app-header {
+      background: var(--primary);
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .app-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .app-nav {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .nav-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .nav-btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+    
+    .nav-btn-secondary {
+      background: var(--secondary);
+      color: white;
+    }
+    
+    .nav-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    /* CONTENEDOR PRINCIPAL */
+    .main-container {
+      padding: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    /* SECCIONES */
+    .section {
+      display: none;
+      animation: fadeIn 0.5s ease;
+    }
+    
+    .section.active {
+      display: block;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* ESTILOS COMUNES PARA TARJETAS */
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+    
+    /* ESTILOS ESPECÍFICOS PARA CONTROL DE TIEMPO */
+    .time-control-section {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .time-control-section h1 {
+      text-align: center;
+      color: var(--primary);
+      margin: 0 0 20px;
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      font-weight: 700;
+    }
+    
+    .time-control-section label {
+      display: block;
+      margin-top: 8px;
+      color: var(--primary);
+      font-weight: 600;
+      font-size: clamp(0.9rem, 2vw, 1rem);
+    }
+    
+    .time-control-section input, 
+    .time-control-section select, 
+    .time-control-section button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+      box-sizing: border-box;
+      font-size: 1rem;
+      transition: var(--transition);
+    }
+    
+    .time-control-section input:focus, 
+    .time-control-section select:focus {
+      outline: none;
+      border-color: var(--secondary);
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    }
+    
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      align-items: end;
+      margin-top: 10px;
+    }
+    
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      min-height: 85px;
+    }
+    
+    .tiempo-group {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .tiempo-input-group {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+    }
+    
+    .tiempo-input-group input {
+      flex: 1;
+      margin: 0;
+      min-width: 0;
+      height: 46px;
+      box-sizing: border-box;
+      font-size: clamp(0.9rem, 2vw, 1rem);
+    }
+    
+    .tiempo-convertido {
+      background: var(--muted);
+      padding: 12px;
+      border-radius: 10px;
+      text-align: center;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #ddd;
+      flex: 1;
+      min-width: 0;
+      height: 46px;
+      box-sizing: border-box;
+      font-size: clamp(0.8rem, 2vw, 0.9rem);
+    }
+    
+    .instrucciones-group {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .btn-instrucciones {
+      background: #9b59b6;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      width: 100%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: var(--transition);
+      height: 46px;
+      box-sizing: border-box;
+      font-size: clamp(0.9rem, 2vw, 1rem);
+      white-space: nowrap;
+      font-weight: 600;
+    }
+    
+    .btn-instrucciones:hover {
+      background: #8e44ad;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(155, 89, 182, 0.3);
+    }
+    
+    .btn-instrucciones:disabled {
+      background: #bdc3c7;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .button-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-top: 15px;
+    }
+    
+    .button-row button {
+      font-size: clamp(0.8rem, 2vw, 0.9rem);
+      padding: 12px 10px;
+      white-space: nowrap;
+      min-height: 50px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: var(--transition);
+      font-weight: 600;
+    }
+    
+    .button-row button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    #btnStart { background: #0984e3; color: white; } 
+    #btnTerminar { background: var(--danger); color: white; } 
+    #btnReset { background: var(--success); color: white; }
+    #btnSilenciar { background: #95a5a6; color: white; }
+    #btnEstadisticas { background: #16a085; color: white; }
+    #btnExportExcel { background: #27ae60; color: white; }
+    #btnResetTabla { background: #e74c3c; color: white; }
+    #btnSync { background: #3498db; color: white; }
+    #btnLogin { background: #9b59b6; color: white; }
+    #btnLogout { background: #e74c3c; color: white; }
+    #btnCreateCollections { background: #8e44ad; color: white; }
+    
+    #cronometro {
+      background: var(--muted);
+      padding: 15px;
+      border-radius: 12px;
+      text-align: center;
+      margin-top: 15px;
+      font-size: clamp(1.1rem, 3vw, 1.4rem);
+      font-weight: bold;
+      box-shadow: var(--shadow);
+      min-height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    #excedido {
+      background: #ffeaa7;
+      color: #d63031;
+      padding: 10px 15px;
+      border-radius: 8px;
+      margin-top: 10px;
+      font-weight: 600;
+      text-align: center;
+      display: none;
+      border-left: 4px solid #d63031;
+    }
+    
+    .table-container {
+      margin-top: 15px;
+      background: var(--card);
+      border-radius: 12px;
+      padding: 12px;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      box-shadow: var(--shadow);
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 980px;
+      font-size: clamp(0.8rem, 2vw, 0.93rem);
+    }
+    
+    th, td {
+      padding: 12px 10px;
+      border: 1px solid #e6e6e6;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    th {
+      background: #f1f2f6;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+    }
+    
+    .progreso-container {
+      margin-top: 15px;
+      background: var(--muted);
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+    }
+    
+    .progreso-bar {
+      width: 100%;
+      height: 28px;
+      background: #f1f2f6;
+      border-radius: 14px;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .progreso-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--success), #27ae60);
+      border-radius: 14px;
+      transition: width 0.3s ease, background 0.3s ease;
+      width: 0%;
+    }
+    
+    .progreso-fill.excedido {
+      background: linear-gradient(90deg, var(--danger), #c0392b);
+    }
+    
+    .progreso-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: 600;
+      font-size: clamp(0.8rem, 2vw, 0.9rem);
+      color: var(--primary);
+      pointer-events: none;
+    }
+    
+    .diff-plus { color: var(--success); font-weight: 700; }
+    .diff-minus { color: var(--danger); font-weight: 700; }
+    
+    #floatingTotal {
+      position: sticky;
+      left: 0;
+      bottom: 0;
+      background: var(--card);
+      border-radius: 12px;
+      padding: 16px 24px;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.12);
+      z-index: 1001;
+      font-weight: 700;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      justify-content: center;
+      margin-top: 20px;
+      border: 2px solid var(--success);
+      font-size: clamp(1rem, 2.5vw, 1.1rem);
+    }
+    
+    /* ESTILOS ESPECÍFICOS PARA ADMINISTRADOR DE TAREAS */
+    .admin-section {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    
+    .admin-nav-buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .admin-nav-buttons button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-admin-primary {
+      background: var(--accent);
+      color: white;
+    }
+    
+    .btn-admin-secondary {
+      background: var(--secondary);
+      color: white;
+    }
+    
+    .admin-nav-buttons button:hover {
+      transform: translateY(-2px);
+    }
+    
+    .form-section {
+      background: var(--muted);
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 25px;
+      overflow-y: auto;
+      max-height: calc(100vh - 200px);
+    }
+    
+    .admin-form-group {
+      margin-bottom: 15px;
+    }
+    
+    .admin-form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+      color: #2f3640;
+    }
+    
+    .admin-form-group input, 
+    .admin-form-group select, 
+    .admin-form-group textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      box-sizing: border-box;
+    }
+    
+    .admin-form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    
+    .array-item {
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+    }
+    
+    .array-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .array-header h4 {
+      margin: 0;
+      color: #2f3640;
+    }
+    
+    .btn-small {
+      padding: 5px 10px;
+      font-size: 0.8rem;
+      background: var(--danger);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .btn-add {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    
+    .tareas-lista {
+      margin-top: 20px;
+      overflow-y: auto;
+      max-height: 500px;
+    }
+    
+    .tarea-item {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .tarea-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .tarea-nombre {
+      font-weight: 600;
+      color: #2f3640;
+      font-size: 1.1rem;
+    }
+    
+    .tarea-acciones {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .btn-edit {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+    
+    .btn-delete {
+      background: var(--danger);
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+    
+    .tarea-detalles {
+      color: #666;
+      font-size: 0.9rem;
+    }
+    
+    .tarea-tipo {
+      display: inline-block;
+      background: #3498db;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      margin-left: 10px;
+    }
+    
+    .tarea-tipo.dc3 { background: #2ecc71; }
+    .tarea-tipo.ms3 { background: #e74c3c; }
+    .tarea-tipo.personalizada { background: #9b59b6; }
+    
+    .admin-nav-buttons-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    
+    .admin-nav-buttons-row .admin-form-group {
+      flex: 1;
+      margin-bottom: 0;
+    }
+    
+    .btn-load-default {
+      background: var(--warning);
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+    
+    .material-cantidad-input {
+      width: 80px;
+      padding: 5px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      text-align: center;
+    }
+    
+    .unidad-input {
+      width: 100px;
+      padding: 5px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    
+    .critico-checkbox {
+      width: auto;
+      margin-right: 10px;
+    }
+    
+    .form-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    
+    .form-row .admin-form-group {
+      flex: 1;
+      margin-bottom: 0;
+    }
+    
+    /* Estilos para carga de imágenes */
+    .image-upload-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .image-preview {
+      max-width: 200px;
+      max-height: 150px;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      display: none;
+      object-fit: contain;
+      background: #f5f5f5;
+    }
+    
+    .image-upload-button {
+      display: inline-block;
+      padding: 8px 15px;
+      background: #3498db;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+    
+    .image-upload-button:hover {
+      background: #2980b9;
+    }
+    
+    .image-input-container {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    
+    .image-input-container input {
+      flex: 1;
+    }
+    
+    .image-upload-info {
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 5px;
+    }
+    
+    .file-input-hidden {
+      display: none;
+    }
+    
+    /* ESTILOS COMPARTIDOS */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 6px;
+      display: none;
+      z-index: 1000;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .firebase-status {
+      margin-bottom: 15px;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: 600;
+      background: #f39c12;
+      color: #fff;
+      display: none;
+    }
+    
+    .firebase-status.connected {
+      background: #2ecc71;
+    }
+    
+    .firebase-status.error {
+      background: #e74c3c;
+    }
+    
+    .user-info {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 15px;
+      padding: 10px;
+      background: rgba(52, 152, 219, 0.1);
+      border-radius: 10px;
+    }
+    
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+    }
+    
+    .user-email {
+      font-weight: 600;
+      color: var(--primary);
+    }
+    
+    /* Modal de instrucciones - OCUPA TODA LA PANTALLA */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.95);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      width: 95%;
+      height: 95%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+    
+    .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--primary);
+      color: white;
+    }
+    
+    .modal-header h2 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+    
+    .close-modal {
+      background: none;
+      border: none;
+      font-size: 28px;
+      cursor: pointer;
+      color: white;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: background 0.3s;
+    }
+    
+    .close-modal:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+      background: #f8f9fa;
+    }
+    
+    .modal-footer {
+      padding: 15px 20px;
+      border-top: 1px solid #e9ecef;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+    }
+    
+    .modal-nav-btn {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      min-width: 120px;
+    }
+    
+    .modal-nav-btn:disabled {
+      background: #bdc3c7;
+      cursor: not-allowed;
+    }
+    
+    .page-counter {
+      font-weight: 600;
+      color: var(--primary);
+    }
+    
+    /* Estilos para contenido de instrucciones */
+    .instruccion-paso {
+      margin-bottom: 25px;
+      padding: 20px;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    
+    .instruccion-paso h4 {
+      margin-top: 0;
+      color: var(--primary);
+      font-size: 1.3rem;
+      margin-bottom: 10px;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 8px;
+    }
+    
+    .instruccion-imagen {
+      max-width: 100%;
+      max-height: 400px;
+      border-radius: 8px;
+      margin: 15px 0;
+      display: block;
+      object-fit: contain;
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    
+    .instruccion-video {
+      color: #3498db;
+      text-decoration: none;
+      display: inline-block;
+      margin-top: 15px;
+      padding: 8px 15px;
+      background: #e8f4fc;
+      border-radius: 6px;
+      font-weight: 600;
+      transition: background 0.3s;
+    }
+    
+    .instruccion-video:hover {
+      background: #d4eaf7;
+      text-decoration: none;
+    }
+    
+    .instruccion-elemento-critico {
+      background: #ffeaa7;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      border-left: 4px solid #e74c3c;
+    }
+    
+    .instruccion-material {
+      background: #dff9fb;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      border-left: 4px solid #3498db;
+    }
+    
+    .instruccion-herramienta {
+      background: #e8f4fc;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      border-left: 4px solid #9b59b6;
+    }
+    
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+    
+    .info-item {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      border: 1px solid #e0e0e0;
+    }
+    
+    .info-item strong {
+      display: block;
+      color: var(--primary);
+      margin-bottom: 5px;
+    }
+    
+    /* Modal de inicio de sesión */
+    .login-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .login-modal > div {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      width: 90%;
+      max-width: 400px;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .app-header {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px;
+      }
+      
+      .app-nav {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      
+      .nav-btn {
+        padding: 8px 15px;
+        font-size: 0.9rem;
+      }
+      
+      .main-container {
+        padding: 15px 10px;
+      }
+      
+      .controls-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      
+      .tiempo-input-group {
+        flex-direction: column;
+        gap: 10px;
+      }
+      
+      .button-row {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 8px;
+      }
+      
+      .button-row button {
+        min-height: 52px;
+        font-size: 0.8rem;
+        padding: 14px 8px;
+      }
+      
+      table {
+        font-size: 0.75rem;
+      }
+      
+      th, td {
+        padding: 10px 6px;
+      }
+      
+      .admin-nav-buttons {
+        justify-content: center;
+      }
+      
+      .form-row {
+        flex-direction: column;
+      }
+      
+      .admin-nav-buttons-row {
+        flex-direction: column;
+      }
+      
+      .modal-content {
+        width: 98%;
+        height: 98%;
+      }
+      
+      .modal-header h2 {
+        font-size: 1.2rem;
+      }
+      
+      .modal-nav-btn {
+        min-width: 100px;
+        padding: 8px 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- HEADER CON NAVEGACIÓN -->
+  <header class="app-header">
+    <div class="app-title">
+      <span>⚙️ Sistema Unificado</span>
+    </div>
+    <nav class="app-nav">
+      <button class="nav-btn nav-btn-primary" id="btnControlTiempo">
+        ⏱ Control de Tiempo
+      </button>
+      <button class="nav-btn nav-btn-secondary" id="btnAdminTareas">
+        📋 Administrador de Tareas
+      </button>
+    </nav>
+  </header>
+
+  <!-- CONTENEDOR PRINCIPAL -->
+  <div class="main-container">
+    <!-- ===== SECCIÓN CONTROL DE TIEMPO ===== -->
+    <section id="control-tiempo" class="section active time-control-section">
+      <div class="card">
+        <h1>⏱ Control de Tiempo — Sistema con Firebase</h1>
+        
+        <!-- Estado de Firebase -->
+        <div id="firebaseStatus" class="firebase-status">
+          🔄 Conectando a Firebase...
+        </div>
+        
+        <!-- Información del usuario -->
+        <div id="userInfo" class="user-info" style="display: none;">
+          <div class="user-avatar" id="userAvatar">U</div>
+          <div class="user-email" id="userEmail"></div>
+        </div>
+        
+        <label for="inpOperacion">N° de Operación</label>
+        <input id="inpOperacion" placeholder="Ej: 234 o Lote 12">
+        
+        <div class="controls-grid">
+          <div class="control-group">
+            <label for="selTipo" style="margin-bottom: 5px;">Tipo</label>
+            <select id="selTipo">
+              <option value="">— Selecciona tipo —</option>
+              <option value="DC3">DC3</option>
+              <option value="MS3">MS3</option>
+              <option value="Personalizada">Personalizada</option>
+            </select>
+          </div>
+          
+          <div class="control-group">
+            <label for="selTarea" style="margin-bottom: 5px;">Tarea</label>
+            <select id="selTarea">
+              <option value="">— Elige tipo primero —</option>
+            </select>
+            <div id="divPersonalizada" style="display:none;margin-top:8px">
+              <input id="inpNombrePersonalizado" placeholder="Nombre de tarea...">
+            </div>
+          </div>
+          
+          <div class="control-group tiempo-group">
+            <label for="inpTiempo" style="margin-bottom: 5px;">Tiempo estimado (horas)</label>
+            <div class="tiempo-input-group">
+              <input id="inpTiempo" type="number" step="0.01" min="0" placeholder="Ej: 1.50">
+              <div id="minutosConvertidos" class="tiempo-convertido">00:00:00</div>
+            </div>
+          </div>
+          
+          <div class="control-group instrucciones-group">
+            <label for="btnInstrucciones" style="margin-bottom: 5px;">&nbsp;</label>
+            <button id="btnInstrucciones" class="btn-instrucciones" disabled>
+              📚 Instrucciones
+            </button>
+          </div>
+        </div>
+        
+        <div id="cronometro">00:00:00</div>
+        <div id="excedido">-00:00:00 excedido</div>
+        
+        <div class="progreso-container">
+          <div class="progreso-bar">
+            <div class="progreso-fill" id="progresoFill"></div>
+            <div class="progreso-text" id="progresoText">0%</div>
+          </div>
+        </div>
+        
+        <div class="button-row">
+          <button id="btnStart">▶️ Iniciar</button>
+          <button id="btnTerminar" disabled>⏹️ Terminar</button>
+          <button id="btnReset">🔄 Reiniciar</button>
+          <button id="btnSilenciar">🔊 Silenciar</button>
+          <button id="btnEstadisticas">📊 Estadísticas</button>
+          <button id="btnExportExcel">📊 Excel</button>
+          <button id="btnResetTabla">🗑️ Resetear</button>
+          <button id="btnSync">☁️ Sincronizar</button>
+          <button id="btnLogin">🔐 Iniciar Sesión</button>
+          <button id="btnLogout">🚪 Salir</button>
+          <button id="btnCreateCollections">🏗️ Crear Colecciones</button>
+        </div>
+        
+        <div class="filtros-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px;">
+          <div class="filtro-item">
+            <label for="filtroFecha">Filtrar por fecha</label>
+            <input id="filtroFecha" type="date">
+          </div>
+          <div class="filtro-item">
+            <label for="filtroOperacion">Filtrar por Nº de Operación</label>
+            <input id="filtroOperacion" placeholder="Ej: 234">
+          </div>
+          <div class="filtro-item limpiar">
+            <label for="filtroLimpiar">&nbsp;</label>
+            <button id="filtroLimpiar">🧹 Limpiar filtros</button>
+          </div>
+        </div>
+        
+        <div class="table-container">
+          <table id="tabla">
+            <thead>
+              <tr>
+                <th>Nº Operación</th>
+                <th>Tipo</th>
+                <th>Tarea</th>
+                <th>Estimado</th>
+                <th>Tiempo Real</th>
+                <th>Diferencia</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        
+        <div id="floatingTotal">
+          <div>Total día:</div>
+          <div id="floatingTotalValue" style="min-width:120px;text-align:center;color:var(--success)">+00:00:00</div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- ===== SECCIÓN ADMINISTRADOR DE TAREAS ===== -->
+    <section id="admin-tareas" class="section admin-section">
+      <div class="card">
+        <!-- BOTONES ARRIBA SIN TÍTULO -->
+        <div class="admin-nav-buttons">
+          <button class="btn-admin-primary" id="btnAddTarea">➕ Añadir Tarea</button>
+          <button class="btn-admin-secondary" id="btnVerTareas">📋 Ver Tareas</button>
+          <button class="btn-admin-secondary" id="btnIrControlTiempo">⏱ Ir a Control Tiempo</button>
+          <button class="btn-load-default" id="btnCargarPredeterminadas">🔄 Cargar Tareas Predeterminadas</button>
+        </div>
+        
+        <!-- FORMULARIO -->
+        <div id="formulario" class="form-section">
+          <h3>📝 Añadir/Editar Tarea</h3>
+          
+          <div class="admin-form-group">
+            <label for="tareaNombre">Nombre de la Tarea *</label>
+            <input type="text" id="tareaNombre" placeholder="Ej: Bandeja AT Derecha">
+          </div>
+          
+          <!-- FILA PARA TIPO Y TIEMPO -->
+          <div class="admin-nav-buttons-row">
+            <div class="admin-form-group">
+              <label for="tareaTipo">Tipo de Tarea *</label>
+              <select id="tareaTipo">
+                <option value="">— Selecciona tipo —</option>
+                <option value="DC3">DC3</option>
+                <option value="MS3">MS3</option>
+                <option value="Personalizada">Personalizada</option>
+              </select>
+            </div>
+            
+            <div class="admin-form-group">
+              <label for="tareaTiempo">Tiempo Estimado (horas) *</label>
+              <input type="number" id="tareaTiempo" step="0.01" min="0" placeholder="Ej: 1.27">
+            </div>
+          </div>
+          
+          <div class="admin-form-group">
+            <label for="tareaTitulo">Título Descriptivo *</label>
+            <input type="text" id="tareaTitulo" placeholder="Ej: Instalación Completa">
+          </div>
+          
+          <!-- SECCIÓN DE ELEMENTOS CRÍTICOS -->
+          <h4>⚠️ Elementos Críticos</h4>
+          <div id="criticosContainer"></div>
+          <button type="button" class="btn-add" id="btnAddCritico">➕ Añadir Elemento Crítico</button>
+          
+          <!-- SECCIÓN DE MATERIALES -->
+          <h4>📦 Materiales Necesarios</h4>
+          <div id="materialesContainer"></div>
+          <button type="button" class="btn-add" id="btnAddMaterial">➕ Añadir Material</button>
+          
+          <!-- SECCIÓN DE HERRAMIENTAS -->
+          <h4>🛠️ Herramientas</h4>
+          <div id="herramientasContainer"></div>
+          <button type="button" class="btn-add" id="btnAddHerramienta">➕ Añadir Herramienta</button>
+          
+          <!-- SECCIÓN DE PASOS -->
+          <h4>📋 Pasos de Instalación</h4>
+          <div id="pasosContainer"></div>
+          <button type="button" class="btn-add" id="btnAddPaso">➕ Añadir Paso</button>
+          
+          <div style="margin-top: 20px; display: flex; gap: 10px;">
+            <button class="btn-admin-primary" id="btnGuardarTarea">💾 Guardar Tarea</button>
+            <button class="btn-small" id="btnLimpiarFormulario">🗑️ Limpiar</button>
+          </div>
+        </div>
+        
+        <!-- LISTA -->
+        <div id="lista" class="form-section" style="display: none;">
+          <h3>📋 Tareas Guardadas</h3>
+          <div id="tareasLista" class="tareas-lista"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- MODALES Y COMPONENTES COMPARTIDOS -->
+  
+  <!-- Modal de instrucciones (OCUPA TODA LA PANTALLA) -->
+  <div id="modalInstrucciones" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitulo">Instrucciones de Tarea</h2>
+        <button id="closeModal" class="close-modal">×</button>
+      </div>
+      <div id="modalBody" class="modal-body">
+        <!-- Aquí se mostrarán las instrucciones -->
+      </div>
+      <div class="modal-footer">
+        <button id="btnAnterior" class="modal-nav-btn" disabled>◀️ Anterior</button>
+        <div id="contadorPaginas" class="page-counter">Paso 1 de 1</div>
+        <button id="btnSiguiente" class="modal-nav-btn">Siguiente ▶️</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal de inicio de sesión -->
+  <div id="loginModal" class="login-modal">
+    <div>
+      <h2 style="color:#2c3e50;margin-bottom:20px;">🔐 Iniciar Sesión</h2>
+      <div style="margin-bottom:15px;">
+        <label style="display:block;margin-bottom:5px;font-weight:600;">Email</label>
+        <input type="email" id="loginEmail" placeholder="tu@email.com" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;">
+      </div>
+      <div style="margin-bottom:20px;">
+        <label style="display:block;margin-bottom:5px;font-weight:600;">Contraseña</label>
+        <input type="password" id="loginPassword" placeholder="Contraseña" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;">
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:15px;">
+        <button id="btnLoginSubmit" style="flex:1;padding:12px;background:#2ecc71;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;">Iniciar Sesión</button>
+        <button id="btnLoginRegister" style="flex:1;padding:12px;background:#3498db;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;">Registrarse</button>
+      </div>
+      <div style="text-align:center;margin-bottom:15px;">
+        <button id="btnLoginAnonymous" style="padding:10px;background:#95a5a6;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;">Continuar como invitado</button>
+      </div>
+      <button id="btnLoginClose" style="width:100%;padding:10px;background:#e74c3c;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;">Cancelar</button>
+    </div>
+  </div>
+  
+  <!-- Toast unificado -->
+  <div id="toast" class="toast"></div>
+  
+  <!-- Audios -->
+  <audio id="beep" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" preload="auto"></audio>
+  <audio id="warningBeep" src="https://actions.google.com/sounds/v1/cartoon/cartoon_whistle.ogg" preload="auto"></audio>
+
+  <script>
+    // =============================================
+    // CONFIGURACIÓN DE FIREBASE
+    // =============================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyBwfcFZvKRQcgv-RclTVCiz9kEtcT-Edy0",
+      authDomain: "traxx-99b01.firebaseapp.com",
+      projectId: "traxx-99b01",
+      storageBucket: "traxx-99b01.firebasestorage.app",
+      messagingSenderId: "739738172366",
+      appId: "1:739738172366:web:f749e5bbe886a9cc1e899f"
+    };
+
+    // =============================================
+    // VARIABLES GLOBALES COMPARTIDAS
+    // =============================================
+    // Variables para control de tiempo
+    let db = null;
+    let auth = null;
+    let currentUser = null;
+    let firebaseInitialized = false;
+    let inicioMs = 0;
+    let rafId = null;
+    let tiempoEstandar = 0;
+    let silenciado = false;
+    let alerta10minMostrada = false;
+    let alerta5minMostrada = false;
+    let alertaExcedidoMostrada = false;
+    let modoPrueba = false;
+    
+    // Variables para admin de tareas
+    let tareasGuardadas = {};
+    let tareaEditando = null;
+    
+    // Variables para navegación
+    let currentSection = 'control-tiempo';
+    let currentAdminSubsection = 'formulario';
+    
+    // Variables para modal de instrucciones
+    let instruccionesActuales = null;
+    let pasoActual = 0;
+    let totalPasos = 0;
+    
+    // TAREAS PREDEFINIDAS PARA CONTROL DE TIEMPO
+    const tareasBase = {
+      "Bandeja AT Derecha":1.27,
+      "Bandeja AT Izquierda":1.27,
+      "Contactor QA1200, QA2200":1.66,
+      "Contactor QA1240, QA2240":2.46,
+      "DCU":1.80,
+      "Contactor QB1240, QB2240, Transductores tensiones, condensador":2.11,
+      "Desmontar Calderería y Placa Conectores":2.31,
+      "Psus, Switch, Bombas":1.62,
+      "Premecanico Transductores Corriente Izquierdo":1.83,
+      "Premecanico Transductores Corriente Derecho":1.83,
+      "PreElectrico Transductores Corriente y BusBars":2.07,
+      "DC-LINK Superior e Inferior":2.19,
+      "Conexion SZ/KK y I/O":1.50
+    };
+
+    // TAREAS PREDETERMINADAS PARA ADMIN - MARCAR COMO DC3
+    const tareasPredeterminadas = {
+      "Bandeja AT Derecha": {
+        tipo: "DC3",
+        titulo: "Instalación Bandeja AT Derecha",
+        tiempo: 1.5,
+        elementosCriticos: [
+          {
+            titulo: "TORNILLOS DE ANCLAJE",
+            descripcion: "Verificar que los tornillos de anclaje sean de grado 8.8 o superior",
+            critico: true
+          }
+        ],
+        materiales: [
+          {
+            nombre: "Tornillos M8x40",
+            descripcion: "Tornillos de fijación grado 8.8",
+            cantidad: 6,
+            unidad: "unidades"
+          }
+        ],
+        herramientas: [
+          {
+            nombre: "Llave torque 25Nm",
+            descripcion: "Para apriete controlado de tornillos",
+            imagen: ""
+          }
+        ],
+        pasos: [
+          {
+            titulo: "Preparación del área",
+            descripcion: "Limpiar y marcar la posición donde irá la bandeja",
+            imagen: "",
+            video: ""
+          }
+        ]
+      }
+    };
+
+    // =============================================
+    // FUNCIONES DE NAVEGACIÓN (GLOBALES)
+    // =============================================
+    function mostrarSeccion(seccionId) {
+      // Ocultar sección actual
+      document.getElementById(currentSection).classList.remove('active');
+      
+      // Mostrar nueva sección
+      document.getElementById(seccionId).classList.add('active');
+      currentSection = seccionId;
+      
+      // Inicializar la sección si es necesario
+      if (seccionId === 'control-tiempo') {
+        inicializarControlTiempo();
+      } else if (seccionId === 'admin-tareas') {
+        inicializarAdminTareas();
+      }
+    }
+    
+    function mostrarSubseccionAdmin(subseccionId) {
+      // Ocultar subsección actual en admin
+      const adminSubsections = ['formulario', 'lista'];
+      adminSubsections.forEach(id => {
+        const elem = document.getElementById(id);
+        if (elem) elem.style.display = 'none';
+      });
+      
+      // Mostrar nueva subsección
+      document.getElementById(subseccionId).style.display = 'block';
+      currentAdminSubsection = subseccionId;
+    }
+
+    // =============================================
+    // FUNCIONES COMPARTIDAS (GLOBALES)
+    // =============================================
+    function mostrarToast(mensaje, tipo = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = mensaje;
+      toast.style.display = 'block';
+      toast.style.background = tipo === 'error' ? 'var(--danger)' : 
+                               tipo === 'warning' ? 'var(--warning)' : 
+                               tipo === 'info' ? 'var(--info)' : 'var(--accent)';
+      
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 3000);
+    }
+
+    // =============================================
+    // INICIALIZACIÓN DE FIREBASE (COMPARTIDA)
+    // =============================================
+    async function initializeFirebase() {
+      try {
+        updateFirebaseStatus('🔄 Conectando a Firebase...', 'warning');
+        
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        auth = firebase.auth();
+        
+        // Escuchar cambios en la autenticación
+        auth.onAuthStateChanged(async (user) => {
+          if (user) {
+            currentUser = user;
+            firebaseInitialized = true;
+            
+            // Mostrar información del usuario
+            updateUserInfo(user);
+            
+            updateFirebaseStatus(`✅ Conectado como: ${user.email || 'Usuario anónimo'}`, 'connected');
+            
+            // Cargar datos desde Firebase
+            await loadDataFromFirebase();
+            
+            setTimeout(() => {
+              document.getElementById('firebaseStatus').style.display = 'none';
+            }, 3000);
+            
+          } else {
+            // Iniciar sesión anónima automáticamente
+            try {
+              await auth.signInAnonymously();
+            } catch (authError) {
+              console.error('Error en autenticación anónima:', authError);
+              updateFirebaseStatus('❌ Error de autenticación', 'error');
+              firebaseInitialized = false;
+            }
+          }
+        });
+        
+      } catch (error) {
+        console.error('Error al inicializar Firebase:', error);
+        updateFirebaseStatus('❌ Error al conectar con Firebase', 'error');
+        mostrarToast('⚠️ Usando almacenamiento local (modo offline)', 'warning');
+      }
+    }
+    
+    function updateFirebaseStatus(message, type = 'warning') {
+      const statusDiv = document.getElementById('firebaseStatus');
+      if (!statusDiv) return;
+      
+      statusDiv.textContent = message;
+      statusDiv.className = 'firebase-status';
+      
+      if (type === 'connected') {
+        statusDiv.classList.add('connected');
+      } else if (type === 'error') {
+        statusDiv.classList.add('error');
+      }
+      
+      statusDiv.style.display = 'block';
+    }
+    
+    function updateUserInfo(user) {
+      const userInfo = document.getElementById('userInfo');
+      const userAvatar = document.getElementById('userAvatar');
+      const userEmail = document.getElementById('userEmail');
+      
+      if (!userInfo || !userAvatar || !userEmail) return;
+      
+      if (user.email) {
+        // Usuario con email
+        userAvatar.textContent = user.email.charAt(0).toUpperCase();
+        userEmail.textContent = user.email;
+      } else {
+        // Usuario anónimo
+        userAvatar.textContent = 'A';
+        userEmail.textContent = 'Usuario Anónimo';
+      }
+      
+      userInfo.style.display = 'flex';
+    }
+
+    // =============================================
+    // FUNCIONES DE CONTROL DE TIEMPO (GLOBALES)
+    // =============================================
+    async function fillTareasForTipo(tipo) {
+      const selTarea = document.getElementById('selTarea');
+      if (!selTarea) return;
+      
+      selTarea.innerHTML = '';
+      const inpNombrePersonalizado = document.getElementById('inpNombrePersonalizado');
+      if (inpNombrePersonalizado) inpNombrePersonalizado.value = '';
+    
+      if(!tipo) {
+        selTarea.innerHTML = '<option value="">— Elige tipo primero —</option>';
+        const divPersonalizada = document.getElementById('divPersonalizada');
+        if (divPersonalizada) divPersonalizada.style.display = 'none';
+        selTarea.style.display = 'block';
+        actualizarBotonInstrucciones();
+        return;
+      }
+    
+      if(tipo === 'Personalizada') {
+        selTarea.style.display = 'none';
+        const divPersonalizada = document.getElementById('divPersonalizada');
+        if (divPersonalizada) divPersonalizada.style.display = 'block';
+        actualizarBotonInstrucciones();
+        return;
+      }
+    
+      const divPersonalizada = document.getElementById('divPersonalizada');
+      if (divPersonalizada) divPersonalizada.style.display = 'none';
+      selTarea.style.display = 'block';
+    
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = '— Selecciona tarea —';
+      selTarea.appendChild(placeholder);
+    
+      // CARGAR TAREAS FILTRANDO POR TIPO
+      const tareasInstrucciones = JSON.parse(localStorage.getItem('tareasInstrucciones') || '{}');
+      
+      // Filtrar solo las tareas del tipo seleccionado
+      const tareasFiltradas = [];
+      
+      // Agregar tareas del tipo específico desde tareasInstrucciones
+      Object.entries(tareasInstrucciones).forEach(([nombre, tarea]) => {
+        if (tarea.tipo === tipo) {
+          tareasFiltradas.push({
+            nombre: nombre,
+            tiempo: tarea.tiempo,
+            tipo: tarea.tipo
+          });
+        }
+      });
+      
+      // Si no hay tareas del tipo seleccionado, podemos mostrar un mensaje
+      if (tareasFiltradas.length === 0) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = '— No hay tareas de este tipo —';
+        option.disabled = true;
+        selTarea.appendChild(option);
+      } else {
+        // Ordenar las tareas alfabéticamente
+        tareasFiltradas.sort((a, b) => a.nombre.localeCompare(b.nombre));
+        
+        // Agregar tareas al select
+        tareasFiltradas.forEach(tarea => {
+          const option = document.createElement('option');
+          option.value = tarea.nombre;
+          option.textContent = tarea.nombre;
+          option.setAttribute('data-tiempo', tarea.tiempo);
+          option.setAttribute('data-tipo', tarea.tipo);
+          selTarea.appendChild(option);
+        });
+      }
+      
+      actualizarBotonInstrucciones();
+    }
+    
+    function actualizarBotonInstrucciones() {
+      const tareaSeleccionada = document.getElementById('selTarea')?.value;
+      const btn = document.getElementById('btnInstrucciones');
+      if (btn) {
+        btn.disabled = !tareaSeleccionada;
+      }
+    }
+    
+    function formatear(ms) {
+      const t = Math.floor(Math.abs(ms)/1000);
+      const h = String(Math.floor(t/3600)).padStart(2,'0');
+      const m = String(Math.floor((t%3600)/60)).padStart(2,'0');
+      const s = String(t%60).padStart(2,'0');
+      return `${h}:${m}:${s}`;
+    }
+    
+    function convertDec(h) {
+      const t = Math.round(h*3600);
+      const hh = Math.floor(t/3600), mm = Math.floor((t%3600)/60), ss = t%60;
+      return `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+    }
+    
+    function msFromHHMMSS(hhmmss) {
+      const parts = (hhmmss||'00:00:00').split(':').map(x=>parseInt(x,10)||0);
+      return ((parts[0]*3600)+(parts[1]*60)+parts[2]) * 1000;
+    }
+    
+    function iniciarControlTiempo() {
+      const inpOperacion = document.getElementById('inpOperacion');
+      const selTipo = document.getElementById('selTipo');
+      const selTarea = document.getElementById('selTarea');
+      const inpTiempo = document.getElementById('inpTiempo');
+      
+      if(!inpOperacion?.value.trim()){ mostrarToast('Introduce Nº de Operación', 'error'); return; }
+      if(!selTipo?.value){ mostrarToast('Selecciona tipo', 'error'); return; }
+      if(selTipo.value !== 'Personalizada' && !selTarea?.value){ mostrarToast('Selecciona una tarea', 'error'); return; }
+      const v = parseFloat(inpTiempo?.value || 0);
+      if(isNaN(v) || v <= 0){ mostrarToast('Introduce un tiempo válido', 'error'); return; }
+      if(rafId) return;
+    
+      tiempoEstandar = v;
+      inicioMs = Date.now();
+      alerta10minMostrada = false;
+      alerta5minMostrada = false;
+      alertaExcedidoMostrada = false;
+      modoPrueba = false;
+    
+      const excedidoElem = document.getElementById('excedido');
+      if (excedidoElem) excedidoElem.style.display = 'none';
+      
+      const progresoFill = document.getElementById('progresoFill');
+      if (progresoFill) {
+        progresoFill.style.width = '0%';
+        progresoFill.classList.remove('excedido');
+      }
+      
+      const progresoText = document.getElementById('progresoText');
+      if (progresoText) progresoText.textContent = '0%';
+      
+      const btnStart = document.getElementById('btnStart');
+      if (btnStart) btnStart.disabled = true;
+      
+      const btnTerminar = document.getElementById('btnTerminar');
+      if (btnTerminar) btnTerminar.disabled = false;
+    
+      guardarTareaActiva();
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(loopControlTiempo);
+      
+      mostrarToast('⏱ Tarea iniciada', 'success');
+    }
+    
+    async function terminarControlTiempo() {
+      if(!inicioMs) return;
+      if(rafId){ cancelAnimationFrame(rafId); rafId = null; }
+    
+      const trans = Date.now() - inicioMs;
+      const estimMs = modoPrueba ? (tiempoEstandar * 1000) : (tiempoEstandar * 3600000);
+      const restante = estimMs - trans;
+      const signo = restante >= 0 ? '+' : '-';
+      const diferencia = formatear(Math.abs(restante));
+      
+      const oper = document.getElementById('inpOperacion')?.value.trim() || '';
+      const tipo = document.getElementById('selTipo')?.value || '';
+      const tareaNombre = tipo === 'Personalizada' ? 
+        (document.getElementById('inpNombrePersonalizado')?.value || 'Sin nombre') : 
+        (document.getElementById('selTarea')?.value || '');
+    
+      const tareaObj = {
+        operacion: oper,
+        tipo: tipo,
+        nombre: tareaNombre,
+        estimado: tiempoEstandar,
+        real: formatear(trans),
+        diferencia: diferencia,
+        signo: signo,
+        fecha: new Date().toISOString(),
+        estado: 'completada'
+      };
+    
+      // Guardar en Firebase
+      const firebaseSaved = await saveTaskToFirebase(tareaObj);
+      
+      if (firebaseSaved) {
+        mostrarToast('✅ Tarea guardada en la nube', 'success');
+      } else {
+        mostrarToast('✅ Tarea guardada localmente', 'warning');
+      }
+      
+      borrarTareaActiva();
+      renderTabla();
+      
+      // Limpiar campos
+      const selTarea = document.getElementById('selTarea');
+      if (selTarea) selTarea.value = '';
+      
+      const inpNombrePersonalizado = document.getElementById('inpNombrePersonalizado');
+      if (inpNombrePersonalizado) inpNombrePersonalizado.value = '';
+      
+      const inpTiempo = document.getElementById('inpTiempo');
+      if (inpTiempo) inpTiempo.value = '';
+      
+      const minutosConvertidos = document.getElementById('minutosConvertidos');
+      if (minutosConvertidos) minutosConvertidos.textContent = '00:00:00';
+      
+      const btnInstrucciones = document.getElementById('btnInstrucciones');
+      if (btnInstrucciones) btnInstrucciones.disabled = true;
+      
+      // Reactivar botones
+      const btnStart = document.getElementById('btnStart');
+      if (btnStart) btnStart.disabled = false;
+      
+      const btnTerminar = document.getElementById('btnTerminar');
+      if (btnTerminar) btnTerminar.disabled = true;
+      
+      // Resetear variables
+      inicioMs = 0;
+      tiempoEstandar = 0;
+      
+      const cronometro = document.getElementById('cronometro');
+      if (cronometro) {
+        cronometro.textContent = '00:00:00';
+        cronometro.style.color = '';
+      }
+      
+      const excedidoElem = document.getElementById('excedido');
+      if (excedidoElem) excedidoElem.style.display = 'none';
+      
+      const progresoFill = document.getElementById('progresoFill');
+      if (progresoFill) {
+        progresoFill.style.width = '0%';
+        progresoFill.classList.remove('excedido');
+      }
+      
+      const progresoText = document.getElementById('progresoText');
+      if (progresoText) progresoText.textContent = '0%';
+    }
+    
+    function reiniciarControlTiempo() {
+      if(rafId){ cancelAnimationFrame(rafId); rafId = null; }
+      inicioMs = 0; 
+      tiempoEstandar = 0; 
+      
+      const cronometro = document.getElementById('cronometro');
+      if (cronometro) {
+        cronometro.textContent = '00:00:00';
+        cronometro.style.color = '';
+      }
+      
+      const excedidoElem = document.getElementById('excedido');
+      if (excedidoElem) excedidoElem.style.display = 'none';
+      
+      const progresoFill = document.getElementById('progresoFill');
+      if (progresoFill) {
+        progresoFill.style.width = '0%';
+        progresoFill.classList.remove('excedido');
+      }
+      
+      const progresoText = document.getElementById('progresoText');
+      if (progresoText) progresoText.textContent = '0%';
+      
+      const btnStart = document.getElementById('btnStart');
+      if (btnStart) btnStart.disabled = false;
+      
+      const btnTerminar = document.getElementById('btnTerminar');
+      if (btnTerminar) btnTerminar.disabled = true;
+      
+      mostrarToast('🔄 Tarea reiniciada', 'warning');
+    }
+    
+    function actualizarTiempo() {
+      if(!inicioMs) return;
+      
+      const elapsed = Date.now() - inicioMs;
+      const estimMs = modoPrueba ? (tiempoEstandar * 1000) : (tiempoEstandar * 3600000);
+      const restante = estimMs - elapsed;
+    
+      const cronometro = document.getElementById('cronometro');
+      if (cronometro) {
+        if (restante >= 0) {
+          cronometro.textContent = `Restante: ${formatear(restante)}`;
+          cronometro.style.color = '';
+        } else {
+          cronometro.textContent = `Excedido: ${formatear(Math.abs(restante))}`;
+          cronometro.style.color = 'var(--danger)';
+        }
+      }
+    
+      const progreso = Math.min(100, (elapsed / estimMs) * 100);
+      const progresoFill = document.getElementById('progresoFill');
+      if (progresoFill) {
+        progresoFill.style.width = `${progreso}%`;
+      }
+      
+      const progresoText = document.getElementById('progresoText');
+      if (progresoText) {
+        progresoText.textContent = `${Math.round(progreso)}%`;
+      }
+    
+      if(restante <= 0 && !alertaExcedidoMostrada) {
+        const progresoFill = document.getElementById('progresoFill');
+        if (progresoFill) {
+          progresoFill.classList.add('excedido');
+        }
+        
+        const excedidoElem = document.getElementById('excedido');
+        if (excedidoElem) {
+          excedidoElem.style.display = 'block';
+          excedidoElem.textContent = `-${formatear(Math.abs(restante))} excedido`;
+        }
+        alertaExcedidoMostrada = true;
+      }
+    }
+    
+    function loopControlTiempo() {
+      actualizarTiempo();
+      rafId = requestAnimationFrame(loopControlTiempo);
+    }
+    
+    function guardarTareaActiva() {
+      if(!inicioMs) return;
+      
+      const tareaActiva = {
+        inicio: inicioMs,
+        tiempoEstandar: tiempoEstandar,
+        operacion: document.getElementById('inpOperacion')?.value.trim() || '',
+        tipo: document.getElementById('selTipo')?.value || '',
+        tarea: document.getElementById('selTipo')?.value === 'Personalizada' ? 
+          (document.getElementById('inpNombrePersonalizado')?.value || 'Sin nombre') : 
+          (document.getElementById('selTarea')?.value || '')
+      };
+      
+      localStorage.setItem('tareaActiva', JSON.stringify(tareaActiva));
+    }
+    
+    function borrarTareaActiva() {
+      localStorage.removeItem('tareaActiva');
+    }
+    
+    function restaurarTareaActiva() {
+      const tareaActiva = JSON.parse(localStorage.getItem('tareaActiva') || 'null');
+      if(!tareaActiva) return false;
+      
+      const inpOperacion = document.getElementById('inpOperacion');
+      if (inpOperacion) inpOperacion.value = tareaActiva.operacion || '';
+      
+      const selTipo = document.getElementById('selTipo');
+      if (selTipo) selTipo.value = tareaActiva.tipo || '';
+      
+      fillTareasForTipo(tareaActiva.tipo);
+      
+      if(tareaActiva.tipo === 'Personalizada') {
+        const inpNombrePersonalizado = document.getElementById('inpNombrePersonalizado');
+        if (inpNombrePersonalizado) inpNombrePersonalizado.value = tareaActiva.tarea || '';
+      } else {
+        setTimeout(() => {
+          const selTarea = document.getElementById('selTarea');
+          if (selTarea) selTarea.value = tareaActiva.tarea || '';
+          actualizarBotonInstrucciones();
+        }, 100);
+      }
+      
+      const inpTiempo = document.getElementById('inpTiempo');
+      if (inpTiempo) inpTiempo.value = tareaActiva.tiempoEstandar || '';
+      
+      const minutosConvertidos = document.getElementById('minutosConvertidos');
+      if (minutosConvertidos) minutosConvertidos.textContent = convertDec(tareaActiva.tiempoEstandar || 0);
+      
+      inicioMs = tareaActiva.inicio;
+      tiempoEstandar = tareaActiva.tiempoEstandar;
+      
+      const btnStart = document.getElementById('btnStart');
+      if (btnStart) btnStart.disabled = true;
+      
+      const btnTerminar = document.getElementById('btnTerminar');
+      if (btnTerminar) btnTerminar.disabled = false;
+      
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(loopControlTiempo);
+      
+      mostrarToast('⏱ Tarea activa restaurada', 'warning');
+      return true;
+    }
+    
+    function renderTabla() {
+      const tbody = document.querySelector('#tabla tbody');
+      if (!tbody) return;
+      
+      tbody.innerHTML = '';
+      const hist = JSON.parse(localStorage.getItem('historial')||'[]');
+      
+      const fechaFiltro = document.getElementById('filtroFecha')?.value || '';
+      const operacionFiltro = document.getElementById('filtroOperacion')?.value.trim().toLowerCase() || '';
+      let totalMs = 0;
+      
+      const registrosFiltrados = hist.filter(r => {
+        const fechaRegistro = r.fecha?.slice(0,10) || '';
+        const operacionRegistro = (r.operacion || '').toLowerCase();
+        
+        if (fechaFiltro && fechaRegistro !== fechaFiltro) return false;
+        if (operacionFiltro && !operacionRegistro.includes(operacionFiltro)) return false;
+        return true;
+      });
+      
+      registrosFiltrados.forEach(r => {
+        const diferenciaMs = msFromHHMMSS(r.diferencia);
+        totalMs += (r.signo === '+') ? diferenciaMs : -diferenciaMs;
+        
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.operacion || ''}</td>
+          <td>${r.tipo || ''}</td>
+          <td>${r.nombre || ''}</td>
+          <td>${r.estimado || ''}</td>
+          <td>${r.real || '00:00:00'}</td>
+          <td class="${r.signo === '+' ? 'diff-plus' : 'diff-minus'}">${r.signo}${r.diferencia}</td>
+          <td>${r.fecha ? new Date(r.fecha).toLocaleDateString('es-ES') : 'N/A'}</td>
+          <td>✅ Completada</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    
+      const signoTotal = totalMs >= 0 ? '+' : '-';
+      const totalFormateado = formatear(Math.abs(totalMs));
+      const totalElement = document.getElementById('floatingTotalValue');
+      if (totalElement) {
+        totalElement.textContent = `${signoTotal}${totalFormateado}`;
+        totalElement.style.color = totalMs >= 0 ? 'var(--success)' : 'var(--danger)';
+      }
+    }
+
+    // =============================================
+    // FUNCIONES DE FIREBASE PARA CONTROL DE TIEMPO
+    // =============================================
+    async function saveTaskToFirebase(tareaObj) {
+      if (!firebaseInitialized || !db || !currentUser) {
+        return false;
+      }
+      
+      try {
+        const taskWithUser = {
+          ...tareaObj,
+          userId: currentUser.uid,
+          userEmail: currentUser.email || 'anonymous',
+          syncTime: firebase.firestore.FieldValue.serverTimestamp(),
+          syncStatus: 'synced'
+        };
+        
+        await db.collection('tasks').add(taskWithUser);
+        
+        // Guardar también en localStorage
+        const localHistorial = JSON.parse(localStorage.getItem('historial') || '[]');
+        localHistorial.push(tareaObj);
+        localStorage.setItem('historial', JSON.stringify(localHistorial));
+        
+        return true;
+      } catch (error) {
+        console.error('Error al guardar en Firebase:', error);
+        
+        // Guardar en localStorage para sincronizar después
+        const pendingTasks = JSON.parse(localStorage.getItem('pendingSync') || '[]');
+        pendingTasks.push({...tareaObj, syncStatus: 'pending'});
+        localStorage.setItem('pendingSync', JSON.stringify(pendingTasks));
+        
+        return false;
+      }
+    }
+    
+    async function loadDataFromFirebase() {
+      if (!firebaseInitialized || !db || !currentUser) {
+        renderTabla();
+        return;
+      }
+      
+      try {
+        updateFirebaseStatus('📥 Sincronizando datos desde Firebase...', 'warning');
+        
+        // 1. Cargar tareas del control de tiempo
+        const querySnapshot = await db.collection('tasks')
+          .where('userId', '==', currentUser.uid)
+          .orderBy('syncTime', 'desc')
+          .limit(100)
+          .get();
+        
+        const firebaseTasks = [];
+        querySnapshot.forEach((doc) => {
+          const taskData = doc.data();
+          firebaseTasks.push({
+            ...taskData,
+            id: doc.id,
+            fecha: taskData.fecha || taskData.syncTime?.toDate().toISOString()
+          });
+        });
+        
+        // Guardar en localStorage
+        localStorage.setItem('historial', JSON.stringify(firebaseTasks));
+        
+        // 2. Cargar instrucciones de tareas
+        const instructionsSnapshot = await db.collection('taskInstructions')
+          .where('userId', '==', currentUser.uid)
+          .get();
+        
+        const firebaseInstructions = {};
+        instructionsSnapshot.forEach((doc) => {
+          const instructionData = doc.data();
+          const nombre = instructionData.nombre || doc.id;
+          
+          firebaseInstructions[nombre] = {
+            tipo: instructionData.tipo,
+            titulo: instructionData.titulo,
+            tiempo: instructionData.tiempo,
+            elementosCriticos: instructionData.elementosCriticos || [],
+            materiales: instructionData.materiales || [],
+            herramientas: instructionData.herramientas || [],
+            pasos: instructionData.pasos || []
+          };
+        });
+        
+        // Combinar con tareas locales
+        const localInstructions = JSON.parse(localStorage.getItem('tareasInstrucciones') || '{}');
+        const combinedInstructions = { ...localInstructions, ...firebaseInstructions };
+        
+        // Guardar combinado en localStorage
+        localStorage.setItem('tareasInstrucciones', JSON.stringify(combinedInstructions));
+        tareasGuardadas = combinedInstructions;
+        
+        // 3. Sincronizar tareas pendientes
+        await syncPendingTasks();
+        await syncPendingInstructions();
+        
+        renderTabla();
+        
+        updateFirebaseStatus(`✅ ${firebaseTasks.length} tareas sincronizadas`, 'connected');
+        
+      } catch (error) {
+        console.error('Error al cargar desde Firebase:', error);
+        renderTabla();
+      }
+    }
+    
+    async function syncPendingTasks() {
+      if (!firebaseInitialized || !db || !currentUser) return;
+      
+      const pendingTasks = JSON.parse(localStorage.getItem('pendingSync') || '[]');
+      if (pendingTasks.length === 0) return;
+      
+      try {
+        const updatedPendingTasks = [];
+        
+        for (const task of pendingTasks) {
+          try {
+            const taskWithUser = {
+              ...task,
+              userId: currentUser.uid,
+              userEmail: currentUser.email || 'anonymous',
+              syncTime: firebase.firestore.FieldValue.serverTimestamp(),
+              syncStatus: 'synced'
+            };
+            
+            await db.collection('tasks').add(taskWithUser);
+          } catch (error) {
+            updatedPendingTasks.push(task);
+          }
+        }
+        
+        localStorage.setItem('pendingSync', JSON.stringify(updatedPendingTasks));
+        
+        if (updatedPendingTasks.length === 0) {
+          console.log('✅ Tareas pendientes sincronizadas');
+        }
+        
+      } catch (error) {
+        console.error('Error en sincronización:', error);
+      }
+    }
+
+    // =============================================
+    // FUNCIONES DE ADMINISTRADOR DE TAREAS (GLOBALES)
+    // =============================================
+    function inicializarAdminTareas() {
+      console.log('🔄 Inicializando administrador de tareas...');
+      
+      // Cargar tareas existentes
+      cargarTareasDesdePrincipal();
+      mostrarTareasAdmin();
+      
+      // Inicializar formulario con elementos vacíos si es necesario
+      const criticosContainer = document.getElementById('criticosContainer');
+      if (criticosContainer && criticosContainer.children.length === 0) {
+        agregarCritico();
+        agregarMaterial();
+        agregarHerramienta();
+        agregarPaso();
+      }
+    }
+    
+    function cargarTareasDesdePrincipal() {
+      console.log('📥 Cargando tareas desde sistema...');
+      
+      // Intentar cargar desde tareasInstrucciones
+      const tareasStorage = localStorage.getItem('tareasInstrucciones');
+      if (tareasStorage) {
+        tareasGuardadas = JSON.parse(tareasStorage);
+        console.log('📁 Tareas cargadas:', Object.keys(tareasGuardadas).length, 'tareas');
+        
+        // Mostrar estadísticas por tipo
+        const tipos = {};
+        Object.values(tareasGuardadas).forEach(tarea => {
+          const tipo = tarea.tipo || 'Sin tipo';
+          tipos[tipo] = (tipos[tipo] || 0) + 1;
+        });
+        console.log('📊 Distribución por tipo:', tipos);
+        return;
+      }
+      
+      // Si no hay, inicializar vacío
+      console.log('📁 No hay tareas en localStorage, inicializando vacío');
+      tareasGuardadas = {};
+    }
+    
+    function cargarTareasPredeterminadasAdmin() {
+      console.log('🔄 Cargando tareas predeterminadas...');
+      
+      // Cargar tareas existentes
+      cargarTareasDesdePrincipal();
+      
+      // Combinar sin sobrescribir tareas existentes
+      Object.keys(tareasPredeterminadas).forEach(nombre => {
+        if (!tareasGuardadas[nombre]) {
+          tareasGuardadas[nombre] = tareasPredeterminadas[nombre];
+          console.log('✅ Tarea predeterminada añadida:', nombre, 'Tipo:', tareasPredeterminadas[nombre].tipo);
+        }
+      });
+      
+      // También agregar tareas base como DC3 (si no existen ya)
+      Object.keys(tareasBase).forEach(nombre => {
+        if (!tareasGuardadas[nombre]) {
+          tareasGuardadas[nombre] = {
+            tipo: "DC3", // Tipo por defecto
+            titulo: nombre,
+            tiempo: tareasBase[nombre],
+            elementosCriticos: [],
+            materiales: [],
+            herramientas: [],
+            pasos: [
+              {
+                titulo: "Instalación básica",
+                descripcion: `Complete los pasos de instalación para ${nombre}`,
+                imagen: "",
+                video: ""
+              }
+            ]
+          };
+        }
+      });
+      
+      // GUARDAR EN AMBOS SISTEMAS
+      localStorage.setItem('tareasInstrucciones', JSON.stringify(tareasGuardadas));
+      actualizarTodasTareasBase(); // Solo guarda DC3 en tareasBase
+      
+      mostrarTareasAdmin();
+      mostrarToast('Tareas predeterminadas cargadas correctamente', 'success');
+    }
+    
+    function actualizarTodasTareasBase() {
+      let tareasBaseLS = JSON.parse(localStorage.getItem('tareasBase') || '{}');
+      const tareasInstrucciones = JSON.parse(localStorage.getItem('tareasInstrucciones') || '{}');
+      
+      // Limpiar tareasBase primero
+      tareasBaseLS = {};
+      
+      // Solo agregar tareas DC3 a tareasBase (para mantener compatibilidad con el sistema antiguo)
+      Object.entries(tareasInstrucciones).forEach(([nombre, tarea]) => {
+        if (tarea.tipo === 'DC3') {
+          tareasBaseLS[nombre] = tarea.tiempo;
+        }
+      });
+      
+      localStorage.setItem('tareasBase', JSON.stringify(tareasBaseLS));
+      console.log('📊 Tareas base actualizadas (solo DC3):', tareasBaseLS);
+    }
+    
+    function actualizarTareasBase(nombre, tiempo, tipo) {
+      let tareasBaseLS = JSON.parse(localStorage.getItem('tareasBase') || '{}');
+      
+      // Solo agregar a tareasBase si es de tipo DC3 (para compatibilidad)
+      // Esto evita que las tareas MS3 aparezcan en la lista DC3
+      if (tipo === 'DC3') {
+        tareasBaseLS[nombre] = tiempo;
+        localStorage.setItem('tareasBase', JSON.stringify(tareasBaseLS));
+        console.log('⏱ Tiempo actualizado en tareasBase (solo DC3):', nombre, tiempo);
+      } else {
+        // Para tareas MS3, no las agregamos a tareasBase
+        // Así no aparecen en la lista DC3
+        console.log('⏱ Tarea MS3 no agregada a tareasBase:', nombre);
+      }
+    }
+    
+    // FUNCIONES PARA AÑADIR ELEMENTOS
+    function agregarCritico() {
+      const container = document.getElementById('criticosContainer');
+      if (!container) return;
+      
+      const id = 'critico-' + Date.now();
+      
+      const html = `
+        <div class="array-item" id="${id}">
+          <div class="array-header">
+            <h4>Elemento Crítico</h4>
+            <button type="button" class="btn-small" onclick="eliminarElemento('${id}')">❌ Eliminar</button>
+          </div>
+          <div class="admin-form-group">
+            <label>Título del elemento crítico</label>
+            <input type="text" placeholder="Ej: PASTA TÉRMICA NECESARIA">
+          </div>
+          <div class="admin-form-group">
+            <label>Descripción</label>
+            <textarea placeholder="Describa por qué es crítico..."></textarea>
+          </div>
+          <div class="admin-form-group">
+            <label>
+              <input type="checkbox" class="critico-checkbox" checked>
+              Marcar como crítico (mostrará alerta especial)
+            </label>
+          </div>
+        </div>
+      `;
+      container.insertAdjacentHTML('beforeend', html);
+    }
+    
+    function agregarMaterial() {
+      const container = document.getElementById('materialesContainer');
+      if (!container) return;
+      
+      const id = 'material-' + Date.now();
+      
+      const html = `
+        <div class="array-item" id="${id}">
+          <div class="array-header">
+            <h4>Material</h4>
+            <button type="button" class="btn-small" onclick="eliminarElemento('${id}')">❌ Eliminar</button>
+          </div>
+          <div class="form-row">
+            <div class="admin-form-group">
+              <label>Nombre del material</label>
+              <input type="text" placeholder="Ej: Tornillos M6x20">
+            </div>
+            <div class="admin-form-group">
+              <label>Descripción</label>
+              <input type="text" placeholder="Ej: Tornillos de fijación">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="admin-form-group">
+              <label>Cantidad</label>
+              <input type="number" class="material-cantidad-input" value="1" min="0">
+            </div>
+            <div class="admin-form-group">
+              <label>Unidad</label>
+              <input type="text" class="unidad-input" placeholder="Ej: unidades" value="unidades">
+            </div>
+          </div>
+        </div>
+      `;
+      container.insertAdjacentHTML('beforeend', html);
+    }
+    
+    function agregarHerramienta() {
+      const container = document.getElementById('herramientasContainer');
+      if (!container) return;
+      
+      const id = 'herramienta-' + Date.now();
+      const fileInputId = 'file-herramienta-' + Date.now();
+      const previewId = 'preview-herramienta-' + Date.now();
+      const urlInputId = 'url-herramienta-' + Date.now();
+      
+      const html = `
+        <div class="array-item" id="${id}">
+          <div class="array-header">
+            <h4>Herramienta</h4>
+            <button type="button" class="btn-small" onclick="eliminarElemento('${id}')">❌ Eliminar</button>
+          </div>
+          <div class="admin-form-group">
+            <label>Nombre de la herramienta</label>
+            <input type="text" placeholder="Ej: Destornillador de estrella #2">
+          </div>
+          <div class="admin-form-group">
+            <label>Descripción (opcional)</label>
+            <input type="text" placeholder="Ej: Para tornillos de fijación">
+          </div>
+          <div class="admin-form-group">
+            <label>Imagen de la herramienta</label>
+            <div class="image-upload-container">
+              <div class="image-input-container">
+                <input type="text" id="${urlInputId}" placeholder="URL de la imagen (opcional)">
+                <label for="${fileInputId}" class="image-upload-button">📁 Cargar</label>
+                <input type="file" id="${fileInputId}" class="file-input-hidden" accept="image/*" onchange="cargarImagenLocal('${fileInputId}', '${urlInputId}', '${previewId}')">
+              </div>
+              <img id="${previewId}" class="image-preview" src="" alt="Vista previa">
+              <div class="image-upload-info">Puede usar una URL o cargar una imagen local</div>
+            </div>
+          </div>
+        </div>
+      `;
+      container.insertAdjacentHTML('beforeend', html);
+    }
+    
+    function agregarPaso() {
+      const container = document.getElementById('pasosContainer');
+      if (!container) return;
+      
+      const id = 'paso-' + Date.now();
+      const fileInputId = 'file-paso-' + Date.now();
+      const previewId = 'preview-paso-' + Date.now();
+      const urlInputId = 'url-paso-' + Date.now();
+      
+      const html = `
+        <div class="array-item" id="${id}">
+          <div class="array-header">
+            <h4>Paso</h4>
+            <button type="button" class="btn-small" onclick="eliminarElemento('${id}')">❌ Eliminar</button>
+          </div>
+          <div class="admin-form-group">
+            <label>Título del paso</label>
+            <input type="text" placeholder="Ej: Preparación del área">
+          </div>
+          <div class="admin-form-group">
+            <label>Descripción del paso</label>
+            <textarea placeholder="Describa detalladamente este paso..."></textarea>
+          </div>
+          <div class="admin-form-group">
+            <label>Imagen del paso</label>
+            <div class="image-upload-container">
+              <div class="image-input-container">
+                <input type="text" id="${urlInputId}" placeholder="URL de la imagen (opcional)">
+                <label for="${fileInputId}" class="image-upload-button">📁 Cargar</label>
+                <input type="file" id="${fileInputId}" class="file-input-hidden" accept="image/*" onchange="cargarImagenLocal('${fileInputId}', '${urlInputId}', '${previewId}')">
+              </div>
+              <img id="${previewId}" class="image-preview" src="" alt="Vista previa">
+              <div class="image-upload-info">Puede usar una URL o cargar una imagen local</div>
+            </div>
+          </div>
+          <div class="admin-form-group">
+            <label>URL del video (opcional)</label>
+            <input type="text" placeholder="https://ejemplo.com/video-paso.mp4">
+          </div>
+        </div>
+      `;
+      container.insertAdjacentHTML('beforeend', html);
+    }
+    
+    function cargarImagenLocal(fileInputId, urlInputId, previewId) {
+      const fileInput = document.getElementById(fileInputId);
+      const urlInput = document.getElementById(urlInputId);
+      const preview = document.getElementById(previewId);
+      
+      const file = fileInput?.files?.[0];
+      if (file) {
+        // Verificar tamaño del archivo (máximo 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          mostrarToast('⚠️ La imagen es muy grande (máximo 5MB)', 'warning');
+          fileInput.value = ''; // Limpiar input
+          if (urlInput) urlInput.value = '';
+          if (preview) {
+            preview.src = '';
+            preview.style.display = 'none';
+          }
+          return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const dataUrl = e.target.result;
+          
+          // Mostrar preview inmediatamente
+          if (preview) {
+            preview.src = dataUrl;
+            preview.style.display = 'block';
+          }
+          
+          // Para Firebase, necesitamos comprimir o convertir
+          // Por ahora guardamos la Data URL completa
+          if (urlInput) {
+            urlInput.value = dataUrl;
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+    
+    function eliminarElemento(id) {
+      const elemento = document.getElementById(id);
+      if (elemento) {
+        elemento.remove();
+      }
+    }
+    
+    function limpiarFormularioAdmin() {
+      const tareaNombre = document.getElementById('tareaNombre');
+      if (tareaNombre) tareaNombre.value = '';
+      
+      const tareaTipo = document.getElementById('tareaTipo');
+      if (tareaTipo) tareaTipo.value = '';
+      
+      const tareaTitulo = document.getElementById('tareaTitulo');
+      if (tareaTitulo) tareaTitulo.value = '';
+      
+      const tareaTiempo = document.getElementById('tareaTiempo');
+      if (tareaTiempo) tareaTiempo.value = '';
+      
+      const criticosContainer = document.getElementById('criticosContainer');
+      if (criticosContainer) criticosContainer.innerHTML = '';
+      
+      const materialesContainer = document.getElementById('materialesContainer');
+      if (materialesContainer) materialesContainer.innerHTML = '';
+      
+      const herramientasContainer = document.getElementById('herramientasContainer');
+      if (herramientasContainer) herramientasContainer.innerHTML = '';
+      
+      const pasosContainer = document.getElementById('pasosContainer');
+      if (pasosContainer) pasosContainer.innerHTML = '';
+      
+      tareaEditando = null;
+      
+      // Añadir elementos vacíos
+      agregarCritico();
+      agregarMaterial();
+      agregarHerramienta();
+      agregarPaso();
+      
+      mostrarToast('Formulario limpiado', 'info');
+    }
+    
+    // =============================================
+    // FUNCIONES PARA OPTIMIZAR IMÁGENES
+    // =============================================
+    function optimizarImagen(dataUrl, maxWidth = 800, calidad = 0.7) {
+      return new Promise((resolve) => {
+        if (!dataUrl || !dataUrl.startsWith('data:image')) {
+          resolve(dataUrl); // Devolver tal cual si no es imagen
+          return;
+        }
+        
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          // Redimensionar si es muy grande
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          // Convertir a JPEG con calidad reducida
+          const imagenOptimizada = canvas.toDataURL('image/jpeg', calidad);
+          resolve(imagenOptimizada);
+        };
+        
+        img.onerror = function() {
+          resolve(dataUrl); // Si hay error, devolver la original
+        };
+        
+        img.src = dataUrl;
+      });
+    }
+    
+    async function recogerHerramientasOptimizadas() {
+      const herramientas = [];
+      const herramientasElements = document.querySelectorAll('#herramientasContainer .array-item');
+      
+      for (const item of herramientasElements) {
+        const inputs = item.querySelectorAll('input');
+        const nombre = inputs[0]?.value.trim() || '';
+        const descripcion = inputs[1]?.value.trim() || '';
+        const imagen = inputs[2]?.value.trim() || '';
+        
+        if (nombre) {
+          let imagenOptimizada = imagen;
+          
+          // Optimizar imagen si es Data URL
+          if (imagen && imagen.startsWith('data:image')) {
+            try {
+              imagenOptimizada = await optimizarImagen(imagen);
+              console.log('🖼️ Imagen de herramienta optimizada:', nombre);
+            } catch (error) {
+              console.error('Error optimizando imagen de herramienta:', error);
+            }
+          }
+          
+          herramientas.push({ nombre, descripcion, imagen: imagenOptimizada });
+        }
+      }
+      
+      return herramientas;
+    }
+    
+    async function recogerPasosOptimizados() {
+      const pasos = [];
+      const pasosElements = document.querySelectorAll('#pasosContainer .array-item');
+      
+      for (const item of pasosElements) {
+        const inputs = item.querySelectorAll('input, textarea');
+        const titulo = inputs[0]?.value.trim() || '';
+        const descripcion = inputs[1]?.value.trim() || '';
+        const imagen = inputs[2]?.value.trim() || '';
+        const video = inputs[3]?.value.trim() || '';
+        
+        if (titulo && descripcion) {
+          let imagenOptimizada = imagen;
+          
+          // Optimizar imagen si es Data URL
+          if (imagen && imagen.startsWith('data:image')) {
+            try {
+              imagenOptimizada = await optimizarImagen(imagen);
+              console.log('🖼️ Imagen de paso optimizada:', titulo);
+            } catch (error) {
+              console.error('Error optimizando imagen de paso:', error);
+            }
+          }
+          
+          pasos.push({ titulo, descripcion, imagen: imagenOptimizada, video });
+        }
+      }
+      
+      return pasos;
+    }
+    
+    // Funciones originales (mantener para compatibilidad)
+    function recogerElementosCriticos() {
+      const elementos = [];
+      const criticosElements = document.querySelectorAll('#criticosContainer .array-item');
+      
+      criticosElements.forEach(item => {
+        const inputs = item.querySelectorAll('input, textarea');
+        const titulo = inputs[0]?.value.trim() || '';
+        const descripcion = inputs[1]?.value.trim() || '';
+        const esCritico = inputs[2]?.checked || false;
+        
+        if (titulo && descripcion) {
+          elementos.push({ titulo, descripcion, critico: esCritico });
+        }
+      });
+      
+      return elementos;
+    }
+    
+    function recogerMateriales() {
+      const materiales = [];
+      const materialesElements = document.querySelectorAll('#materialesContainer .array-item');
+      
+      materialesElements.forEach(item => {
+        const inputs = item.querySelectorAll('input');
+        const nombre = inputs[0]?.value.trim() || '';
+        const descripcion = inputs[1]?.value.trim() || '';
+        const cantidad = parseInt(inputs[2]?.value) || 0;
+        const unidad = inputs[3]?.value.trim() || 'unidades';
+        
+        if (nombre) {
+          materiales.push({ nombre, descripcion, cantidad, unidad });
+        }
+      });
+      
+      return materiales;
+    }
+    
+    // =============================================
+    // FUNCIONES DE FIREBASE PARA ADMINISTRADOR
+    // =============================================
+    async function saveTaskInstructionsToFirebase(nombre, tareaObj) {
+      if (!firebaseInitialized || !db || !currentUser) {
+        console.log('⚠️ Firebase no disponible, guardando solo localmente');
+        return false;
+      }
+      
+      try {
+        const taskWithUser = {
+          ...tareaObj,
+          nombre: nombre,
+          userId: currentUser.uid,
+          userEmail: currentUser.email || 'anonymous',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        
+        // Guardar en la colección 'taskInstructions' (instrucciones detalladas)
+        await db.collection('taskInstructions').doc(nombre).set(taskWithUser);
+        
+        // También guardar en 'taskTemplates' (para la lista básica)
+        await db.collection('taskTemplates').doc(nombre).set({
+          nombre: nombre,
+          tiempo: tareaObj.tiempo,
+          tipo: tareaObj.tipo,
+          userId: currentUser.uid,
+          userEmail: currentUser.email || 'anonymous',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        console.log('✅ Tarea guardada en Firebase:', nombre);
+        return true;
+        
+      } catch (error) {
+        console.error('❌ Error al guardar instrucciones en Firebase:', error);
+        
+        // Guardar en localStorage para sincronizar después
+        const pendingInstructions = JSON.parse(localStorage.getItem('pendingInstructions') || '[]');
+        pendingInstructions.push({nombre, ...tareaObj});
+        localStorage.setItem('pendingInstructions', JSON.stringify(pendingInstructions));
+        
+        return false;
+      }
+    }
+    
+    async function syncPendingInstructions() {
+      if (!firebaseInitialized || !db || !currentUser) return;
+      
+      const pendingInstructions = JSON.parse(localStorage.getItem('pendingInstructions') || '[]');
+      if (pendingInstructions.length === 0) return;
+      
+      try {
+        const updatedPendingInstructions = [];
+        
+        for (const instruction of pendingInstructions) {
+          try {
+            const { nombre, ...tareaObj } = instruction;
+            
+            const taskWithUser = {
+              ...tareaObj,
+              nombre: nombre,
+              userId: currentUser.uid,
+              userEmail: currentUser.email || 'anonymous',
+              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            // Guardar en taskInstructions
+            await db.collection('taskInstructions').doc(nombre).set(taskWithUser);
+            
+            // Guardar en taskTemplates
+            await db.collection('taskTemplates').doc(nombre).set({
+              nombre: nombre,
+              tiempo: tareaObj.tiempo,
+              tipo: tareaObj.tipo,
+              userId: currentUser.uid,
+              userEmail: currentUser.email || 'anonymous',
+              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            console.log('✅ Instrucción pendiente sincronizada:', nombre);
+          } catch (error) {
+            console.error('Error al sincronizar instrucción:', error);
+            updatedPendingInstructions.push(instruction);
+          }
+        }
+        
+        localStorage.setItem('pendingInstructions', JSON.stringify(updatedPendingInstructions));
+        
+        if (updatedPendingInstructions.length === 0) {
+          console.log('✅ Todas las instrucciones pendientes sincronizadas');
+        }
+        
+      } catch (error) {
+        console.error('Error en sincronización de instrucciones:', error);
+      }
+    }
+    
+    // =============================================
+    // FUNCIÓN GUARDAR TAREA EN ADMIN CON FIREBASE
+    // =============================================
+    async function guardarTareaAdmin() {
+      console.log('🔵 Botón Guardar Tarea pulsado');
+      
+      try {
+        // Obtener valores básicos
+        const tareaNombre = document.getElementById('tareaNombre');
+        const tareaTipo = document.getElementById('tareaTipo');
+        const tareaTitulo = document.getElementById('tareaTitulo');
+        const tareaTiempo = document.getElementById('tareaTiempo');
+        
+        if (!tareaNombre || !tareaTipo || !tareaTitulo || !tareaTiempo) {
+          mostrarToast('❌ Error al acceder a los campos del formulario', 'error');
+          return;
+        }
+        
+        const nombre = tareaNombre.value.trim();
+        const tipo = tareaTipo.value;
+        const titulo = tareaTitulo.value.trim();
+        const tiempoInput = tareaTiempo.value;
+        
+        console.log('📝 Datos del formulario:', { nombre, tipo, titulo, tiempoInput });
+
+        // Validaciones básicas
+        if (!nombre) {
+          mostrarToast('❌ El nombre de la tarea es obligatorio', 'error');
+          return;
+        }
+        
+        if (!tipo) {
+          mostrarToast('❌ El tipo de tarea es obligatorio', 'error');
+          return;
+        }
+        
+        if (!titulo) {
+          mostrarToast('❌ El título descriptivo es obligatorio', 'error');
+          return;
+        }
+        
+        if (!tiempoInput) {
+          mostrarToast('❌ El tiempo estimado es obligatorio', 'error');
+          return;
+        }
+        
+        const tiempo = parseFloat(tiempoInput);
+        if (isNaN(tiempo) || tiempo <= 0) {
+          mostrarToast('❌ El tiempo estimado debe ser un número mayor a 0', 'error');
+          return;
+        }
+
+        // Recoger datos de los arrays (con optimización de imágenes)
+        const elementosCriticos = recogerElementosCriticos();
+        const materiales = recogerMateriales();
+        const herramientas = await recogerHerramientasOptimizadas();
+        const pasos = await recogerPasosOptimizados();
+
+        // Validar pasos
+        if (pasos.length === 0) {
+          mostrarToast('❌ Debe añadir al menos un paso de instrucción', 'error');
+          return;
+        }
+
+        console.log('📦 Datos recogidos:', {
+          elementosCriticos: elementosCriticos.length,
+          materiales: materiales.length,
+          herramientas: herramientas.length,
+          pasos: pasos.length
+        });
+
+        // Crear objeto de tarea
+        const nuevaTarea = {
+          tipo: tipo,
+          titulo: titulo,
+          tiempo: tiempo,
+          elementosCriticos: elementosCriticos,
+          materiales: materiales,
+          herramientas: herramientas,
+          pasos: pasos
+        };
+
+        // Guardar en tareasGuardadas
+        tareasGuardadas[nombre] = nuevaTarea;
+        
+        // GUARDAR EN AMBOS SISTEMAS
+        // 1. En tareasInstrucciones (para el admin y control de tiempo)
+        localStorage.setItem('tareasInstrucciones', JSON.stringify(tareasGuardadas));
+        
+        // 2. En tareasBase SOLO si es DC3 (para mantener compatibilidad con sistema antiguo)
+        actualizarTareasBase(nombre, tiempo, tipo);
+        
+        // 3. GUARDAR EN FIREBASE
+        const firebaseSaved = await saveTaskInstructionsToFirebase(nombre, nuevaTarea);
+        
+        console.log('💾 Tarea guardada:', nombre, 'Tipo:', tipo, 'Firebase:', firebaseSaved);
+
+        // Mostrar mensaje de éxito
+        const mensaje = tareaEditando ? 'Tarea actualizada correctamente' : 'Tarea guardada correctamente';
+        if (firebaseSaved) {
+          mostrarToast(`✅ ${mensaje} (Guardada en la nube)`, 'success');
+        } else {
+          mostrarToast(`✅ ${mensaje} (Guardada localmente)`, 'warning');
+        }
+        
+        // Limpiar y mostrar lista
+        limpiarFormularioAdmin();
+        mostrarTareasAdmin();
+        mostrarSubseccionAdmin('lista');
+        
+      } catch (error) {
+        console.error('❌ Error al guardar tarea:', error);
+        mostrarToast('❌ Error al guardar la tarea', 'error');
+      }
+    }
+    
+    function mostrarTareasAdmin() {
+      const container = document.getElementById('tareasLista');
+      if (!container) {
+        console.error('❌ No se encontró el elemento tareasLista');
+        return;
+      }
+      container.innerHTML = '';
+    
+      if (!tareasGuardadas || Object.keys(tareasGuardadas).length === 0) {
+        container.innerHTML = '<p>No hay tareas guardadas.</p>';
+        return;
+      }
+      
+      // Ordenar tareas por tipo y luego por nombre
+      const tareasOrdenadas = Object.entries(tareasGuardadas)
+        .sort(([nombreA, tareaA], [nombreB, tareaB]) => {
+          // Primero por tipo
+          if (tareaA.tipo < tareaB.tipo) return -1;
+          if (tareaA.tipo > tareaB.tipo) return 1;
+          // Luego por nombre
+          return nombreA.localeCompare(nombreB);
+        });
+    
+      tareasOrdenadas.forEach(([nombre, tarea]) => {
+        const tipoClass = tarea.tipo ? tarea.tipo.toLowerCase() : '';
+        const html = `
+          <div class="tarea-item">
+            <div class="tarea-header">
+              <div>
+                <span class="tarea-nombre">${nombre}</span>
+                <span class="tarea-tipo ${tipoClass}">${tarea.tipo || 'Sin tipo'}</span>
+              </div>
+              <div class="tarea-acciones">
+                <button class="btn-edit" onclick="editarTareaAdmin('${nombre.replace(/'/g, "\\'")}')">✏️ Editar</button>
+                <button class="btn-delete" onclick="eliminarTareaAdmin('${nombre.replace(/'/g, "\\'")}')">🗑️ Eliminar</button>
+              </div>
+            </div>
+            <div class="tarea-detalles">
+              <strong>Título:</strong> ${tarea.titulo || 'Sin título'}<br>
+              <strong>Tiempo:</strong> ${tarea.tiempo || 0} horas<br>
+              <strong>Elementos críticos:</strong> ${tarea.elementosCriticos?.length || 0}<br>
+              <strong>Materiales:</strong> ${tarea.materiales?.length || 0}<br>
+              <strong>Herramientas:</strong> ${tarea.herramientas?.length || 0}<br>
+              <strong>Pasos:</strong> ${tarea.pasos?.length || 0}
+            </div>
+          </div>
+        `;
+        container.innerHTML += html;
+      });
+    }
+    
+    function editarTareaAdmin(nombre) {
+      console.log('✏️ Editando tarea:', nombre);
+      
+      const tarea = tareasGuardadas[nombre];
+      if (!tarea) {
+        mostrarToast('❌ Tarea no encontrada', 'error');
+        return;
+      }
+
+      // Llenar formulario con datos de la tarea
+      const tareaNombre = document.getElementById('tareaNombre');
+      if (tareaNombre) tareaNombre.value = nombre;
+      
+      const tareaTipo = document.getElementById('tareaTipo');
+      if (tareaTipo) tareaTipo.value = tarea.tipo;
+      
+      const tareaTitulo = document.getElementById('tareaTitulo');
+      if (tareaTitulo) tareaTitulo.value = tarea.titulo;
+      
+      const tareaTiempo = document.getElementById('tareaTiempo');
+      if (tareaTiempo) tareaTiempo.value = tarea.tiempo;
+
+      // Limpiar contenedores
+      const criticosContainer = document.getElementById('criticosContainer');
+      if (criticosContainer) criticosContainer.innerHTML = '';
+      
+      const materialesContainer = document.getElementById('materialesContainer');
+      if (materialesContainer) materialesContainer.innerHTML = '';
+      
+      const herramientasContainer = document.getElementById('herramientasContainer');
+      if (herramientasContainer) herramientasContainer.innerHTML = '';
+      
+      const pasosContainer = document.getElementById('pasosContainer');
+      if (pasosContainer) pasosContainer.innerHTML = '';
+
+      // Llenar elementos críticos
+      if (tarea.elementosCriticos && tarea.elementosCriticos.length > 0) {
+        tarea.elementosCriticos.forEach(critico => {
+          agregarCritico();
+          const container = document.getElementById('criticosContainer');
+          const lastItem = container.lastElementChild;
+          const inputs = lastItem.querySelectorAll('input, textarea');
+          inputs[0].value = critico.titulo;
+          inputs[1].value = critico.descripcion;
+          inputs[2].checked = critico.critico;
+        });
+      } else {
+        agregarCritico();
+      }
+
+      // Llenar materiales
+      if (tarea.materiales && tarea.materiales.length > 0) {
+        tarea.materiales.forEach(material => {
+          agregarMaterial();
+          const container = document.getElementById('materialesContainer');
+          const lastItem = container.lastElementChild;
+          const inputs = lastItem.querySelectorAll('input');
+          inputs[0].value = material.nombre;
+          inputs[1].value = material.descripcion;
+          inputs[2].value = material.cantidad;
+          inputs[3].value = material.unidad;
+        });
+      } else {
+        agregarMaterial();
+      }
+
+      // Llenar herramientas
+      if (tarea.herramientas && tarea.herramientas.length > 0) {
+        tarea.herramientas.forEach(herramienta => {
+          agregarHerramienta();
+          const container = document.getElementById('herramientasContainer');
+          const lastItem = container.lastElementChild;
+          const inputs = lastItem.querySelectorAll('input');
+          inputs[0].value = herramienta.nombre;
+          inputs[1].value = herramienta.descripcion;
+          inputs[2].value = herramienta.imagen;
+          
+          // Mostrar preview si hay imagen
+          if (herramienta.imagen) {
+            const preview = lastItem.querySelector('.image-preview');
+            if (preview) {
+              preview.src = herramienta.imagen;
+              preview.style.display = 'block';
+            }
+          }
+        });
+      } else {
+        agregarHerramienta();
+      }
+
+      // Llenar pasos
+      if (tarea.pasos && tarea.pasos.length > 0) {
+        tarea.pasos.forEach(paso => {
+          agregarPaso();
+          const container = document.getElementById('pasosContainer');
+          const lastItem = container.lastElementChild;
+          const inputs = lastItem.querySelectorAll('input, textarea');
+          inputs[0].value = paso.titulo;
+          inputs[1].value = paso.descripcion;
+          inputs[2].value = paso.imagen;
+          inputs[3].value = paso.video;
+          
+          // Mostrar preview si hay imagen
+          if (paso.imagen) {
+            const preview = lastItem.querySelector('.image-preview');
+            if (preview) {
+              preview.src = paso.imagen;
+              preview.style.display = 'block';
+            }
+          }
+        });
+      } else {
+        agregarPaso();
+      }
+
+      tareaEditando = nombre;
+      mostrarSubseccionAdmin('formulario');
+      mostrarToast(`✏️ Editando tarea: ${nombre}`, 'info');
+    }
+    
+    async function eliminarTareaAdmin(nombre) {
+      if (confirm(`¿Está seguro de que desea eliminar la tarea "${nombre}"?`)) {
+        // Obtener el tipo de tarea antes de eliminarla
+        const tarea = tareasGuardadas[nombre];
+        
+        delete tareasGuardadas[nombre];
+        
+        // ELIMINAR DE AMBOS SISTEMAS
+        // 1. De tareasInstrucciones
+        localStorage.setItem('tareasInstrucciones', JSON.stringify(tareasGuardadas));
+        
+        // 2. De tareasBase SOLO si es DC3
+        if (tarea && tarea.tipo === 'DC3') {
+          let tareasBaseLS = JSON.parse(localStorage.getItem('tareasBase') || '{}');
+          delete tareasBaseLS[nombre];
+          localStorage.setItem('tareasBase', JSON.stringify(tareasBaseLS));
+        }
+        
+        // 3. ELIMINAR DE FIREBASE SI ESTÁ DISPONIBLE
+        if (firebaseInitialized && db && currentUser) {
+          try {
+            // Eliminar de ambas colecciones
+            await db.collection('taskInstructions').doc(nombre).delete();
+            await db.collection('taskTemplates').doc(nombre).delete();
+            console.log('🗑️ Tarea eliminada de Firebase:', nombre);
+          } catch (error) {
+            console.error('Error al eliminar de Firebase:', error);
+          }
+        }
+        
+        mostrarTareasAdmin();
+        mostrarToast(`🗑️ Tarea "${nombre}" eliminada`, 'error');
+      }
+    }
+
+    // =============================================
+    // FUNCIONES PARA EL MODAL DE INSTRUCCIONES
+    // =============================================
+    function abrirModalInstrucciones() {
+      const tareaSeleccionada = document.getElementById('selTarea')?.value;
+      
+      if (!tareaSeleccionada) {
+        mostrarToast('Selecciona una tarea primero', 'warning');
+        return;
+      }
+      
+      // Cargar las tareas desde localStorage
+      const tareasGuardadas = JSON.parse(localStorage.getItem('tareasInstrucciones') || '{}');
+      const tarea = tareasGuardadas[tareaSeleccionada];
+      
+      if (!tarea) {
+        mostrarToast('No hay instrucciones disponibles para esta tarea', 'warning');
+        return;
+      }
+      
+      instruccionesActuales = tarea;
+      pasoActual = 0;
+      totalPasos = tarea.pasos?.length || 0;
+      
+      // Mostrar información general de la tarea
+      mostrarInformacionGeneral(tarea, tareaSeleccionada);
+      
+      // Mostrar el modal (OCUPA TODA LA PANTALLA)
+      document.getElementById('modalInstrucciones').style.display = 'flex';
+    }
+    
+    function mostrarInformacionGeneral(tarea, nombreTarea) {
+      const modalBody = document.getElementById('modalBody');
+      const modalTitulo = document.getElementById('modalTitulo');
+      
+      modalTitulo.textContent = `Instrucciones: ${nombreTarea}`;
+      
+      let html = `
+        <div style="margin-bottom: 30px;">
+          <h3 style="color: var(--primary); margin-bottom: 15px; font-size: 1.4rem;">${nombreTarea}</h3>
+          <div class="info-grid">
+            <div class="info-item">
+              <strong>Tipo:</strong> ${tarea.tipo || 'No especificado'}
+            </div>
+            <div class="info-item">
+              <strong>Tiempo estimado:</strong> ${tarea.tiempo || 0} horas
+            </div>
+            <div class="info-item">
+              <strong>Título:</strong> ${tarea.titulo || 'Sin título'}
+            </div>
+          </div>
+      `;
+      
+      // Mostrar elementos críticos
+      if (tarea.elementosCriticos && tarea.elementosCriticos.length > 0) {
+        html += `<h4 style="color: #e74c3c; margin-top: 25px; font-size: 1.2rem;">⚠️ Elementos Críticos</h4>`;
+        tarea.elementosCriticos.forEach(critico => {
+          html += `
+            <div class="instruccion-elemento-critico">
+              <strong style="color: #e74c3c;">${critico.titulo}</strong>
+              <p style="margin: 10px 0 0 0; color: #333;">${critico.descripcion}</p>
+              ${critico.critico ? '<div style="color: #e74c3c; font-weight: bold; margin-top: 10px; padding: 5px; background: rgba(231, 76, 60, 0.1); border-radius: 4px;">⚠️ ELEMENTO CRÍTICO</div>' : ''}
+            </div>
+          `;
+        });
+      }
+      
+      // Mostrar materiales
+      if (tarea.materiales && tarea.materiales.length > 0) {
+        html += `<h4 style="color: #3498db; margin-top: 25px; font-size: 1.2rem;">📦 Materiales Necesarios</h4>`;
+        tarea.materiales.forEach(material => {
+          html += `
+            <div class="instruccion-material">
+              <strong style="color: #3498db;">${material.nombre}</strong>
+              <p style="margin: 10px 0 0 0; color: #333;">${material.descripcion || 'Sin descripción'}</p>
+              <div style="margin-top: 10px; color: #2c3e50;">
+                <strong>Cantidad:</strong> ${material.cantidad || 0} ${material.unidad || 'unidades'}
+              </div>
+            </div>
+          `;
+        });
+      }
+      
+      // Mostrar herramientas
+      if (tarea.herramientas && tarea.herramientas.length > 0) {
+        html += `<h4 style="color: #9b59b6; margin-top: 25px; font-size: 1.2rem;">🛠️ Herramientas</h4>`;
+        tarea.herramientas.forEach(herramienta => {
+          html += `
+            <div class="instruccion-herramienta">
+              <strong style="color: #9b59b6;">${herramienta.nombre}</strong>
+              <p style="margin: 10px 0 0 0; color: #333;">${herramienta.descripcion || 'Sin descripción'}</p>
+              ${herramienta.imagen ? `<img src="${herramienta.imagen}" alt="${herramienta.nombre}" class="instruccion-imagen" onerror="this.style.display='none'">` : ''}
+            </div>
+          `;
+        });
+      }
+      
+      // Mostrar pasos (solo el primero inicialmente)
+      if (tarea.pasos && tarea.pasos.length > 0) {
+        html += `<h4 style="color: #2c3e50; margin-top: 25px; font-size: 1.2rem;">📋 Pasos de Instalación</h4>`;
+        mostrarPaso(0);
+        
+        // Configurar botones de navegación
+        actualizarBotonesNavegacion();
+      } else {
+        html += `<p style="text-align: center; color: #7f8c8d; margin-top: 30px; padding: 20px; background: white; border-radius: 8px; border: 1px solid #e0e0e0;">No hay pasos definidos para esta tarea.</p>`;
+      }
+      
+      html += `</div>`;
+      modalBody.innerHTML = html;
+    }
+    
+    function mostrarPaso(numeroPaso) {
+      if (!instruccionesActuales || !instruccionesActuales.pasos || numeroPaso >= instruccionesActuales.pasos.length) {
+        return;
+      }
+      
+      const paso = instruccionesActuales.pasos[numeroPaso];
+      const pasoContainer = document.createElement('div');
+      pasoContainer.className = 'instruccion-paso';
+      pasoContainer.id = 'pasoActualContainer';
+      
+      let pasoHTML = `
+        <h4>Paso ${numeroPaso + 1}: ${paso.titulo || 'Sin título'}</h4>
+        <p style="line-height: 1.6; color: #333;">${paso.descripcion || 'Sin descripción'}</p>
+      `;
+      
+      if (paso.imagen) {
+        // Añadir manejo de errores para imágenes
+        pasoHTML += `
+          <img src="${paso.imagen}" 
+               alt="Paso ${numeroPaso + 1}" 
+               class="instruccion-imagen" 
+               onerror="this.onerror=null; this.style.display='none'; console.log('Error cargando imagen');">
+        `;
+      }
+      
+      if (paso.video) {
+        pasoHTML += `<a href="${paso.video}" target="_blank" class="instruccion-video">📹 Ver video de este paso</a>`;
+      }
+      
+      pasoContainer.innerHTML = pasoHTML;
+      
+      // Reemplazar o agregar el paso
+      const existingContainer = document.getElementById('pasoActualContainer');
+      if (existingContainer) {
+        existingContainer.replaceWith(pasoContainer);
+      } else {
+        const modalBody = document.getElementById('modalBody');
+        modalBody.appendChild(pasoContainer);
+      }
+      
+      // Actualizar contador
+      document.getElementById('contadorPaginas').textContent = `Paso ${numeroPaso + 1} de ${instruccionesActuales.pasos.length}`;
+      
+      // Actualizar estado de botones
+      actualizarBotonesNavegacion();
+    }
+    
+    function siguientePaso() {
+      if (instruccionesActuales && instruccionesActuales.pasos && pasoActual < instruccionesActuales.pasos.length - 1) {
+        pasoActual++;
+        mostrarPaso(pasoActual);
+      }
+    }
+    
+    function anteriorPaso() {
+      if (pasoActual > 0) {
+        pasoActual--;
+        mostrarPaso(pasoActual);
+      }
+    }
+    
+    function actualizarBotonesNavegacion() {
+      const btnAnterior = document.getElementById('btnAnterior');
+      const btnSiguiente = document.getElementById('btnSiguiente');
+      
+      if (btnAnterior) {
+        btnAnterior.disabled = pasoActual === 0;
+      }
+      
+      if (btnSiguiente && instruccionesActuales && instruccionesActuales.pasos) {
+        btnSiguiente.disabled = pasoActual === instruccionesActuales.pasos.length - 1;
+      }
+    }
+    
+    function cerrarModalInstrucciones() {
+      document.getElementById('modalInstrucciones').style.display = 'none';
+      instruccionesActuales = null;
+      pasoActual = 0;
+    }
+
+    // =============================================
+    // FUNCIONES DE AUTENTICACIÓN (COMPARTIDAS)
+    // =============================================
+    function mostrarLoginModal() {
+      document.getElementById('loginModal').style.display = 'flex';
+    }
+    
+    function ocultarLoginModal() {
+      document.getElementById('loginModal').style.display = 'none';
+    }
+    
+    async function iniciarSesionEmail() {
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      
+      if (!email || !password) {
+        mostrarToast('❌ Completa todos los campos', 'error');
+        return;
+      }
+      
+      try {
+        await auth.signInWithEmailAndPassword(email, password);
+        ocultarLoginModal();
+        mostrarToast(`✅ Bienvenido ${email}`, 'success');
+        
+      } catch (error) {
+        console.error('Error al iniciar sesión:', error);
+        mostrarToast(`❌ Error: ${error.message}`, 'error');
+      }
+    }
+    
+    async function registrarUsuario() {
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      
+      if (!email || !password) {
+        mostrarToast('❌ Completa todos los campos', 'error');
+        return;
+      }
+      
+      try {
+        await auth.createUserWithEmailAndPassword(email, password);
+        ocultarLoginModal();
+        mostrarToast(`✅ Usuario ${email} registrado`, 'success');
+        
+      } catch (error) {
+        console.error('Error al registrarse:', error);
+        mostrarToast(`❌ Error: ${error.message}`, 'error');
+      }
+    }
+    
+    async function iniciarSesionAnonima() {
+      try {
+        await auth.signInAnonymously();
+        ocultarLoginModal();
+        mostrarToast('✅ Modo invitado activado', 'info');
+        
+      } catch (error) {
+        console.error('Error en autenticación anónima:', error);
+        mostrarToast(`❌ Error: ${error.message}`, 'error');
+      }
+    }
+    
+    async function cerrarSesion() {
+      if (!firebaseInitialized || !auth) return;
+      
+      try {
+        await auth.signOut();
+        mostrarToast('✅ Sesión cerrada', 'info');
+        
+        // Iniciar sesión anónima automáticamente
+        await auth.signInAnonymously();
+        
+      } catch (error) {
+        console.error('Error al cerrar sesión:', error);
+        mostrarToast(`❌ Error: ${error.message}`, 'error');
+      }
+    }
+    
+    async function createFirebaseCollections() {
+      if (!firebaseInitialized || !db) {
+        mostrarToast('⚠️ Firebase no está inicializado', 'warning');
+        return;
+      }
+      
+      try {
+        updateFirebaseStatus('🏗️ Creando colecciones en Firebase...', 'warning');
+        
+        // Colección de plantillas de tareas
+        const taskTemplatesRef = db.collection('taskTemplates');
+        
+        // Agregar tareas predeterminadas
+        for (const [nombre, tiempo] of Object.entries(tareasBase)) {
+          await taskTemplatesRef.doc(nombre).set({
+            nombre: nombre,
+            tiempo: tiempo,
+            tipo: 'DC3',
+            userId: currentUser.uid,
+            userEmail: currentUser.email || 'anonymous',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
+        
+        // Colección de instrucciones de tareas
+        const taskInstructionsRef = db.collection('taskInstructions');
+        
+        // Agregar instrucción de ejemplo
+        await taskInstructionsRef.doc('Bandeja AT Derecha').set({
+          nombre: 'Bandeja AT Derecha',
+          titulo: "Instalación Bandeja AT Derecha",
+          tipo: "DC3",
+          tiempo: 1.27,
+          elementosCriticos: [
+            {
+              titulo: "TORNILLOS DE ANCLAJE",
+              descripcion: "Verificar que los tornillos de anclaje sean de grado 8.8 o superior",
+              critico: true
+            }
+          ],
+          materiales: [
+            {
+              nombre: "Tornillos M8x40",
+              descripcion: "Tornillos de fijación grado 8.8",
+              cantidad: 6,
+              unidad: "unidades"
+            }
+          ],
+          herramientas: [
+            {
+              nombre: "Llave torque 25Nm",
+              descripcion: "Para apriete controlado de tornillos",
+              imagen: ""
+            }
+          ],
+          pasos: [
+            {
+              titulo: "Preparación del área",
+              descripcion: "Limpiar y marcar la posición donde irá la bandeja",
+              imagen: "",
+              video: ""
+            },
+            {
+              titulo: "Instalación de soportes",
+              descripcion: "Colocar y fijar los soportes de la bandeja",
+              imagen: "",
+              video: ""
+            },
+            {
+              titulo: "Montaje de la bandeja",
+              descripcion: "Colocar la bandeja en posición y asegurar con tornillos",
+              imagen: "",
+              video: ""
+            },
+            {
+              titulo: "Verificación final",
+              descripcion: "Comprobar que la instalación sea segura y estable",
+              imagen: "",
+              video: ""
+            }
+          ],
+          userId: currentUser.uid,
+          userEmail: currentUser.email || 'anonymous',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        updateFirebaseStatus('✅ Colecciones creadas exitosamente', 'connected');
+        mostrarToast('🏗️ Colecciones creadas en Firebase', 'success');
+        
+        // Recargar datos
+        await loadDataFromFirebase();
+        
+      } catch (error) {
+        console.error('Error al crear colecciones:', error);
+        updateFirebaseStatus('❌ Error al crear colecciones', 'error');
+        mostrarToast(`❌ Error: ${error.message}`, 'error');
+      }
+    }
+
+    // =============================================
+    // INICIALIZACIÓN DE SECCIONES
+    // =============================================
+    function inicializarControlTiempo() {
+      console.log('🔄 Inicializando Control de Tiempo...');
+      
+      // Establecer fecha actual como filtro
+      const hoy = new Date().toISOString().slice(0,10);
+      const filtroFecha = document.getElementById('filtroFecha');
+      if (filtroFecha) filtroFecha.value = hoy;
+      
+      // Renderizar tabla
+      renderTabla();
+      
+      // Restaurar tarea activa si existe
+      restaurarTareaActiva();
+      
+      // Cargar el tipo actual si existe
+      const selTipo = document.getElementById('selTipo');
+      if (selTipo && selTipo.value) {
+        fillTareasForTipo(selTipo.value);
+      }
+    }
+
+    // =============================================
+    // INICIALIZACIÓN DE LA APLICACIÓN
+    // =============================================
+    document.addEventListener('DOMContentLoaded', async function() {
+      console.log('🚀 Aplicación unificada iniciada');
+      
+      // Inicializar Firebase
+      await initializeFirebase();
+      
+      // Configurar navegación
+      const btnControlTiempo = document.getElementById('btnControlTiempo');
+      if (btnControlTiempo) {
+        btnControlTiempo.addEventListener('click', function() {
+          mostrarSeccion('control-tiempo');
+        });
+      }
+      
+      const btnAdminTareas = document.getElementById('btnAdminTareas');
+      if (btnAdminTareas) {
+        btnAdminTareas.addEventListener('click', function() {
+          mostrarSeccion('admin-tareas');
+        });
+      }
+      
+      // Configurar Control de Tiempo
+      const selTipo = document.getElementById('selTipo');
+      if (selTipo) {
+        selTipo.addEventListener('change', function() {
+          fillTareasForTipo(this.value);
+        });
+      }
+      
+      const selTarea = document.getElementById('selTarea');
+      if (selTarea) {
+        selTarea.addEventListener('change', function() {
+          const tiempo = this.options[this.selectedIndex]?.getAttribute('data-tiempo');
+          if(tiempo) {
+            const inpTiempo = document.getElementById('inpTiempo');
+            if (inpTiempo) inpTiempo.value = tiempo;
+            
+            const minutosConvertidos = document.getElementById('minutosConvertidos');
+            if (minutosConvertidos) minutosConvertidos.textContent = convertDec(parseFloat(tiempo));
+          }
+          actualizarBotonInstrucciones();
+        });
+      }
+      
+      const inpTiempo = document.getElementById('inpTiempo');
+      if (inpTiempo) {
+        inpTiempo.addEventListener('input', function() {
+          const v = parseFloat(this.value);
+          const minutosConvertidos = document.getElementById('minutosConvertidos');
+          if (minutosConvertidos) {
+            minutosConvertidos.textContent = (!isNaN(v) && v>0) ? convertDec(v) : '00:00:00';
+          }
+        });
+      }
+      
+      // Botones principales de Control de Tiempo
+      const btnStart = document.getElementById('btnStart');
+      if (btnStart) btnStart.addEventListener('click', iniciarControlTiempo);
+      
+      const btnTerminar = document.getElementById('btnTerminar');
+      if (btnTerminar) btnTerminar.addEventListener('click', terminarControlTiempo);
+      
+      const btnReset = document.getElementById('btnReset');
+      if (btnReset) btnReset.addEventListener('click', reiniciarControlTiempo);
+      
+      const btnSilenciar = document.getElementById('btnSilenciar');
+      if (btnSilenciar) {
+        btnSilenciar.addEventListener('click', function() { 
+          silenciado = !silenciado;
+          this.textContent = silenciado ? '🔇 Silenciado' : '🔊 Sonidos activados';
+          mostrarToast(silenciado ? '🔇 Silenciado' : '🔊 Sonidos activados', silenciado ? 'info' : 'success'); 
+        });
+      }
+      
+      const btnEstadisticas = document.getElementById('btnEstadisticas');
+      if (btnEstadisticas) {
+        btnEstadisticas.addEventListener('click', function() {
+          const hist = JSON.parse(localStorage.getItem('historial')||'[]');
+          alert(`📊 Total de tareas: ${hist.length}`);
+        });
+      }
+      
+      const btnExportExcel = document.getElementById('btnExportExcel');
+      if (btnExportExcel) {
+        btnExportExcel.addEventListener('click', function() {
+          mostrarToast('📊 Descargando Excel...', 'info');
+        });
+      }
+      
+      const btnResetTabla = document.getElementById('btnResetTabla');
+      if (btnResetTabla) {
+        btnResetTabla.addEventListener('click', function() {
+          if(confirm('¿Borrar todo el historial?')) {
+            localStorage.removeItem('historial');
+            localStorage.removeItem('pendingSync');
+            localStorage.removeItem('pendingInstructions');
+            renderTabla();
+            mostrarToast('🗑️ Histórico borrado', 'error');
+          }
+        });
+      }
+      
+      // Botones Firebase
+      const btnSync = document.getElementById('btnSync');
+      if (btnSync) {
+        btnSync.addEventListener('click', async function() {
+          await loadDataFromFirebase();
+          mostrarToast('☁️ Datos sincronizados', 'info');
+        });
+      }
+      
+      const btnLogin = document.getElementById('btnLogin');
+      if (btnLogin) btnLogin.addEventListener('click', mostrarLoginModal);
+      
+      const btnLogout = document.getElementById('btnLogout');
+      if (btnLogout) btnLogout.addEventListener('click', cerrarSesion);
+      
+      const btnCreateCollections = document.getElementById('btnCreateCollections');
+      if (btnCreateCollections) btnCreateCollections.addEventListener('click', createFirebaseCollections);
+      
+      // Login modal
+      const btnLoginSubmit = document.getElementById('btnLoginSubmit');
+      if (btnLoginSubmit) btnLoginSubmit.addEventListener('click', iniciarSesionEmail);
+      
+      const btnLoginRegister = document.getElementById('btnLoginRegister');
+      if (btnLoginRegister) btnLoginRegister.addEventListener('click', registrarUsuario);
+      
+      const btnLoginAnonymous = document.getElementById('btnLoginAnonymous');
+      if (btnLoginAnonymous) btnLoginAnonymous.addEventListener('click', iniciarSesionAnonima);
+      
+      const btnLoginClose = document.getElementById('btnLoginClose');
+      if (btnLoginClose) btnLoginClose.addEventListener('click', ocultarLoginModal);
+      
+      // Configurar Admin de Tareas
+      const btnAddTarea = document.getElementById('btnAddTarea');
+      if (btnAddTarea) {
+        btnAddTarea.addEventListener('click', function() {
+          mostrarSubseccionAdmin('formulario');
+        });
+      }
+      
+      const btnVerTareas = document.getElementById('btnVerTareas');
+      if (btnVerTareas) {
+        btnVerTareas.addEventListener('click', function() {
+          mostrarTareasAdmin();
+          mostrarSubseccionAdmin('lista');
+        });
+      }
+      
+      const btnIrControlTiempo = document.getElementById('btnIrControlTiempo');
+      if (btnIrControlTiempo) {
+        btnIrControlTiempo.addEventListener('click', function() {
+          mostrarSeccion('control-tiempo');
+        });
+      }
+      
+      const btnCargarPredeterminadas = document.getElementById('btnCargarPredeterminadas');
+      if (btnCargarPredeterminadas) {
+        btnCargarPredeterminadas.addEventListener('click', cargarTareasPredeterminadasAdmin);
+      }
+      
+      const btnAddCritico = document.getElementById('btnAddCritico');
+      if (btnAddCritico) {
+        btnAddCritico.addEventListener('click', agregarCritico);
+      }
+      
+      const btnAddMaterial = document.getElementById('btnAddMaterial');
+      if (btnAddMaterial) {
+        btnAddMaterial.addEventListener('click', agregarMaterial);
+      }
+      
+      const btnAddHerramienta = document.getElementById('btnAddHerramienta');
+      if (btnAddHerramienta) {
+        btnAddHerramienta.addEventListener('click', agregarHerramienta);
+      }
+      
+      const btnAddPaso = document.getElementById('btnAddPaso');
+      if (btnAddPaso) {
+        btnAddPaso.addEventListener('click', agregarPaso);
+      }
+      
+      const btnGuardarTarea = document.getElementById('btnGuardarTarea');
+      if (btnGuardarTarea) {
+        btnGuardarTarea.addEventListener('click', guardarTareaAdmin);
+      }
+      
+      const btnLimpiarFormulario = document.getElementById('btnLimpiarFormulario');
+      if (btnLimpiarFormulario) {
+        btnLimpiarFormulario.addEventListener('click', limpiarFormularioAdmin);
+      }
+      
+      // Configurar filtros
+      const filtroFecha = document.getElementById('filtroFecha');
+      if (filtroFecha) {
+        filtroFecha.addEventListener('change', renderTabla);
+      }
+      
+      const filtroOperacion = document.getElementById('filtroOperacion');
+      if (filtroOperacion) {
+        filtroOperacion.addEventListener('input', renderTabla);
+      }
+      
+      const filtroLimpiar = document.getElementById('filtroLimpiar');
+      if (filtroLimpiar) {
+        filtroLimpiar.addEventListener('click', function() {
+          const filtroFecha = document.getElementById('filtroFecha');
+          if (filtroFecha) filtroFecha.value = '';
+          
+          const filtroOperacion = document.getElementById('filtroOperacion');
+          if (filtroOperacion) filtroOperacion.value = '';
+          
+          renderTabla();
+          mostrarToast('🧹 Filtros limpiados', 'info');
+        });
+      }
+      
+      // Configurar modal de instrucciones
+      const btnInstrucciones = document.getElementById('btnInstrucciones');
+      if (btnInstrucciones) {
+        btnInstrucciones.addEventListener('click', abrirModalInstrucciones);
+      }
+      
+      const closeModal = document.getElementById('closeModal');
+      if (closeModal) {
+        closeModal.addEventListener('click', cerrarModalInstrucciones);
+      }
+      
+      const modalInstrucciones = document.getElementById('modalInstrucciones');
+      if (modalInstrucciones) {
+        modalInstrucciones.addEventListener('click', function(e) {
+          if (e.target === this) {
+            cerrarModalInstrucciones();
+          }
+        });
+      }
+      
+      const btnAnterior = document.getElementById('btnAnterior');
+      if (btnAnterior) {
+        btnAnterior.addEventListener('click', anteriorPaso);
+      }
+      
+      const btnSiguiente = document.getElementById('btnSiguiente');
+      if (btnSiguiente) {
+        btnSiguiente.addEventListener('click', siguientePaso);
+      }
+      
+      // Inicializar Control de Tiempo por defecto
+      inicializarControlTiempo();
+    });
+  </script>
+</body>
+</html>
