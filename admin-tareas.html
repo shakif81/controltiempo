@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>🛠️ Administrador de Tareas</title>
+  <title>Administrador de Tareas</title>
   <style>
     :root {
       --bg: #f5f6fa;
@@ -14,26 +14,34 @@
       --muted: #e9ecef;
     }
     
+    * {
+      box-sizing: border-box;
+    }
+    
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
       background: var(--bg);
-      margin: 0;
       padding: 20px;
+      height: 100vh;
+      overflow: hidden;
     }
     
     .container {
-      max-width: 1000px;
+      max-width: 100%;
+      height: 100%;
       margin: 0 auto;
       background: white;
       border-radius: 12px;
       padding: 25px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    }
-    
-    h1 {
-      text-align: center;
-      color: #2f3640;
-      margin-bottom: 30px;
+      display: flex;
+      flex-direction: column;
     }
     
     .nav-buttons {
@@ -71,6 +79,8 @@
       padding: 20px;
       border-radius: 8px;
       margin-bottom: 25px;
+      flex: 1;
+      overflow-y: auto;
     }
     
     .form-group {
@@ -140,6 +150,7 @@
     
     .tareas-lista {
       margin-top: 20px;
+      overflow-y: auto;
     }
     
     .tarea-item {
@@ -223,16 +234,118 @@
       display: none;
       z-index: 1000;
     }
+
+    .material-cantidad-input {
+      width: 80px;
+      padding: 5px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    .unidad-input {
+      width: 100px;
+      padding: 5px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .critico-checkbox {
+      width: auto;
+      margin-right: 10px;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .form-row .form-group {
+      flex: 1;
+      margin-bottom: 0;
+    }
+
+    /* Estilos para carga de imágenes */
+    .image-upload-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .image-preview {
+      max-width: 200px;
+      max-height: 150px;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      display: none;
+    }
+
+    .image-upload-button {
+      display: inline-block;
+      padding: 8px 15px;
+      background: #3498db;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
+    .image-upload-button:hover {
+      background: #2980b9;
+    }
+
+    .image-input-container {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .image-input-container input {
+      flex: 1;
+    }
+
+    .image-upload-info {
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 5px;
+    }
+
+    .file-input-hidden {
+      display: none;
+    }
+
+    .nav-buttons-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .nav-buttons-row .form-group {
+      flex: 1;
+      margin-bottom: 0;
+    }
+
+    .btn-load-default {
+      background: var(--warning);
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>🛠️ Administrador de Tareas</h1>
-    
+    <!-- BOTONES ARRIBA SIN TÍTULO -->
     <div class="nav-buttons">
       <button class="btn-primary" onclick="mostrarSeccion('formulario')">➕ Añadir Tarea</button>
       <button class="btn-secondary" onclick="mostrarSeccion('lista')">📋 Ver Tareas</button>
       <button class="btn-secondary" onclick="location.href='control-tiempo.html'">⏱ Ir a Control Tiempo</button>
+      <button class="btn-load-default" onclick="cargarTareasPredeterminadas()">🔄 Cargar Tareas Predeterminadas</button>
     </div>
     
     <!-- FORMULARIO -->
@@ -244,31 +357,46 @@
         <input type="text" id="tareaNombre" placeholder="Ej: Bandeja AT Derecha">
       </div>
       
-      <div class="form-group">
-        <label for="tareaTipo">Tipo de Tarea *</label>
-        <select id="tareaTipo">
-          <option value="">— Selecciona tipo —</option>
-          <option value="DC3">DC3</option>
-          <option value="MS3">MS3</option>
-          <option value="Personalizada">Personalizada</option>
-        </select>
+      <!-- FILA PARA TIPO Y TIEMPO -->
+      <div class="nav-buttons-row">
+        <div class="form-group">
+          <label for="tareaTipo">Tipo de Tarea *</label>
+          <select id="tareaTipo">
+            <option value="">— Selecciona tipo —</option>
+            <option value="DC3">DC3</option>
+            <option value="MS3">MS3</option>
+            <option value="Personalizada">Personalizada</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="tareaTiempo">Tiempo Estimado (horas) *</label>
+          <input type="number" id="tareaTiempo" step="0.01" min="0" placeholder="Ej: 1.27">
+        </div>
       </div>
       
       <div class="form-group">
         <label for="tareaTitulo">Título Descriptivo *</label>
         <input type="text" id="tareaTitulo" placeholder="Ej: Instalación Completa">
       </div>
+
+      <!-- SECCIÓN DE ELEMENTOS CRÍTICOS -->
+      <h4>⚠️ Elementos Críticos</h4>
+      <div id="criticosContainer"></div>
+      <button type="button" class="btn-add" onclick="agregarCritico()">➕ Añadir Elemento Crítico</button>
+
+      <!-- SECCIÓN DE MATERIALES -->
+      <h4>📦 Materiales Necesarios</h4>
+      <div id="materialesContainer"></div>
+      <button type="button" class="btn-add" onclick="agregarMaterial()">➕ Añadir Material</button>
       
-      <div class="form-group">
-        <label for="tareaTiempo">Tiempo Estimado (horas) *</label>
-        <input type="number" id="tareaTiempo" step="0.01" min="0" placeholder="Ej: 1.27">
-      </div>
-      
+      <!-- SECCIÓN DE HERRAMIENTAS -->
       <h4>🛠️ Herramientas</h4>
       <div id="herramientasContainer"></div>
       <button type="button" class="btn-add" onclick="agregarHerramienta()">➕ Añadir Herramienta</button>
       
-      <h4>📋 Pasos</h4>
+      <!-- SECCIÓN DE PASOS -->
+      <h4>📋 Pasos de Instalación</h4>
       <div id="pasosContainer"></div>
       <button type="button" class="btn-add" onclick="agregarPaso()">➕ Añadir Paso</button>
       
@@ -288,16 +416,105 @@
   <div id="toast" class="toast"></div>
 
   <script>
-    let tareasGuardadas = JSON.parse(localStorage.getItem('tareasInstrucciones') || '{}');
+    // VARIABLES GLOBALES - INICIALIZACIÓN CORRECTA
+    let tareasGuardadas = {};
     let tareaEditando = null;
-    let contadorHerramientas = 0;
-    let contadorPasos = 0;
 
+    // INICIALIZACIÓN AL CARGAR LA PÁGINA
     document.addEventListener('DOMContentLoaded', function() {
+      console.log('🔄 Inicializando aplicación...');
+      
+      // Cargar tareas existentes
+      const tareasStorage = localStorage.getItem('tareasInstrucciones');
+      if (tareasStorage) {
+        tareasGuardadas = JSON.parse(tareasStorage);
+        console.log('📁 Tareas cargadas del localStorage:', Object.keys(tareasGuardadas));
+      } else {
+        console.log('📁 No hay tareas en localStorage, inicializando vacío');
+        tareasGuardadas = {};
+      }
+      
       mostrarTareas();
+      
+      // Inicializar formulario con elementos vacíos
+      agregarCritico();
+      agregarMaterial();
       agregarHerramienta();
       agregarPaso();
+      
+      console.log('✅ Aplicación inicializada correctamente');
     });
+
+    // TAREAS PREDETERMINADAS
+    const tareasPredeterminadas = {
+      "Bandeja AT Derecha": {
+        tipo: "DC3",
+        titulo: "Instalación Bandeja AT Derecha",
+        tiempo: 1.5,
+        elementosCriticos: [
+          {
+            titulo: "TORNILLOS DE ANCLAJE",
+            descripcion: "Verificar que los tornillos de anclaje sean de grado 8.8 o superior",
+            critico: true
+          }
+        ],
+        materiales: [
+          {
+            nombre: "Tornillos M8x40",
+            descripcion: "Tornillos de fijación grado 8.8",
+            cantidad: 6,
+            unidad: "unidades"
+          }
+        ],
+        herramientas: [
+          {
+            nombre: "Llave torque 25Nm",
+            descripcion: "Para apriete controlado de tornillos",
+            imagen: ""
+          }
+        ],
+        pasos: [
+          {
+            titulo: "Preparación del área",
+            descripcion: "Limpiar y marcar la posición donde irá la bandeja",
+            imagen: "",
+            video: ""
+          }
+        ]
+      }
+    };
+
+    function cargarTareasPredeterminadas() {
+      console.log('🔄 Cargando tareas predeterminadas...');
+      
+      // Combinar sin sobrescribir tareas existentes
+      Object.keys(tareasPredeterminadas).forEach(nombre => {
+        if (!tareasGuardadas[nombre]) {
+          tareasGuardadas[nombre] = tareasPredeterminadas[nombre];
+          console.log('✅ Tarea predeterminada añadida:', nombre);
+        }
+      });
+      
+      // Guardar en localStorage
+      localStorage.setItem('tareasInstrucciones', JSON.stringify(tareasGuardadas));
+      
+      // Actualizar tareasBase
+      actualizarTodasTareasBase();
+      
+      mostrarTareas();
+      mostrarToast('Tareas predeterminadas cargadas correctamente');
+    }
+
+    function actualizarTodasTareasBase() {
+      let tareasBase = JSON.parse(localStorage.getItem('tareasBase') || '{}');
+      
+      Object.keys(tareasGuardadas).forEach(nombre => {
+        tareasBase[nombre] = tareasGuardadas[nombre].tiempo;
+      });
+      
+      localStorage.setItem('tareasBase', JSON.stringify(tareasBase));
+      console.log('📊 Tareas base actualizadas:', tareasBase);
+    }
 
     function mostrarSeccion(seccion) {
       document.getElementById('formulario').classList.add('hidden');
@@ -305,64 +522,166 @@
       document.getElementById(seccion).classList.remove('hidden');
     }
 
-    function agregarHerramienta() {
-      contadorHerramientas++;
+    // FUNCIONES PARA AÑADIR ELEMENTOS
+    function agregarCritico() {
+      const container = document.getElementById('criticosContainer');
+      const id = 'critico-' + Date.now();
+      
       const html = `
-        <div class="array-item" id="herramienta-${contadorHerramientas}">
+        <div class="array-item" id="${id}">
           <div class="array-header">
-            <h4>Herramienta ${contadorHerramientas}</h4>
-            <button type="button" class="btn-small" onclick="eliminarHerramienta(${contadorHerramientas})">❌ Eliminar</button>
+            <h4>Elemento Crítico</h4>
+            <button type="button" class="btn-small" onclick="document.getElementById('${id}').remove()">❌ Eliminar</button>
           </div>
           <div class="form-group">
-            <label>Nombre</label>
-            <input type="text" placeholder="Ej: Destornillador" id="herramientaNombre-${contadorHerramientas}">
-          </div>
-          <div class="form-group">
-            <label>URL Imagen (opcional)</label>
-            <input type="text" placeholder="https://..." id="herramientaImagen-${contadorHerramientas}">
-          </div>
-        </div>
-      `;
-      document.getElementById('herramientasContainer').innerHTML += html;
-    }
-
-    function eliminarHerramienta(id) {
-      const elemento = document.getElementById(`herramienta-${id}`);
-      if (elemento) elemento.remove();
-    }
-
-    function agregarPaso() {
-      contadorPasos++;
-      const html = `
-        <div class="array-item" id="paso-${contadorPasos}">
-          <div class="array-header">
-            <h4>Paso ${contadorPasos}</h4>
-            <button type="button" class="btn-small" onclick="eliminarPaso(${contadorPasos})">❌ Eliminar</button>
-          </div>
-          <div class="form-group">
-            <label>Título</label>
-            <input type="text" placeholder="Ej: Preparación" id="pasoTitulo-${contadorPasos}">
+            <label>Título del elemento crítico</label>
+            <input type="text" placeholder="Ej: PASTA TÉRMICA NECESARIA">
           </div>
           <div class="form-group">
             <label>Descripción</label>
-            <textarea placeholder="Describa el paso..." id="pasoDescripcion-${contadorPasos}"></textarea>
+            <textarea placeholder="Describa por qué es crítico..."></textarea>
           </div>
           <div class="form-group">
-            <label>URL Imagen (opcional)</label>
-            <input type="text" placeholder="https://..." id="pasoImagen-${contadorPasos}">
-          </div>
-          <div class="form-group">
-            <label>URL Video (opcional)</label>
-            <input type="text" placeholder="https://..." id="pasoVideo-${contadorPasos}">
+            <label>
+              <input type="checkbox" class="critico-checkbox" checked>
+              Marcar como crítico (mostrará alerta especial)
+            </label>
           </div>
         </div>
       `;
-      document.getElementById('pasosContainer').innerHTML += html;
+      container.insertAdjacentHTML('beforeend', html);
     }
 
-    function eliminarPaso(id) {
-      const elemento = document.getElementById(`paso-${id}`);
-      if (elemento) elemento.remove();
+    function agregarMaterial() {
+      const container = document.getElementById('materialesContainer');
+      const id = 'material-' + Date.now();
+      
+      const html = `
+        <div class="array-item" id="${id}">
+          <div class="array-header">
+            <h4>Material</h4>
+            <button type="button" class="btn-small" onclick="document.getElementById('${id}').remove()">❌ Eliminar</button>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nombre del material</label>
+              <input type="text" placeholder="Ej: Tornillos M6x20">
+            </div>
+            <div class="form-group">
+              <label>Descripción</label>
+              <input type="text" placeholder="Ej: Tornillos de fijación">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Cantidad</label>
+              <input type="number" class="material-cantidad-input" value="1" min="0">
+            </div>
+            <div class="form-group">
+              <label>Unidad</label>
+              <input type="text" class="unidad-input" placeholder="Ej: unidades" value="unidades">
+            </div>
+          </div>
+        </div>
+      `;
+      container.insertAdjacentHTML('beforeend', html);
+    }
+
+    function agregarHerramienta() {
+      const container = document.getElementById('herramientasContainer');
+      const id = 'herramienta-' + Date.now();
+      const fileInputId = 'file-herramienta-' + Date.now();
+      const previewId = 'preview-herramienta-' + Date.now();
+      const urlInputId = 'url-herramienta-' + Date.now();
+      
+      const html = `
+        <div class="array-item" id="${id}">
+          <div class="array-header">
+            <h4>Herramienta</h4>
+            <button type="button" class="btn-small" onclick="document.getElementById('${id}').remove()">❌ Eliminar</button>
+          </div>
+          <div class="form-group">
+            <label>Nombre de la herramienta</label>
+            <input type="text" placeholder="Ej: Destornillador de estrella #2">
+          </div>
+          <div class="form-group">
+            <label>Descripción (opcional)</label>
+            <input type="text" placeholder="Ej: Para tornillos de fijación">
+          </div>
+          <div class="form-group">
+            <label>Imagen de la herramienta</label>
+            <div class="image-upload-container">
+              <div class="image-input-container">
+                <input type="text" id="${urlInputId}" placeholder="URL de la imagen (opcional)">
+                <label for="${fileInputId}" class="image-upload-button">📁 Cargar</label>
+                <input type="file" id="${fileInputId}" class="file-input-hidden" accept="image/*" onchange="cargarImagenLocal('${fileInputId}', '${urlInputId}', '${previewId}')">
+              </div>
+              <img id="${previewId}" class="image-preview" src="" alt="Vista previa">
+              <div class="image-upload-info">Puede usar una URL o cargar una imagen local</div>
+            </div>
+          </div>
+        </div>
+      `;
+      container.insertAdjacentHTML('beforeend', html);
+    }
+
+    function agregarPaso() {
+      const container = document.getElementById('pasosContainer');
+      const id = 'paso-' + Date.now();
+      const fileInputId = 'file-paso-' + Date.now();
+      const previewId = 'preview-paso-' + Date.now();
+      const urlInputId = 'url-paso-' + Date.now();
+      
+      const html = `
+        <div class="array-item" id="${id}">
+          <div class="array-header">
+            <h4>Paso</h4>
+            <button type="button" class="btn-small" onclick="document.getElementById('${id}').remove()">❌ Eliminar</button>
+          </div>
+          <div class="form-group">
+            <label>Título del paso</label>
+            <input type="text" placeholder="Ej: Preparación del área">
+          </div>
+          <div class="form-group">
+            <label>Descripción del paso</label>
+            <textarea placeholder="Describa detalladamente este paso..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Imagen del paso</label>
+            <div class="image-upload-container">
+              <div class="image-input-container">
+                <input type="text" id="${urlInputId}" placeholder="URL de la imagen (opcional)">
+                <label for="${fileInputId}" class="image-upload-button">📁 Cargar</label>
+                <input type="file" id="${fileInputId}" class="file-input-hidden" accept="image/*" onchange="cargarImagenLocal('${fileInputId}', '${urlInputId}', '${previewId}')">
+              </div>
+              <img id="${previewId}" class="image-preview" src="" alt="Vista previa">
+              <div class="image-upload-info">Puede usar una URL o cargar una imagen local</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>URL del video (opcional)</label>
+            <input type="text" placeholder="https://ejemplo.com/video-paso.mp4">
+          </div>
+        </div>
+      `;
+      container.insertAdjacentHTML('beforeend', html);
+    }
+
+    function cargarImagenLocal(fileInputId, urlInputId, previewId) {
+      const fileInput = document.getElementById(fileInputId);
+      const urlInput = document.getElementById(urlInputId);
+      const preview = document.getElementById(previewId);
+      
+      const file = fileInput.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          urlInput.value = e.target.result;
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      }
     }
 
     function limpiarFormulario() {
@@ -370,95 +689,218 @@
       document.getElementById('tareaTipo').value = '';
       document.getElementById('tareaTitulo').value = '';
       document.getElementById('tareaTiempo').value = '';
+      document.getElementById('criticosContainer').innerHTML = '';
+      document.getElementById('materialesContainer').innerHTML = '';
       document.getElementById('herramientasContainer').innerHTML = '';
       document.getElementById('pasosContainer').innerHTML = '';
-      contadorHerramientas = 0;
-      contadorPasos = 0;
       tareaEditando = null;
+      
+      agregarCritico();
+      agregarMaterial();
       agregarHerramienta();
       agregarPaso();
+      
       mostrarToast('Formulario limpiado');
     }
 
+    // FUNCIÓN GUARDAR TAREA
     function guardarTarea() {
-      const nombre = document.getElementById('tareaNombre').value.trim();
-      const tipo = document.getElementById('tareaTipo').value;
-      const titulo = document.getElementById('tareaTitulo').value.trim();
-      const tiempo = parseFloat(document.getElementById('tareaTiempo').value);
+      console.log('🔵 Botón Guardar Tarea pulsado');
+      
+      try {
+        // Obtener valores básicos
+        const nombre = document.getElementById('tareaNombre').value.trim();
+        const tipo = document.getElementById('tareaTipo').value;
+        const titulo = document.getElementById('tareaTitulo').value.trim();
+        const tiempoInput = document.getElementById('tareaTiempo').value;
+        
+        console.log('📝 Datos del formulario:', { nombre, tipo, titulo, tiempoInput });
 
-      if (!nombre || !tipo || !titulo || isNaN(tiempo)) {
-        mostrarToast('Complete todos los campos obligatorios', 'error');
-        return;
+        // Validaciones básicas
+        if (!nombre) {
+          mostrarToast('❌ El nombre de la tarea es obligatorio', 'error');
+          return;
+        }
+        
+        if (!tipo) {
+          mostrarToast('❌ El tipo de tarea es obligatorio', 'error');
+          return;
+        }
+        
+        if (!titulo) {
+          mostrarToast('❌ El título descriptivo es obligatorio', 'error');
+          return;
+        }
+        
+        if (!tiempoInput) {
+          mostrarToast('❌ El tiempo estimado es obligatorio', 'error');
+          return;
+        }
+        
+        const tiempo = parseFloat(tiempoInput);
+        if (isNaN(tiempo) || tiempo <= 0) {
+          mostrarToast('❌ El tiempo estimado debe ser un número mayor a 0', 'error');
+          return;
+        }
+
+        // Recoger datos de los arrays
+        const elementosCriticos = recogerElementosCriticos();
+        const materiales = recogerMateriales();
+        const herramientas = recogerHerramientas();
+        const pasos = recogerPasos();
+
+        // Validar pasos
+        if (pasos.length === 0) {
+          mostrarToast('❌ Debe añadir al menos un paso de instrucción', 'error');
+          return;
+        }
+
+        console.log('📦 Datos recogidos:', {
+          elementosCriticos: elementosCriticos.length,
+          materiales: materiales.length,
+          herramientas: herramientas.length,
+          pasos: pasos.length
+        });
+
+        // Crear objeto de tarea
+        const nuevaTarea = {
+          tipo: tipo,
+          titulo: titulo,
+          tiempo: tiempo,
+          elementosCriticos: elementosCriticos,
+          materiales: materiales,
+          herramientas: herramientas,
+          pasos: pasos
+        };
+
+        // Guardar en tareasGuardadas
+        tareasGuardadas[nombre] = nuevaTarea;
+        
+        // Guardar en localStorage
+        localStorage.setItem('tareasInstrucciones', JSON.stringify(tareasGuardadas));
+        console.log('💾 Tarea guardada en localStorage:', nombre);
+
+        // Actualizar tareasBase
+        actualizarTareasBase(nombre, tiempo);
+        
+        // Mostrar mensaje de éxito
+        const mensaje = tareaEditando ? 'Tarea actualizada correctamente' : 'Tarea guardada correctamente';
+        mostrarToast(`✅ ${mensaje}`);
+        
+        // Limpiar y mostrar lista
+        limpiarFormulario();
+        mostrarTareas();
+        mostrarSeccion('lista');
+        
+      } catch (error) {
+        console.error('❌ Error al guardar tarea:', error);
+        mostrarToast('❌ Error al guardar la tarea', 'error');
       }
+    }
 
+    // FUNCIONES AUXILIARES PARA RECOGER DATOS
+    function recogerElementosCriticos() {
+      const elementos = [];
+      const criticosElements = document.querySelectorAll('#criticosContainer .array-item');
+      
+      criticosElements.forEach(item => {
+        const inputs = item.querySelectorAll('input, textarea');
+        const titulo = inputs[0]?.value.trim() || '';
+        const descripcion = inputs[1]?.value.trim() || '';
+        const esCritico = inputs[2]?.checked || false;
+        
+        if (titulo && descripcion) {
+          elementos.push({ titulo, descripcion, critico: esCritico });
+        }
+      });
+      
+      return elementos;
+    }
+
+    function recogerMateriales() {
+      const materiales = [];
+      const materialesElements = document.querySelectorAll('#materialesContainer .array-item');
+      
+      materialesElements.forEach(item => {
+        const inputs = item.querySelectorAll('input');
+        const nombre = inputs[0]?.value.trim() || '';
+        const descripcion = inputs[1]?.value.trim() || '';
+        const cantidad = parseInt(inputs[2]?.value) || 0;
+        const unidad = inputs[3]?.value.trim() || 'unidades';
+        
+        if (nombre) {
+          materiales.push({ nombre, descripcion, cantidad, unidad });
+        }
+      });
+      
+      return materiales;
+    }
+
+    function recogerHerramientas() {
       const herramientas = [];
-      for (let i = 1; i <= contadorHerramientas; i++) {
-        const nombreHerramienta = document.getElementById(`herramientaNombre-${i}`)?.value.trim();
-        if (nombreHerramienta && document.getElementById(`herramienta-${i}`)) {
-          herramientas.push({
-            nombre: nombreHerramienta,
-            imagen: document.getElementById(`herramientaImagen-${i}`)?.value.trim() || ''
-          });
+      const herramientasElements = document.querySelectorAll('#herramientasContainer .array-item');
+      
+      herramientasElements.forEach(item => {
+        const inputs = item.querySelectorAll('input');
+        const nombre = inputs[0]?.value.trim() || '';
+        const descripcion = inputs[1]?.value.trim() || '';
+        const imagen = inputs[2]?.value.trim() || '';
+        
+        if (nombre) {
+          herramientas.push({ nombre, descripcion, imagen });
         }
-      }
+      });
+      
+      return herramientas;
+    }
 
+    function recogerPasos() {
       const pasos = [];
-      for (let i = 1; i <= contadorPasos; i++) {
-        const tituloPaso = document.getElementById(`pasoTitulo-${i}`)?.value.trim();
-        const descripcionPaso = document.getElementById(`pasoDescripcion-${i}`)?.value.trim();
-        if (tituloPaso && descripcionPaso && document.getElementById(`paso-${i}`)) {
-          pasos.push({
-            titulo: tituloPaso,
-            descripcion: descripcionPaso,
-            imagen: document.getElementById(`pasoImagen-${i}`)?.value.trim() || '',
-            video: document.getElementById(`pasoVideo-${i}`)?.value.trim() || ''
-          });
+      const pasosElements = document.querySelectorAll('#pasosContainer .array-item');
+      
+      pasosElements.forEach(item => {
+        const inputs = item.querySelectorAll('input, textarea');
+        const titulo = inputs[0]?.value.trim() || '';
+        const descripcion = inputs[1]?.value.trim() || '';
+        const imagen = inputs[2]?.value.trim() || '';
+        const video = inputs[3]?.value.trim() || '';
+        
+        if (titulo && descripcion) {
+          pasos.push({ titulo, descripcion, imagen, video });
         }
-      }
-
-      tareasGuardadas[nombre] = {
-        tipo: tipo,
-        titulo: titulo,
-        tiempo: tiempo,
-        herramientas: herramientas,
-        pasos: pasos
-      };
-
-      localStorage.setItem('tareasInstrucciones', JSON.stringify(tareasGuardadas));
+      });
       
-      // Actualizar también las tareas base para que aparezcan en el selector
-      actualizarTareasBase(nombre, tiempo);
-      
-      mostrarToast(tareaEditando ? 'Tarea actualizada' : 'Tarea guardada');
-      limpiarFormulario();
-      mostrarTareas();
-      mostrarSeccion('lista');
+      return pasos;
     }
 
     function actualizarTareasBase(nombre, tiempo) {
-      // Actualizar el objeto tareasBase en localStorage para que la app principal lo use
       let tareasBase = JSON.parse(localStorage.getItem('tareasBase') || '{}');
       tareasBase[nombre] = tiempo;
       localStorage.setItem('tareasBase', JSON.stringify(tareasBase));
+      console.log('⏱ Tiempo actualizado en tareasBase:', nombre, tiempo);
     }
 
     function mostrarTareas() {
       const container = document.getElementById('tareasLista');
+      if (!container) {
+        console.error('❌ No se encontró el elemento tareasLista');
+        return;
+      }
       container.innerHTML = '';
 
-      if (Object.keys(tareasGuardadas).length === 0) {
+      if (!tareasGuardadas || Object.keys(tareasGuardadas).length === 0) {
         container.innerHTML = '<p>No hay tareas guardadas.</p>';
         return;
       }
 
       for (const [nombre, tarea] of Object.entries(tareasGuardadas)) {
-        const tipoClass = tarea.tipo.toLowerCase();
+        const tipoClass = tarea.tipo ? tarea.tipo.toLowerCase() : '';
         const html = `
           <div class="tarea-item">
             <div class="tarea-header">
               <div>
                 <span class="tarea-nombre">${nombre}</span>
-                <span class="tarea-tipo ${tipoClass}">${tarea.tipo}</span>
+                <span class="tarea-tipo ${tipoClass}">${tarea.tipo || 'Sin tipo'}</span>
               </div>
               <div class="tarea-acciones">
                 <button class="btn-edit" onclick="editarTarea('${nombre}')">✏️ Editar</button>
@@ -466,10 +908,12 @@
               </div>
             </div>
             <div class="tarea-detalles">
-              <strong>Título:</strong> ${tarea.titulo}<br>
-              <strong>Tiempo:</strong> ${tarea.tiempo} horas<br>
-              <strong>Herramientas:</strong> ${tarea.herramientas.length}<br>
-              <strong>Pasos:</strong> ${tarea.pasos.length}
+              <strong>Título:</strong> ${tarea.titulo || 'Sin título'}<br>
+              <strong>Tiempo:</strong> ${tarea.tiempo || 0} horas<br>
+              <strong>Elementos críticos:</strong> ${tarea.elementosCriticos?.length || 0}<br>
+              <strong>Materiales:</strong> ${tarea.materiales?.length || 0}<br>
+              <strong>Herramientas:</strong> ${tarea.herramientas?.length || 0}<br>
+              <strong>Pasos:</strong> ${tarea.pasos?.length || 0}
             </div>
           </div>
         `;
@@ -478,94 +922,131 @@
     }
 
     function editarTarea(nombre) {
+      console.log('✏️ Editando tarea:', nombre);
+      
       const tarea = tareasGuardadas[nombre];
-      if (!tarea) return;
+      if (!tarea) {
+        mostrarToast('❌ Tarea no encontrada', 'error');
+        return;
+      }
 
-      tareaEditando = nombre;
+      // Llenar formulario con datos de la tarea
       document.getElementById('tareaNombre').value = nombre;
       document.getElementById('tareaTipo').value = tarea.tipo;
       document.getElementById('tareaTitulo').value = tarea.titulo;
       document.getElementById('tareaTiempo').value = tarea.tiempo;
 
+      // Limpiar contenedores
+      document.getElementById('criticosContainer').innerHTML = '';
+      document.getElementById('materialesContainer').innerHTML = '';
       document.getElementById('herramientasContainer').innerHTML = '';
       document.getElementById('pasosContainer').innerHTML = '';
 
-      contadorHerramientas = 0;
-      tarea.herramientas.forEach(herramienta => {
-        contadorHerramientas++;
-        const html = `
-          <div class="array-item" id="herramienta-${contadorHerramientas}">
-            <div class="array-header">
-              <h4>Herramienta ${contadorHerramientas}</h4>
-              <button type="button" class="btn-small" onclick="eliminarHerramienta(${contadorHerramientas})">❌ Eliminar</button>
-            </div>
-            <div class="form-group">
-              <label>Nombre</label>
-              <input type="text" value="${herramienta.nombre}" id="herramientaNombre-${contadorHerramientas}">
-            </div>
-            <div class="form-group">
-              <label>URL Imagen</label>
-              <input type="text" value="${herramienta.imagen || ''}" id="herramientaImagen-${contadorHerramientas}">
-            </div>
-          </div>
-        `;
-        document.getElementById('herramientasContainer').innerHTML += html;
-      });
+      // Llenar elementos críticos
+      if (tarea.elementosCriticos && tarea.elementosCriticos.length > 0) {
+        tarea.elementosCriticos.forEach(critico => {
+          agregarCritico();
+          const container = document.getElementById('criticosContainer');
+          const lastItem = container.lastElementChild;
+          const inputs = lastItem.querySelectorAll('input, textarea');
+          inputs[0].value = critico.titulo;
+          inputs[1].value = critico.descripcion;
+          inputs[2].checked = critico.critico;
+        });
+      } else {
+        agregarCritico();
+      }
 
-      contadorPasos = 0;
-      tarea.pasos.forEach(paso => {
-        contadorPasos++;
-        const html = `
-          <div class="array-item" id="paso-${contadorPasos}">
-            <div class="array-header">
-              <h4>Paso ${contadorPasos}</h4>
-              <button type="button" class="btn-small" onclick="eliminarPaso(${contadorPasos})">❌ Eliminar</button>
-            </div>
-            <div class="form-group">
-              <label>Título</label>
-              <input type="text" value="${paso.titulo}" id="pasoTitulo-${contadorPasos}">
-            </div>
-            <div class="form-group">
-              <label>Descripción</label>
-              <textarea id="pasoDescripcion-${contadorPasos}">${paso.descripcion}</textarea>
-            </div>
-            <div class="form-group">
-              <label>URL Imagen</label>
-              <input type="text" value="${paso.imagen || ''}" id="pasoImagen-${contadorPasos}">
-            </div>
-            <div class="form-group">
-              <label>URL Video</label>
-              <input type="text" value="${paso.video || ''}" id="pasoVideo-${contadorPasos}">
-            </div>
-          </div>
-        `;
-        document.getElementById('pasosContainer').innerHTML += html;
-      });
+      // Llenar materiales
+      if (tarea.materiales && tarea.materiales.length > 0) {
+        tarea.materiales.forEach(material => {
+          agregarMaterial();
+          const container = document.getElementById('materialesContainer');
+          const lastItem = container.lastElementChild;
+          const inputs = lastItem.querySelectorAll('input');
+          inputs[0].value = material.nombre;
+          inputs[1].value = material.descripcion;
+          inputs[2].value = material.cantidad;
+          inputs[3].value = material.unidad;
+        });
+      } else {
+        agregarMaterial();
+      }
 
+      // Llenar herramientas
+      if (tarea.herramientas && tarea.herramientas.length > 0) {
+        tarea.herramientas.forEach(herramienta => {
+          agregarHerramienta();
+          const container = document.getElementById('herramientasContainer');
+          const lastItem = container.lastElementChild;
+          const inputs = lastItem.querySelectorAll('input');
+          inputs[0].value = herramienta.nombre;
+          inputs[1].value = herramienta.descripcion;
+          inputs[2].value = herramienta.imagen;
+          
+          // Mostrar preview si hay imagen
+          if (herramienta.imagen) {
+            const preview = lastItem.querySelector('.image-preview');
+            preview.src = herramienta.imagen;
+            preview.style.display = 'block';
+          }
+        });
+      } else {
+        agregarHerramienta();
+      }
+
+      // Llenar pasos
+      if (tarea.pasos && tarea.pasos.length > 0) {
+        tarea.pasos.forEach(paso => {
+          agregarPaso();
+          const container = document.getElementById('pasosContainer');
+          const lastItem = container.lastElementChild;
+          const inputs = lastItem.querySelectorAll('input, textarea');
+          inputs[0].value = paso.titulo;
+          inputs[1].value = paso.descripcion;
+          inputs[2].value = paso.imagen;
+          inputs[3].value = paso.video;
+          
+          // Mostrar preview si hay imagen
+          if (paso.imagen) {
+            const preview = lastItem.querySelector('.image-preview');
+            preview.src = paso.imagen;
+            preview.style.display = 'block';
+          }
+        });
+      } else {
+        agregarPaso();
+      }
+
+      tareaEditando = nombre;
       mostrarSeccion('formulario');
+      mostrarToast(`✏️ Editando tarea: ${nombre}`);
     }
 
     function eliminarTarea(nombre) {
-      if (confirm(`¿Eliminar "${nombre}"?`)) {
+      if (confirm(`¿Está seguro de que desea eliminar la tarea "${nombre}"?`)) {
         delete tareasGuardadas[nombre];
         localStorage.setItem('tareasInstrucciones', JSON.stringify(tareasGuardadas));
         
-        // También eliminar de tareasBase
+        // Actualizar tareasBase también
         let tareasBase = JSON.parse(localStorage.getItem('tareasBase') || '{}');
         delete tareasBase[nombre];
         localStorage.setItem('tareasBase', JSON.stringify(tareasBase));
         
         mostrarTareas();
-        mostrarToast('Tarea eliminada');
+        mostrarToast(`🗑️ Tarea "${nombre}" eliminada`);
       }
     }
 
     function mostrarToast(mensaje, tipo = 'success') {
       const toast = document.getElementById('toast');
       toast.textContent = mensaje;
-      toast.style.background = tipo === 'error' ? 'var(--danger)' : 'var(--accent)';
       toast.style.display = 'block';
-      setTimeout(() => toast.style.display = 'none', 3000);
+      toast.style.background = tipo === 'error' ? 'var(--danger)' : 'var(--accent)';
+      
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 3000);
     }
   </script>
 </body>
